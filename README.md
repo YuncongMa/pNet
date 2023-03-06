@@ -26,7 +26,7 @@ Major functions:
 
 
 # Additional package needed
-> Downlaod workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
+1. To allow the input of HCP data in cifti format, downlaod workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
 
 # Reference
 [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
