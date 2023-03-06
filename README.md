@@ -24,9 +24,25 @@ Major functions:
 (F) Surface-based visualization of the maximum t value (two sample t-test, FDR correction, p-value=0.001) of sex differences of individualized FNs (k=50) of the HCP S1200 dataset. <br />
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
 
+# Installation guideline
+1. Download the whole package and open the pNet.mlapp in MATLAB with version newer than 2021b.
+2. The help document (Help_Document.pdf) can be opened on the pNet user interface: click "Help" on the left top menu bar, and select 'Document'.
+3. Several example data can be downloaded from Google Drive, please follow the section below "Example Data"
+4. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template"
 
 # Additional package needed
-1. To allow the input of HCP data in cifti format, downlaod workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
+1. To allow the input of HCP data in cifti format, download workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
+
+# Brain Template
+Note: three widely used brain templates are available in the toolbox subfolder "Brain_Template"
+1. HCP surface space: subfolder "HCP_Surface". It contains a single MATLAB file "Brain_Surface.mat" which includes the brain shapes, medial wall index.
+2. FreeSurfer fsaverage5: "FreeSurfer_ fsaverage5". It contains a single MATLAB file "Brain_Surface.mat" which includes the brain shapes, medial wall index.
+3. MNI volume space: subfolder "MNI_Volume". It contains two MATLAB files "Brain_Mask.mat" and "Overlay_Image.mat".
+
+# Example Data
+Note: fMRI data usually take more than 100MB space, so we provide example data on Google Drive:  <br />
+1. HCP surface data (10 subjects, 2 scans per subject, 400 volumes per scan) in .mat format, derived from HCP minimally preprocessing pipleline, followed by temporal filtering (0.01-0.08Hz).
+2. 
 
 # Reference
 [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
