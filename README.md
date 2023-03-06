@@ -11,7 +11,7 @@ Major functions:
 6. provide MATLAB functions and scripts to carry out computation and visualization of group and personalized FNs
 7. come with built-in help documents and video
 
-# Snapshots
+# Snapshot
 ![Screenshot 2023-03-06 at 10 31 39 AM](https://user-images.githubusercontent.com/20191790/223155797-ab8f8b7c-e528-4e2a-a6f0-946e7f9c2694.jpg)
 
 (A) Welcome page for the toolbox. <br />
@@ -22,7 +22,7 @@ Major functions:
 (F) Surface-based visualization of the maximum t value (two sample t-test, FDR correction, p-value=0.001) of sex differences of individualized FNs (k=50) of the HCP S1200 dataset. <br />
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
 
-# Installation guideline
+# Installation Guideline
 1. Download the whole package and open the pNet.mlapp in MATLAB with version newer than 2021b.
 2. The help document (Help_Document.pdf) can also be opened on the pNet user interface: click "Help" on the left top menu bar, and select 'Document'.
 3. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
