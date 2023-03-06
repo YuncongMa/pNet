@@ -13,7 +13,7 @@ Major functions:
 7. come with built-in help documents and video
 
 # Snapshot
-![Screenshot 2023-03-06 at 10 31 39 AM](https://user-images.githubusercontent.com/20191790/223155797-ab8f8b7c-e528-4e2a-a6f0-946e7f9c2694.jpg)
+![Screenshot 2023-03-06 at 4 46 53 PM](https://user-images.githubusercontent.com/20191790/223241753-b5a0a300-480a-4397-8585-5874f91c6590.jpg)
 
 (A) Welcome page for the toolbox. <br />
 (B) A module for loading fMRI scans and brain template files. <br />
