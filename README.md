@@ -3,7 +3,7 @@
 
 ![Welcome](https://user-images.githubusercontent.com/20191790/222938004-af056d30-1ddd-4e35-86ed-bcb0c31b7094.jpg)
 
-This toolbox is designed to provide a user-friendly interface to perform personalized functional network computation
+This toolbox is designed to provide a user-friendly interface to perform personalized functional network computation <br />
 Major functions:
 1. search and organize fMRI files
 2. compute or load pre-computed group-level functional network (FN) results
