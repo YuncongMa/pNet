@@ -1,7 +1,5 @@
-# pNet
-# A toolbox for personalized functional network modeling
-
 ![Welcome](https://user-images.githubusercontent.com/20191790/222938004-af056d30-1ddd-4e35-86ed-bcb0c31b7094.jpg)
+## pNet <br /> A toolbox for personalized functional network modeling <br />
 
 This toolbox is designed to provide a user-friendly interface to perform personalized functional network computation <br />
 Major functions:
