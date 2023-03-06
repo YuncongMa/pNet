@@ -29,7 +29,7 @@ Major functions:
 2. The help document (Help_Document.pdf) can be opened on the pNet user interface: click "Help" on the left top menu bar, and select 'Document'.
 3. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
 4. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template".
-5. Several example data can be downloaded from Google Drive, please follow the section below "Example Data".
+5. Several examples can be downloaded from Google Drive, please follow the section below "Example".
 
 # Additional Package
 1. To allow the input of HCP data in cifti format, download workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
@@ -40,11 +40,11 @@ Note: three widely used brain templates are available in the toolbox subfolder "
 2. FreeSurfer fsaverage5: "FreeSurfer_ fsaverage5". It contains a single MATLAB file "Brain_Surface.mat" which includes the brain shapes, medial wall index.
 3. MNI volume space: subfolder "MNI_Volume". It contains two MATLAB files "Brain_Mask.mat" and "Overlay_Image.mat".
 
-# Example Data
-Note: fMRI data can easily take more than 1GB space, so we provide example data on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=sharing  <br />
-1. HCP surface data (10 subjects, 2 scans per subject, 400 volumes per scan) in .mat format.
-2. PNC surface data (10 subjects, 1 scan per subject, 555 volumes per scan) in .mgh format.
-3. UKBB volume data (10 subjects, 1 scan per subject, 490 volumes per scan) in .nii.gz format.
+# Example
+Note: fMRI data can easily take more than 1GB space, so we provide examples on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=sharing  <br />
+1. HCP surface data (10 subjects, 2 scans per subject, 400 volumes per scan) in .mat format. pNet results are stored in subfolder "Test_FN17".
+2. PNC surface data (10 subjects, 1 scan per subject, 555 volumes per scan) in .mgh format. pNet results are stored in subfolder "Test_FN17".
+3. UKBB volume data (10 subjects, 1 scan per subject, 490 volumes per scan) in .nii.gz format. pNet results are stored in subfolder "Test_FN17".
 
 # Reference
 [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
