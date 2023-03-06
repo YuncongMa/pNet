@@ -41,7 +41,7 @@ Note: three widely used brain templates are available in the toolbox subfolder "
 3. MNI volume space: subfolder "MNI_Volume". It contains two MATLAB files "Brain_Mask.mat" and "Overlay_Image.mat".
 
 # Example Data
-Note: fMRI data can easily take more than 1GB space, so we provide example data on Google Drive: .  <br />
+Note: fMRI data can easily take more than 1GB space, so we provide example data on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=sharing  <br />
 1. HCP surface data (10 subjects, 2 scans per subject, 400 volumes per scan) in .mat format.
 2. PNC surface data (10 subjects, 1 scan per subject, 555 volumes per scan) in .mgh format.
 3. UKBB volume data (10 subjects, 1 scan per subject, 490 volumes per scan) in .nii.gz format.
