@@ -27,4 +27,12 @@ Major functions:
 
 # Additional package needed
 > Downlaod workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
- 
+
+# Reference
+[1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
+[2] Cui, Z. (2022). Linking Individual Differences in Personalized Functional Network Topography to Psychopathology in Youth. Biological Psychiatry. <br />
+[3] Li H (2017) Large-scale sparse functional networks from resting state fMRI. Neuroimage 156:1-13. <br />
+[4] Pines, A. R. (2022). Dissociable multi-scale patterns of development in personalized brain networks. Nature communications, 13(1), 1-15. <br />
+[5] Shanmugan, S. (2022). Sex differences in the functional topography of association networks in youth. Proceedings of the National Academy of Sciences, 119(33), e2110416119. <br />
+[6] Zhou, Z. (2023). Multiscale functional connectivity patterns of the aging brain learned from harmonized rsfMRI data of the multi-cohort iSTAGING study. NeuroImage, 269, 119911. <br />
+
