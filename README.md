@@ -27,10 +27,11 @@ Major functions:
 # Installation guideline
 1. Download the whole package and open the pNet.mlapp in MATLAB with version newer than 2021b.
 2. The help document (Help_Document.pdf) can be opened on the pNet user interface: click "Help" on the left top menu bar, and select 'Document'.
-3. Several example data can be downloaded from Google Drive, please follow the section below "Example Data"
-4. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template"
+3. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
+4. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template".
+5. Several example data can be downloaded from Google Drive, please follow the section below "Example Data".
 
-# Additional package needed
+# Additional Package
 1. To allow the input of HCP data in cifti format, download workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
 
 # Brain Template
@@ -40,9 +41,10 @@ Note: three widely used brain templates are available in the toolbox subfolder "
 3. MNI volume space: subfolder "MNI_Volume". It contains two MATLAB files "Brain_Mask.mat" and "Overlay_Image.mat".
 
 # Example Data
-Note: fMRI data usually take more than 100MB space, so we provide example data on Google Drive:  <br />
-1. HCP surface data (10 subjects, 2 scans per subject, 400 volumes per scan) in .mat format, derived from HCP minimally preprocessing pipleline, followed by temporal filtering (0.01-0.08Hz).
-2. 
+Note: fMRI data can easily take more than 1GB space, so we provide example data on Google Drive: .  <br />
+1. HCP surface data (10 subjects, 2 scans per subject, 400 volumes per scan) in .mat format.
+2. PNC surface data (10 subjects, 1 scan per subject, 555 volumes per scan) in .mgh format.
+3. UKBB volume data (10 subjects, 1 scan per subject, 490 volumes per scan) in .nii.gz format.
 
 # Reference
 [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
