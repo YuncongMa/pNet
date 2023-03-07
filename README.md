@@ -41,9 +41,14 @@ Note: three widely used brain templates are available in the toolbox subfolder "
 
 # Example
 Note: fMRI data can easily take more than 1GB space, so we provide examples on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link  <br />
+
 1. HCP surface data (10 subjects, 2 scans per subject, 400 volumes per scan) in .mat format. pNet results are stored in subfolder "Test_FN17".
 2. PNC surface data (10 subjects, 1 scan per subject, 555 volumes per scan) in .mgh format. pNet results are stored in subfolder "Test_FN17".
 3. UKBB volume data (10 subjects, 1 scan per subject, 490 volumes per scan) in .nii.gz format. pNet results are stored in subfolder "Test_FN17".
+
+The data organization is as below.
+
+![Screenshot 2023-03-06 at 11 25 09 PM](https://user-images.githubusercontent.com/20191790/223320484-77bad915-3369-4977-b22c-4b9e017e80bd.jpg)
 
 # Reference
 [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
