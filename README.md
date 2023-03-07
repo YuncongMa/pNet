@@ -49,7 +49,8 @@ Note: fMRI data can easily take more than 1GB space, so we provide examples on G
 
 The data organization is as below.
 
-![Screenshot 2023-03-06 at 11 25 09 PM](https://user-images.githubusercontent.com/20191790/223320484-77bad915-3369-4977-b22c-4b9e017e80bd.jpg)
+![Screenshot 2023-03-06 at 11 29 38 PM](https://user-images.githubusercontent.com/20191790/223320985-12aed4d4-6bef-4b23-a9a2-ff67f79eced3.jpg)
+
 
 # Reference
 [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
