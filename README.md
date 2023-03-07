@@ -1,4 +1,5 @@
-![Screenshot 2023-03-06 at 2 23 52 PM](https://user-images.githubusercontent.com/20191790/223210265-36c89d95-30df-4d25-827d-4ca0cfed41b1.jpg)
+![Screenshot 2023-03-06 at 2 23 52 PM](https://user-images.githubusercontent.com/20191790/223320724-67f18e53-cda3-41a4-9215-620c991877f4.jpg)
+
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
 
