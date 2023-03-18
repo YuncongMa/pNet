@@ -25,7 +25,7 @@ Major functions:
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
 
 # Installation Guideline
-1. Download the whole package and open the pNet.mlapp in MATLAB with version newer than 2021b.
+1. Download the whole package and open the pNet.mlapp in MATLAB with version not older than 2018A.
 2. The help document (Help_Document.pdf) can also be opened on the pNet user interface: click "Help" on the left top menu bar, and select 'Document'.
 3. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
 4. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template".
