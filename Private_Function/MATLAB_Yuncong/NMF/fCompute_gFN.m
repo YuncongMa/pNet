@@ -63,7 +63,7 @@ end
 % Compute each bootstrapping
 switch Setting.Load_Data.Data_Format
     case {'HCP Surface (*.cifti, *.mat)','MGH Surface (*.mgh)','MGZ Surface (*.mgz)','Volume (*.nii, *.nii.gz, *.mat)'}
-        if Setting.Compute_FN.IndividualizedFN.Combine_Flag==0
+        if Setting.Compute_FN.PersonalizedFN.Combine_Flag==0
             if Setting.Compute_FN.Parallel.Flag==0
                 for i=1:Setting.Compute_FN.GroupFN.BootStrap.Repetition
                     [Flag,Message]=fCompute_gFN_Bootstrapping(App_Dir,Work_Dir,Setting.Compute_FN,Bootstrapping(i));

@@ -1,5 +1,5 @@
 function Setting=fCompute_FN_Setting(Read_Write,File,Compute_FN)
-% Yuncong Ma, 2/21/2023
+% Yuncong Ma, 3/17/2023
 % To Read mat or write txt files about settings in Compute_FN for NMF APP
 % Setting=fCompute_FN_Setting(Read_Write,File,Compute_FN)
 
@@ -21,14 +21,14 @@ switch Read_Write
         fprintf(FID,'[GroupFN.iterNum] = %d\n',Compute_FN.GroupFN.iterNum);
         fprintf(FID,'[GroupFN.Alpha] = %d\n',Compute_FN.GroupFN.Alpha);
         fprintf(FID,'[GroupFN.Beta] = %d\n',Compute_FN.GroupFN.Beta);
-        fprintf(FID,'[IndividualizedFN.Combine_Flag] = %d\n',Compute_FN.IndividualizedFN.Combine_Flag);
-        fprintf(FID,'[IndividualizedFN.spaR] = %d\n',Compute_FN.IndividualizedFN.spaR);
-        fprintf(FID,'[IndividualizedFN.vxI] = %d\n',Compute_FN.IndividualizedFN.vxI);
-        fprintf(FID,'[IndividualizedFN.ard] = %d\n',Compute_FN.IndividualizedFN.ard);
-        fprintf(FID,'[IndividualizedFN.eta] = %d\n',Compute_FN.IndividualizedFN.eta);
-        fprintf(FID,'[IndividualizedFN.iterNum] = %d\n',Compute_FN.IndividualizedFN.iterNum);
-        fprintf(FID,'[IndividualizedFN.alphaS21] = %d\n',Compute_FN.IndividualizedFN.alphaS21);
-        fprintf(FID,'[IndividualizedFN.alphaL] = %d\n',Compute_FN.IndividualizedFN.alphaL);
+        fprintf(FID,'[PersonalizedFN.Combine_Flag] = %d\n',Compute_FN.PersonalizedFN.Combine_Flag);
+        fprintf(FID,'[PersonalizedFN.spaR] = %d\n',Compute_FN.PersonalizedFN.spaR);
+        fprintf(FID,'[PersonalizedFN.vxI] = %d\n',Compute_FN.PersonalizedFN.vxI);
+        fprintf(FID,'[PersonalizedFN.ard] = %d\n',Compute_FN.PersonalizedFN.ard);
+        fprintf(FID,'[PersonalizedFN.eta] = %d\n',Compute_FN.PersonalizedFN.eta);
+        fprintf(FID,'[PersonalizedFN.iterNum] = %d\n',Compute_FN.PersonalizedFN.iterNum);
+        fprintf(FID,'[PersonalizedFN.alphaS21] = %d\n',Compute_FN.PersonalizedFN.alphaS21);
+        fprintf(FID,'[PersonalizedFN.alphaL] = %d\n',Compute_FN.PersonalizedFN.alphaL);
         fprintf(FID,'[Parallel.Flag] = %d\n',Compute_FN.Parallel.Flag);
         fprintf(FID,'[Parallel.N_Thread] = %d\n',Compute_FN.Parallel.N_Thread);
         fclose(FID);
