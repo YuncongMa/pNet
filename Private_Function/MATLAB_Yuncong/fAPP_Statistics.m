@@ -1,5 +1,5 @@
 function Result=fAPP_Statistics(File_List,varargin)
-% Yuncong Ma, 11/21/2022
+% Yuncong Ma, 3/17/2023
 % Result=fAPP_Statistics(File_List)
 % Perform statistic analysis for NMF APP
 % Options support Data_Type, Data_Format, Method, FDR, P_Value, Behavior
@@ -30,20 +30,18 @@ Data=[];
 switch Options.Data_Type
     case 'Surface'
         for i=1:N_File
-            load(File_List{i},'V');
-            V=V{1,1};
-            Data(i,:,:)=V'; %[k,N]
+            FN=fLoad_MATLAB_Single_Variable(fullfile(File_List{i},'FN.mat'));
+            Data(i,:,:)=FN'; %[k,N]
         end
     case 'Volume'
         if ~exist(Options.File_Brain_Mask,'file')
             error('Error in fAPP_Statistics: cannot find the brain mask file for volume-based results');
         else
-            load(Options.File_Brain_Mask,'Brain_Mask');
+            Brain_Mask=fLoad_MATLAB_Single_Variable(Options.File_Brain_Mask,'Brain_Mask');
         end
         for i=1:N_File
-            load(File_List{i},'V');
-            V=V{1,1};
-            Data(i,:,:)=fApply_Mask(Brain_Mask,V,-1)';
+            FN=fLoad_MATLAB_Single_Variable(fullfile(File_List{i},'FN.mat'));
+            Data(i,:,:)=fApply_Mask(Brain_Mask,FN,-1)';
         end
     otherwise
         error('Error in fAPP_Statistics: unknown Data_Type: %s',Options.Data_Type);
