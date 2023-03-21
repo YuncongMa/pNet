@@ -28,9 +28,9 @@ Major functions:
 1. A help document (Help_Document.pdf) is provided in the root directory and can be accessed in the app UI. It can also be accessed from Google drive: https://drive.google.com/file/d/1ArWRLM72tTgQbAo0P84v-qkoIYYwdSrF/view?usp=share_link
 2. Help videos are provided on a Google drive folder: https://drive.google.com/drive/folders/1aVU99aJlFJZ5kKw2KW3wkwZKv6TBkgu_?usp=share_link
 
-# Installation Guideline
-1. Download the whole package and open the pNet.mlapp in MATLAB with version not older than 2021A.
-2. The help document (Help_Document.pdf) can also be opened on the pNet user interface: click "Help" on the left top menu bar, and select 'Document'.
+# Installation
+1. Download the whole package and open the pNet.mlapp in MATLAB with version not older than 2021A. Or add the whole folder to the path, and run pNet in the command window.
+2. Additional installation information can be found in the help document (Help_Document.pdf).
 3. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
 4. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template".
 5. Several examples can be downloaded from Google Drive, please follow the section below "Example".
