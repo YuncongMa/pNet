@@ -51,6 +51,13 @@ The data organization is as below.
 
 ![Screenshot 2023-03-06 at 11 29 38 PM](https://user-images.githubusercontent.com/20191790/223320985-12aed4d4-6bef-4b23-a9a2-ff67f79eced3.jpg)
 
+# MATLAB and system Compatibility
+Note: it is recommended to run pNet as a MATLAB function to allow for maximum compatibility. Although we are striving for maximizing the compatibility of pNet on different MATLAB versions and operation systems, it is difficult to conduct comprehensive tests on all cases. Our primary test environment is MATLAB 2022B and macOS Ventura 13.
+
+![Compatibility](https://user-images.githubusercontent.com/20191790/226629151-a37f4c68-126c-4006-b4e1-d19255de0f61.jpg)
+
+
+
 
 # Reference
 [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
