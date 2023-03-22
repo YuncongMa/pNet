@@ -61,7 +61,8 @@ The data organization is as below.
 # MATLAB and system Compatibility
 Note: it is recommended to run pNet as a MATLAB function to allow for maximum compatibility. Although we are striving for maximizing the compatibility of pNet on different MATLAB versions and operation systems, it is difficult to conduct comprehensive tests on all cases. Our primary test environment is MATLAB 2022B and macOS Ventura 13.
 
-![Compatibility](https://user-images.githubusercontent.com/20191790/226629151-a37f4c68-126c-4006-b4e1-d19255de0f61.jpg)
+![Screenshot 2023-03-21 at 10 53 56 PM](https://user-images.githubusercontent.com/20191790/226790097-18b601fa-84ca-4ee6-aab6-19c8322ffc7d.jpg)
+
 
 
 
