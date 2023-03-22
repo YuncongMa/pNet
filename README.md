@@ -36,7 +36,7 @@ Major functions:
 5. Several examples can be downloaded from Google Drive, please follow the section below "Example".
 
 # Hardware requirement
-It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 16GB, and free disk storage at least 10GB. Large dataset and parallel computation will require more CPU cores, memory space, and disk space.
+It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 16GB, and free disk storage at least 10GB. Large dataset and parallel computation will require more CPU cores, memory space, and disk space. CPU and memory inf, as well as estimated memory usage can be found in the parallel section.
 
 # Additional Package
 1. To allow the input of HCP data in cifti format, download workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
