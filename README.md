@@ -29,7 +29,7 @@ Major functions:
 2. Help videos are provided on a Google drive folder: https://drive.google.com/drive/folders/1aVU99aJlFJZ5kKw2KW3wkwZKv6TBkgu_?usp=share_link
 
 # Installation
-1. Download the whole package and open the pNet.mlapp in MATLAB with version not older than 2021A. Or add the whole folder to the path, and run pNet in the command window.
+1. Download the whole package and run the pNet.mlapp in MATLAB with version not older than 2021A. Or install the pNet.mlappinstall into MATLAB APPS. Also we provide several versions of compiled pNet (in folder Compiled_Runtime) for different operation systems. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html.  Details can be found in the README.txt in each subfolder containing the compiled pNet.
 2. Additional installation information can be found in the help document (Help_Document.pdf).
 3. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
 4. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template".
