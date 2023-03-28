@@ -1,1 +1,2 @@
-This version requires MATLAB runtime no older than 2021A to run compiled pNet
+This version requires MATLAB runtime 2021A to run compiled pNet
+Details can be found in the help document
