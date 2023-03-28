@@ -48,18 +48,20 @@ Note: three widely used brain templates are available in the toolbox subfolder "
 3. MNI volume space: subfolder "MNI_Volume". It contains two MATLAB files "Brain_Mask.mat" and "Overlay_Image.mat".
 
 # Example
-Note: fMRI data can easily take more than 1GB space, so we provide examples on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link  <br />
+We provided three examples for users to learn how to run the pFN computation, and navigate through the precomputed results. For each example, we provides examples of simulated fMRI data, and precomputed results of real fMRI data. Examples can be accessed on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link.   <br />
 
-1. HCP surface data (10 subjects, 2 scans per subject, 400 volumes per scan) in .mat format. pNet results are stored in subfolder "Test_FN17".
-2. PNC surface data (10 subjects, 1 scan per subject, 555 volumes per scan) in .mgh format. pNet results are stored in subfolder "Test_FN17".
-3. UKBB volume data (10 subjects, 1 scan per subject, 490 volumes per scan) in .nii.gz format. pNet results are stored in subfolder "Test_FN17".
+1.	HCP surface data. (2 subject, 2 scans per subject, 400 volumes per scan) in .mat format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
+2.	PNC surface data (2 subject, 1 scan per subject, 300 volumes per scan) in .mgh format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
+3.	UKBB volume data (2 subject, 1 scan per subject, 200 volumes per scan) in .nii.gz format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
+
+
 
 The data organization is as below.
 
 ![Screenshot 2023-03-06 at 11 29 38 PM](https://user-images.githubusercontent.com/20191790/223320985-12aed4d4-6bef-4b23-a9a2-ff67f79eced3.jpg)
 
 # MATLAB and system Compatibility
-Note: it is recommended to run pNet as a MATLAB function to allow for maximum compatibility. Although we are striving for maximizing the compatibility of pNet on different MATLAB versions and operation systems, it is difficult to conduct comprehensive tests on all cases. Our primary test environment is MATLAB 2022B and macOS Ventura 13.
+Note: it is recommended to run pNet as a MATLAB APP to allow for maximum compatibility. Although we are striving for maximizing the compatibility of pNet on different MATLAB versions and operation systems, it is difficult to conduct comprehensive tests on all cases. Our primary test environment is MATLAB 2022B and macOS Ventura 13.
 
 ![Screenshot 2023-03-21 at 10 53 56 PM](https://user-images.githubusercontent.com/20191790/226790097-18b601fa-84ca-4ee6-aab6-19c8322ffc7d.jpg)
 
