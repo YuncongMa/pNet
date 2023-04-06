@@ -24,6 +24,15 @@ Major functions:
 (F) Surface-based visualization of the maximum t value (two sample t-test, FDR correction, p-value=0.001) of sex differences of individualized FNs (k=50) of the HCP S1200 dataset. <br />
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
 
+# Workflow
+![Screenshot 2023-04-06 at 1 33 00 PM](https://user-images.githubusercontent.com/20191790/230453494-b7cb3911-ec70-429e-aa89-0bff099d008d.jpg)
+
+It consists of six major modules, including data loading, FN computation, group-level FN display, personalized FN display, statistics, and quality control. The six modules correspond to six major UI panels in pNet, and six subfolders in the pNet result folder. The pNet UI is designed to follow the left-to-right workflow direction to setup each step. Curved arrows show alternative workflows. The FN computation module (colored in light red) can use precomputed group-level FNs to derive personalized FNs as one option. Precomputed visualization of group-level and personalized FNs will be used in the two display modules (group FN and personalized FN). pNet features synchronized display to facilitate the comparisons between group-level and personalized FNs, as well as statistical results. The dashed double-sided arrows denote this display synchronization between three modules.
+
+# Data Structure
+![Screenshot 2023-04-06 at 1 34 11 PM](https://user-images.githubusercontent.com/20191790/230453690-b17706bb-2e76-4936-89bc-0902fd9cd1c9.jpg)
+Folder are noted in boxes with black borders above the black horizontal line, and files are in boxes without black border, separated into three categories (setting, data, and figure files) by the dashed lines. Boxes are color coded for different modules. In the first three modules, the setting files are present. In personalized FN folder, subfolders are named by subject information. In statistics folder, subfolders are named by their method information. 
+
 # Guideline
 1. A help document (Help_Document.pdf) is provided in the root directory and can be accessed in the app UI. It can also be accessed from Google drive: https://drive.google.com/file/d/1ArWRLM72tTgQbAo0P84v-qkoIYYwdSrF/view?usp=share_link
 2. Help videos are provided on a Google drive folder: https://drive.google.com/drive/folders/1aVU99aJlFJZ5kKw2KW3wkwZKv6TBkgu_?usp=share_link
