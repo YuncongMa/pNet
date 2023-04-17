@@ -34,7 +34,7 @@ It consists of six major modules, including data loading, FN computation, group-
 Folder are noted in boxes with black borders above the black horizontal line, and files are in boxes without black border, separated into three categories (setting, data, and figure files) by the dashed lines. Boxes are color coded for different modules. In the first three modules, the setting files are present. In personalized FN folder, subfolders are named by subject information. In statistics folder, subfolders are named by their method information. 
 
 # Guideline
-1. A help document ([Help_Document.pdf](https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf)) is provided in the root directory and can be accessed in the app UI. It can also be accessed from Google drive: https://drive.google.com/file/d/1ArWRLM72tTgQbAo0P84v-qkoIYYwdSrF/view?usp=share_link
+1. A help document ([Help_Document.pdf](https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf)) is provided in the root directory and can be accessed in the app UI. 
 2. Help videos are provided on a Google drive folder: https://drive.google.com/drive/folders/1aVU99aJlFJZ5kKw2KW3wkwZKv6TBkgu_?usp=share_link
 
 # Installation
