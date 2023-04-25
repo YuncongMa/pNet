@@ -48,8 +48,6 @@ Folder are noted in boxes with black borders above the black horizontal line, an
 # Hardware requirement
 It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 16GB, and free disk storage at least 10GB. Large dataset and parallel computation will require more CPU cores, memory space, and disk space. CPU and memory inf, as well as estimated memory usage can be found in the parallel section.The pNet UI requires screen displaying resolution at least 1280x960. It is recommended to use an external montior with reosolution at least 1920x1080. 2k and 4k displays are desirable.
 
-# Additional Package
-1. To allow the input of HCP data in cifti format, download workbench from HCP website: https://www.humanconnectome.org/software/get-connectome-workbench
 
 # Brain Template
 Note: three widely used brain templates are available in the toolbox subfolder "Brain_Template"
