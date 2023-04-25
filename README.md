@@ -13,7 +13,8 @@ Major functions:
 6. provide MATLAB functions and scripts to carry out computation and visualization of group and personalized FNs
 7. come with a help document that can be accessed directly on the app UI
 
-# Workflow
+
+# GUI Module
 ![Screenshot 2023-04-06 at 1 33 00 PM](https://user-images.githubusercontent.com/20191790/230453494-b7cb3911-ec70-429e-aa89-0bff099d008d.jpg)
 
 It consists of six major modules, including data loading, FN computation, group-level FN display, personalized FN display, statistics, and quality control. The six modules correspond to six major UI panels in pNet, and six subfolders in the pNet result folder. The pNet UI is designed to follow the left-to-right workflow direction to setup each step. Curved arrows show alternative workflows. The FN computation module (colored in light red) can use precomputed group-level FNs to derive personalized FNs as one option. Precomputed visualization of group-level and personalized FNs will be used in the two display modules (group FN and personalized FN). pNet features synchronized display to facilitate the comparisons between group-level and personalized FNs, as well as statistical results. The dashed double-sided arrows denote this display synchronization between three modules.
@@ -81,8 +82,8 @@ Note: it is recommended to run pNet as a MATLAB APP to allow for maximum compati
 # Reference
 [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353. <br />
 [2] Cui, Z. (2022). Linking Individual Differences in Personalized Functional Network Topography to Psychopathology in Youth. Biological Psychiatry. <br />
-[3] Li H. (2017) Large-scale sparse functional networks from resting state fMRI. Neuroimage 156:1-13. <br />
-[4] Pines, A. R. (2022). Dissociable multi-scale patterns of development in personalized brain networks. Nature communications, 13(1), 1-15. <br />
+[3] Li, H. and Fan, Y., 2016, April. Individualized brain parcellation with integrated funcitonal and morphological information. In 2016 IEEE 13th International Symposium on Biomedical Imaging (ISBI) (pp. 992-995). IEEE. <br />
+[4] Li H. (2017) Large-scale sparse functional networks from resting state fMRI. Neuroimage 156:1-13. <br />
 [5] Shanmugan, S. (2022). Sex differences in the functional topography of association networks in youth. Proceedings of the National Academy of Sciences, 119(33), e2110416119. <br />
 [6] Zhou, Z. (2023). Multiscale functional connectivity patterns of the aging brain learned from harmonized rsfMRI data of the multi-cohort iSTAGING study. NeuroImage, 269, 119911. <br />
 
