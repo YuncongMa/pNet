@@ -9,7 +9,7 @@ Major functions:
 2. compute or load pre-computed group-level functional network (FN) results
 3. compute personalized FNs, with quality control
 4. perform statistical analysis to investigate the correlation between FN loading and behavior measurement
-5. provide both pre-computed and interactive visualization for group and personalized FNs and statistical resutls
+5. provide both pre-computed and interactive visualization for group and personalized FNs and statistical results
 6. provide MATLAB functions and scripts to carry out computation and visualization of group and personalized FNs
 7. come with a help document that can be accessed directly on the app UI
 
