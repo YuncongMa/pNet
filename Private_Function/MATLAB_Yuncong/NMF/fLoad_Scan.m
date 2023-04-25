@@ -1,5 +1,5 @@
 function [Data,Flag,Message]=fLoad_Scan(App_Dir,Work_Dir,Scan_List)
-% Yuncong Ma, 3/2/2023
+% Yuncong Ma, 4/24/2023
 % Load fMRI scans to NMF APP
 % [Data,Flag,Message]=fLoad_Scan(App_Dir,Work_Dir,Scan_List)
 % Works for different formats of fMRI scans
@@ -78,6 +78,23 @@ switch Setting.Load_Data.Data_Format
 
         [~,~,EXT]=fileparts(Scan_File);
         switch EXT
+            case '.nii'
+                Struct=cifti_read(Scan_File);
+                if isempty(Struct) || ~isfield(Struct,'cdata') || isempty(Struct.cdata)
+                    Flag=1;
+                    Message='Failed to load the CIFTI file, or the CIFTI file contains an empty matrix';
+                    return
+                end
+                Data=Struct.cdata;
+                N_Vertex=59412; % For surface mesh
+                if size(Data,1)>N_Vertex
+                    Data(N_Vertex+1:end,:)=[];
+                elseif size(Data,1)<N_Vertex
+                    Flag=1;
+                    Message=['For data format HCP Surface, it requires data contains at least ',num2str(N_Vertex),' nodes\nBut the scan ',...
+                        Scan_File, ' contains ',nu2mstr(size(Data,1)),' nodes'];
+                    return
+                end
             case '.mat'
                 [Data,Flag,Message]=fLoad_MATLAB_Single_Variable(Scan_File);
                 if Flag==1
