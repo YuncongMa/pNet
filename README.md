@@ -14,7 +14,8 @@ Major functions:
 7. come with a help document that can be accessed directly on the app UI
 
 # Module
-![Screenshot 2023-05-23 at 11 42 44 AM](https://github.com/YuncongMa/pNet/assets/20191790/5dd5a8d9-475a-444b-8a30-e9331b3c1386)
+![Screenshot 2023-05-23 at 11 45 40 AM](https://github.com/YuncongMa/pNet/assets/20191790/e5d5ea2e-89bc-4676-b4d1-7516a3db9275)
+
 
 
 
