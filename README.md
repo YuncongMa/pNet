@@ -13,9 +13,14 @@ Major functions:
 6. provide MATLAB functions and scripts to carry out computation and visualization of group and personalized FNs
 7. come with a help document that can be accessed directly on the app UI
 
+# Module
+![1](https://github.com/YuncongMa/pNet/assets/20191790/48fc9dac-c427-4ea3-8674-d55335c44300)
 
-# GUI Module
-![Screenshot 2023-04-06 at 1 33 00 PM](https://user-images.githubusercontent.com/20191790/230453494-b7cb3911-ec70-429e-aa89-0bff099d008d.jpg)
+
+# GUI workflow
+![2](https://github.com/YuncongMa/pNet/assets/20191790/4c2e2255-ebe8-4d05-9f36-33640ed602eb)
+
+
 
 It consists of six major modules, including data loading, FN computation, group-level FN display, personalized FN display, statistics, and quality control. The six modules correspond to six major UI panels in pNet, and six subfolders in the pNet result folder. The pNet UI is designed to follow the left-to-right workflow direction to setup each step. Curved arrows show alternative workflows. The FN computation module (colored in light red) can use precomputed group-level FNs to derive personalized FNs as one option. Precomputed visualization of group-level and personalized FNs will be used in the two display modules (group FN and personalized FN). pNet features synchronized display to facilitate the comparisons between group-level and personalized FNs, as well as statistical results. The dashed double-sided arrows denote this display synchronization between three modules.
 
