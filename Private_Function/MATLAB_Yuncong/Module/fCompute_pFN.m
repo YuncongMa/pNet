@@ -1,5 +1,5 @@
 function [Flag,Message]=fCompute_pFN(App_Dir,Work_Dir)
-% Yuncong Ma, 3/2/2023
+% Yuncong Ma, 5/25/2023
 % Perform personalized FN computation
 % [Flag,Message]=fCompute_pFN(App_Dir,Work_Dir)
 
@@ -16,7 +16,7 @@ Scan_File=textscan(FID,'%s\n');
 Scan_File=Scan_File{1};
 fclose(FID);
 
-FID=fopen(fullfile(Work_Dir,'Load_Data','Subject_Folder.txt'));
+FID=fopen(fullfile(Work_Dir,'Load_Data','Subject_ID.txt'));
 Subject_Folder=textscan(FID,'%s\n');
 Subject_Folder=Subject_Folder{1};
 fclose(FID);

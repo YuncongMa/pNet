@@ -1,5 +1,5 @@
 function [Flag,Message]=fCompute_pFN_Single(App_Dir,Work_Dir,Compute_FN,Subject_Folder)
-% Yuncong Ma, 2/27/2023
+% Yuncong Ma, 5/25/2023
 % Compute Personalized FN in each subject folder
 % [Flag,Message]=fCompute_pFN_Single(App_Dir,Work_Dir,Compute_FN,Subject_Folder)
 
@@ -30,6 +30,14 @@ fprintf(FID,'fCompute_pFN_Single\n Start at %s\n',char(datetime('now')));
 
 % Load data
 [Data,Flag,Message]=fLoad_Scan(App_Dir,Work_Dir,Scan_List);
+% Concatenate Data on time dimension after normalization
+temp=[];
+for i=1:length(Data)
+    temp(end+1:end+size(Data{i},1),:)=dataPrepro(Data{i},'vp','vmax');
+end
+Data={temp};
+clear temp
+
 if Flag
     return
 end
