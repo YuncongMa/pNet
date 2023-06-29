@@ -14,13 +14,16 @@ Major functions:
 7. come with a help document that can be accessed directly on the app UI
 
 # Module
-![Screenshot 2023-05-23 at 11 45 40 AM](https://github.com/YuncongMa/pNet/assets/20191790/e5d5ea2e-89bc-4676-b4d1-7516a3db9275)
+![Screenshot 2023-06-29 at 10 57 59 AM](https://github.com/YuncongMa/pNet/assets/20191790/9546d31e-aa9a-4a9c-8558-a875c92da27e)
+
+
 
 
 
 
 # GUI workflow
-![2](https://github.com/YuncongMa/pNet/assets/20191790/4c2e2255-ebe8-4d05-9f36-33640ed602eb)
+
+![Screenshot 2023-06-29 at 10 58 25 AM](https://github.com/YuncongMa/pNet/assets/20191790/8bd6a580-dd3f-4003-b92e-487dd5c3bf11)
 
 
 
@@ -38,7 +41,10 @@ It consists of six major modules, including data loading, FN computation, group-
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
 
 # Data Structure
-![Screenshot 2023-04-06 at 1 34 11 PM](https://user-images.githubusercontent.com/20191790/230453690-b17706bb-2e76-4936-89bc-0902fd9cd1c9.jpg)
+![Screenshot 2023-06-29 at 10 58 52 AM](https://github.com/YuncongMa/pNet/assets/20191790/a72263c5-0a0d-4507-89f9-f22ba80c9853)
+
+
+
 Folder are noted in boxes with black borders above the black horizontal line, and files are in boxes without black border, separated into three categories (setting, data, and figure files) by the dashed lines. Boxes are color coded for different modules. In the first three modules, the setting files are present. In personalized FN folder, subfolders are named by subject information. In statistics folder, subfolders are named by their method information. 
 
 # Guideline
