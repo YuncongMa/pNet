@@ -1,0 +1,108 @@
+
+Start loading fMRI data at 2023-09-02 23:12:39
+
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/148941/func/148941_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/990366/func/990366_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/572045/func/572045_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/835657/func/835657_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/142828/func/142828_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2393)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/214221/func/214221_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2397)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/121921/func/121921_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/870861/func/870861_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/978578/func/978578_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/978578/func/978578_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/618952/func/618952_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/114318/func/114318_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/169949/func/169949_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/153833/func/153833_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2380)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/131823/func/131823_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/679770/func/679770_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/943862/func/943862_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/146129/func/146129_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2398)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/894774/func/894774_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/156233/func/156233_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2200)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/159441/func/159441_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2393)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/962058/func/962058_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/885975/func/885975_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/173940/func/173940_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/933253/func/933253_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/130417/func/130417_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/162026/func/162026_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/162026/func/162026_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/204622/func/204622_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/152427/func/152427_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/715041/func/715041_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/191841/func/191841_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/287248/func/287248_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/541943/func/541943_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/130922/func/130922_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/861456/func/861456_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/878776/func/878776_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/203923/func/203923_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2391)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/203923/func/203923_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2397)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/139637/func/139637_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/139637/func/139637_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/448347/func/448347_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/162935/func/162935_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/194443/func/194443_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/186545/func/186545_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/379657/func/379657_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/106319/func/106319_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/102311/func/102311_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/352738/func/352738_task-REST1_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+ loading scan /Volumes/Scratch_0/Scratch/HCP_XCPD/456346/func/456346_task-REST2_prep_s6mm.dtseries.nii
+ data size is (59412, 2400)
+
+Loaded data is a 2D matrix with size (119749, 59412)
+
+Start NMF for gFN using PyTorch at 2023-09-02 23:20:01
+
