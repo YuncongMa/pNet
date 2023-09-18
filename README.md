@@ -11,7 +11,8 @@ Major functions:
 4. perform statistical analysis to investigate the correlation between FN loading and behavior measurement
 5. provide both pre-computed and interactive visualization for group and personalized FNs and statistical results
 6. provide MATLAB functions and scripts to carry out computation and visualization of group and personalized FNs
-7. come with a help document that can be accessed directly on the app UI
+7. provide Python functions and scripts to carry out the computation
+8. come with a help document that can be accessed directly on the app UI
 
 # Module
 ![Screenshot 2023-06-29 at 10 57 59 AM](https://github.com/YuncongMa/pNet/assets/20191790/9546d31e-aa9a-4a9c-8558-a875c92da27e)
@@ -53,10 +54,11 @@ Folder are noted in boxes with black borders above the black horizontal line, an
 
 # Installation
 1. Download the whole package and run the pNet.mlapp in MATLAB with version not older than 2021A. Or install the pNet.mlappinstall into MATLAB APPS. Also we provide several versions of compiled pNet (in folder Compiled_Runtime) for different operation systems. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html.  Details can be found in the README.txt in each subfolder containing the compiled pNet.
-2. Additional installation information can be found in the help document (Help_Document.pdf).
-3. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
-4. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template".
-5. Several examples can be downloaded from Google Drive, please follow the section below "Example".
+2. The Python version requires version=3.8, with additional tools installed via the script 'Install_Toolbox.py'. pNet offers computation code built with either NumPy or PyTorch. The PyTorch version has significantly faster speed and capability on GPU accleration.
+3. Additional installation information can be found in the help document (Help_Document.pdf).
+4. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
+5. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template".
+6. Several examples can be downloaded from Google Drive, please follow the section below "Example".
 
 # Hardware requirement
 It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 16GB, and free disk storage at least 10GB. Large dataset and parallel computation will require more CPU cores, memory space, and disk space. CPU and memory inf, as well as estimated memory usage can be found in the parallel section.The pNet UI requires screen displaying resolution at least 1280x960. It is recommended to use an external montior with reosolution at least 1920x1080. 2k and 4k displays are desirable.
