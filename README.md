@@ -11,7 +11,7 @@ Major functions:
 4. perform statistical analysis to investigate the correlation between FN loading and behavior measurement
 5. provide both pre-computed and interactive visualization for group and personalized FNs and statistical results
 6. provide MATLAB functions and scripts to carry out computation and visualization of group and personalized FNs
-7. provide Python functions and scripts to carry out the computation
+7. provide Python functions and scripts to carry out the computation, using both Numpy and PyTorch for code readbility and fast comptutation
 8. come with a help document that can be accessed directly on the app UI
 
 # Module
