@@ -1071,10 +1071,10 @@ def compute_gNb(Brain_Template, logFile=None):
     return gNb
 
 
-def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, combineFLag=0,
+def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, combineScan=0,
                    samplingMethod='Subject', sampleSize=10, nBS=50, logFile=None):
     """
-    bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, combineFLag=0, samplingMethod='Subject', sampleSize=10, nBS=50, logFile=None)
+    bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, combineScan=0, samplingMethod='Subject', sampleSize=10, nBS=50, logFile=None)
     prepare bootstrapped scan file lists
 
     :param dir_output: directory of a folder to store bootstrapped files
@@ -1082,14 +1082,14 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
     :param file_group: a txt file that store group information corresponding to fMRI scan in file_scan
-    :param combineFLag: 0 or 1, whether to combine multiple fMRI scans for each subject
+    :param combineScan: 0 or 1, whether to combine multiple fMRI scans for each subject
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
     :param sampleSize: number of subjects selected for each bootstrapping run
     :param nBS: number of runs for bootstrap
     :param logFile: directory of a txt file
     :return: None
 
-    Yuncong Ma, 9/14/2023
+    Yuncong Ma, 9/18/2023
     """
 
     if logFile is not None:
@@ -1125,7 +1125,7 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
         if samplingMethod == 'Subject':
             ps = np.sort(np.random.choice(N_Subject, sampleSize, replace=False))
             for j in range(sampleSize):
-                if combineFLag == 1:
+                if combineScan == 1:
                     # Get all scans from the selected subject
                     temp = list_scan[np.where(np.compare_chararrays(list_subject_ID, subject_ID_unique[ps[j]], '==', False))[0]]
                     List_BS[j] = str.join('\n', temp)
@@ -1148,10 +1148,10 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
 
 
 def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1):
+                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
     """
     setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1)
+                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
     Setup the setting for NMF-based method to compute gFNs and pFNs
 
     :param dir_pnet_result: directory of the pNet result folder
@@ -1177,6 +1177,7 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gF
     :param Parallel: False or True, whether to enable parallel computation
     :param Computation_Mode: 'CPU'
     :param N_Thread: positive integers, used for parallel computation
+    :param dataPrecision: 'double' or 'single'
     :return: setting: a structure
 
     Yuncong Ma, 9/14/2023
@@ -1189,35 +1190,217 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gF
                 'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL, 'vxI': vxI, 'ard': ard, 'eta': eta, 'nRepeat': nRepeat}
     Personalized_FN = {'maxIter': maxIter, 'minIter': minIter, 'meanFitRatio': meanFitRatio, 'error': error,
                        'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL, 'vxI': vxI, 'ard': ard, 'eta': eta}
-    Computation = {'Parallel': Parallel, 'Model': Computation_Mode, 'N_Thread': N_Thread}
+    Computation = {'Parallel': Parallel, 'Model': Computation_Mode, 'N_Thread': N_Thread, 'dataPrecision': dataPrecision}
 
-    setting = {'Method': 'SR-NMF_1.0', 'K': K, 'Combine_Scan': Combine_Scan, 'Group_FN': Group_FN, 'Personalized_FN': Personalized_FN, 'Computation': Computation}
+    setting = {'Method': 'SR-NMF', 'K': K, 'Combine_Scan': Combine_Scan, 'Group_FN': Group_FN, 'Personalized_FN': Personalized_FN, 'Computation': Computation}
 
     write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
     return setting
 
 
-def module_FN_Computation(dir_pnet_result: str):
+def setup_pFN_folder(dir_pnet_result: str):
+    """
+    setup_pFN_folder(dir_pnet_result: str)
+    Setup sub-folders in Personalized_FN to
+
+    :param dir_pnet_result: directory of the pNet result folder
+    :return: list_subject_folder_unique: unique subject folder array for getting sub-folders in Personalized_FN
+
+    Yuncong Ma, 9/19/2023
+    """
 
     # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _, _ = setup_result_folder(dir_pnet_result)
+    dir_pnet_dataInput, dir_pnet_FNC, _, dir_pnet_pFN, _, _, _ = setup_result_folder(dir_pnet_result)
 
     # load settings for data input and FN computation
-    settingDataInput = load_json_setting(dir_pnet_dataInput)
-    settingFNC = load_json_setting(dir_pnet_FNC)
+    if not os.path.isfile(os.path.join(dir_pnet_FNC, 'Setting.json')):
+        raise ValueError('Cannot find the setting json file in folder FN_Computation')
+    setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+
+    combineScan = setting['combineScan']
+
+    file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
+    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+
+    list_scan = [line.replace('\n', '') for line in open(file_scan, 'r')]
+    list_subject_folder = [line.replace('\n', '') for line in open(file_subject_folder, 'r')]
+    list_subject_folder = np.array(list_subject_folder)
+    list_subject_folder_unique = np.unique(list_subject_folder)
+
+    # Check consistency of setting and files
+    if len(list_subject_folder) != len(list_scan):
+        raise ValueError('The length of contents in Scan_List.txt and Subject_Folder.txt does NOT match')
+    if combineScan and len(list_subject_folder_unique) == len(list_subject_folder):
+        raise ValueError('When combineScan is enabled, the txt file Subject_Folder.txt is supposed to show repeated sub-folder names')
+
+    N_Scan = list_subject_folder_unique.shape[0]
+    for i in range(N_Scan):
+        template = list_subject_folder_unique[i]
+        # find scan indexes that match to the subject folder
+        scan_index = [i for i, x in enumerate(list_subject_folder) if x == template]
+        dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, template)
+        file_scan_ind = os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt')
+        file_scan_ind = open(file_scan_ind, 'w')
+        for j in range(len(scan_index)):
+            print(list_scan[scan_index[j]] + '\n', file=file_scan_ind)
+        file_scan_ind.close()
+
+    return list_subject_folder_unique
+
+
+def run_FN_Computation(dir_pnet_result: str):
+    """
+    run_FN_Computation(dir_pnet_result: str)
+    run the FN Computation module with settings ready in Data_Input and FN_Computation
+
+    :param dir_pnet_result: directory of pNet result folder
+
+    Yuncong Ma, 9/18/2023
+    """
+
+    # get directories of sub-folders
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _, _ = setup_result_folder(dir_pnet_result)
+
+    # load settings for data input and FN computation
+    if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
+        raise ValueError('Cannot find the setting json file in folder Data_Input')
+    if not os.path.isfile(os.path.join(dir_pnet_FNC, 'Setting.json')):
+        raise ValueError('Cannot find the setting json file in folder FN_Computation')
+    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
+    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
     setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
 
-    # Basic settings
-    Data_Type = setting['Data_Input']['Data_Type']
-    Data_Format = setting['Data_Input']['Data_Format']
+    # load basic settings
+    dataType = setting['Data_Input']['Data_Type']
+    dataFormat = setting['Data_Input']['Data_Format']
 
-    # Brain Template
+    # load Brain Template
     Brain_Template = load_matlab_single_variable(os.path.join(dir_pnet_dataInput, 'Brain_Template.mat'))
+    if dataType == 'Volume':
+        Brain_Mask = Brain_Template['Mask']
+    else:
+        Brain_Mask = None
 
+    # Start computation using SP-NMF
+    if setting['FN_Computation']['Method'] == 'SR-NMF':
 
-    return
+        # Generate additional parameters
+        gNb = compute_gNb(Brain_Template)
+        scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb})
 
+        # ============== Bootstrap ============== #
+        # sub-folder in FNC for storing bootstrapped results
+        dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
+        if not os.path.exists(dir_pnet_BS):
+            os.makedirs(dir_pnet_BS)
+        # Log
+        logFile = os.path.join(dir_pnet_BS, 'Log.log')
 
+        # ============== gFN Computation ============== #
+        if setting['FN_Computation']['Compute_gFN']:
+            # 2 steps
+            # step 1 ============== bootstrap
+            # Input files
+            file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
+            file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
+            file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+            file_group = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
+            if not os.path.exists(file_group):
+                file_group = None
+            # Parameters
+            combineScan = setting['FN_Computation']['combineScan']
+            samplingMethod = setting['FN_Computation']['BootStrap']['samplingMethod']
+            sampleSize = setting['FN_Computation']['BootStrap']['sampleSize']
+            nBS = setting['FN_Computation']['BootStrap']['nBS']
 
+            # Perform bootstrap
+            bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder, file_group=file_group, combineScan=combineScan,
+                           samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, logFile=logFile)
 
+            # Parameters
+            K = setting['FN_Computation']['K']
+            maxIter = setting['FN_Computation']['Group_FN']['maxIter']
+            minIter = setting['FN_Computation']['Group_FN']['minIter']
+            error = setting['FN_Computation']['Group_FN']['error']
+            normW = setting['FN_Computation']['Group_FN']['normW']
+            Alpha = setting['FN_Computation']['Group_FN']['Alpha']
+            Beta = setting['FN_Computation']['Group_FN']['Beta']
+            alphaS = setting['FN_Computation']['Group_FN']['alphaS']
+            alphaL = setting['FN_Computation']['Group_FN']['alphaL']
+            vxI = setting['FN_Computation']['Group_FN']['vxI']
+            ard = setting['FN_Computation']['Group_FN']['ard']
+            eta = setting['FN_Computation']['Group_FN']['eta']
+            nRepeat = setting['FN_Computation']['Group_FN']['nRepeat']
+            dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
 
+            # NMF on bootstrapped subsets
+            for rep in range(1, 1+nBS):
+                # log file
+                logFile = os.path.join(dir_pnet_BS, str(rep), 'Log.log')
+                # load data
+                file_scan_list = os.path.join(dir_pnet_BS, str(rep), 'Scan_List.txt')
+                Data = load_fmri_scan(file_scan_list, dataType=dataType, dataFormat=dataFormat, Reshape=True, Brain_Mask=Brain_Mask,
+                                      Normalization='vp-vmax', logFile=logFile)
+                # perform NMF
+                FN_BS = gFN_NMF(Data, K, gNb, maxIter=maxIter, minIter=minIter, error=error, normW=normW,
+                                Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
+                                nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=logFile)
+                # save results
+                FN_BS = reshape_FN(FN_BS, dataType=dataType, Brain_Mask=Brain_Mask)
+                sio.savemat(os.path.join(dir_pnet_BS, str(rep), 'FN.mat'), {"FN": FN_BS})
+
+            # step 2 ============== fuse results
+            # Generate gFNs
+            FN_BS = np.empty(nBS, dtype=np.ndarray)
+            # load bootstrapped results
+            for rep in range(1, nBS+1):
+                FN_BS[rep-1] = np.array(reshape_fmri_data(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
+            gFN_BS = np.concatenate(FN_BS, axis=1)
+            # log
+            logFile = os.path.join(dir_pnet_gFN, 'Log.log')
+            # Fuse bootstrapped results
+            gFN = gFN_fusion_NCut(gFN_BS, K, logFile=logFile)
+            # output
+            gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+        # ============================================= #
+
+        # ============== pFN Computation ============== #
+        # load precomputed gFNs
+        gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
+        # reshape to 2D if required
+        gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+        # setup folders in Personalized_FN
+        list_subject_folder = setup_pFN_folder(dir_pnet_result)
+        N_Scan = len(list_subject_folder)
+        for i in range(1, N_Scan+1):
+            print(' Processing ' + str(i))
+            dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder[i-1])
+            # parameter
+            maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
+            minIter = setting['FN_Computation']['Personalized_FN']['minIter']
+            meanFitRatio = setting['FN_Computation']['Personalized_FN']['meanFitRatio']
+            error = setting['FN_Computation']['Personalized_FN']['error']
+            normW = setting['FN_Computation']['Personalized_FN']['normW']
+            Alpha = setting['FN_Computation']['Personalized_FN']['Alpha']
+            Beta = setting['FN_Computation']['Personalized_FN']['Beta']
+            alphaS = setting['FN_Computation']['Personalized_FN']['alphaS']
+            alphaL = setting['FN_Computation']['Personalized_FN']['alphaL']
+            vxI = setting['FN_Computation']['Personalized_FN']['vxI']
+            initConv = setting['FN_Computation']['Personalized_FN']['initConv']
+            ard = setting['FN_Computation']['Personalized_FN']['ard']
+            eta = setting['FN_Computation']['Personalized_FN']['eta']
+            dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
+            # log file
+            logFile = os.path.join(dir_pnet_pFN_indv, 'Log.log')
+            # load data
+            Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'), dataType, dataFormat=dataFormat, logFile=logFile)
+            # perform NMF
+            TC, pFN = pFN_NMF(Data, gFN, gNb, maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
+                              Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, initConv=initConv, ard=ard, eta=eta,
+                              dataPrecision=dataPrecision, logFile=logFile)
+            # output
+            pFN = reshape_FN(pFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
+            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN})
+            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC})
+        # ============================================= #

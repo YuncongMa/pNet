@@ -18,10 +18,7 @@ from FN_Computation import *
 from FN_Computation_torch import *
 from Computation_Environment import *
 from Quality_Control import *
-
-
-# ------------- Workflow ------------- #
-
+from Workflow import run_workflow
 
 
 
