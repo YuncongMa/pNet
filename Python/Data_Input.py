@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/12/2023
+# Yuncong Ma, 9/18/2023
 # Data Input module of pNet
 
 
@@ -6,6 +6,7 @@
 # Packages
 import nibabel as nib
 import numpy as np
+import scipy.io
 import scipy.io as sio
 import os
 import re
@@ -400,10 +401,10 @@ def load_fmri_scan(file_scan_list: str, dataType='Surface', dataFormat='HCP Surf
     return Data
 
 
-def compute_Brain_Surface(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
+def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
                           maskValue=0, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None):
     """
-    compute_Brain_Surface(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
+    compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
                           maskType=0, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None)
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
@@ -419,7 +420,7 @@ def compute_Brain_Surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     :param logFile:
     :return: Brain_Surface: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R)
 
-    Yuncong Ma, 9/7/2023
+    Yuncong Ma, 9/18/2023
     """
 
     if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
@@ -467,11 +468,62 @@ def compute_Brain_Surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     return Brain_Surface
 
 
-def compute_brain_template():
+def compute_brain_template(dataType: str, dataFormat: str, file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str,
+                           file_mask_vol: str, file_overlayImage: str, maskValue=0, file_surfL_inflated=None, file_surfR_inflated=None,
+                           logFile=None):
+    """
+    compute_brain_template(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
+                          maskType=0, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None)
+    Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
-    Brain_Template = {}
-    
+    :param dataType: 'Surface', 'Volume'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'FreeSurfer Surface (*.)', or 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
+    :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
+    :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
+    :param file_maskR: file that stores the mask information of the right hemisphere, a 1D 0-1 vector
+    :param file_surfL_inflated: file that stores the inflated surface shape information of the left hemisphere, including vertices and faces
+    :param file_surfR_inflated: file that stores the inflated surface shape information of the right hemisphere, including vertices and faces
+    :param file_mask_vol: file of a mask file for volume-based data type
+    :param file_overlayImage: file of a background image for visualizing volume-based results
+    :param maskValue: 0 or 1, 0 means 0s in mask files are useful vertices, otherwise vice versa. maskValue=0 for medial wall in HCP data, and maskValue=1 for brain masks
+
+    :param logFile:
+    :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
+                            a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
+
+    Yuncong Ma, 9/18/2023
+    """
+
+    if dataType == 'Volume':
+        Brain_Mask = load_fmri_scan(file_mask_vol, Reshape=None, Normalization=None)
+        Overlay_Image = load_fmri_scan(file_overlayImage, Reshape=None, Normalization=None)
+        Brain_Mask = (Brain_Mask == maskValue)
+        Brain_Template = {'Data_Type': dataType, 'Data_Format': dataFormat, 'Brain_Mask': Brain_Mask, 'Overlay_Image': Overlay_Image}
+
+    elif dataType == 'Surface':
+        Brain_Template = compute_brain_surface(file_surfL, file_surfR, file_maskL, file_maskR,
+                                               file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated, maskValue=maskValue,
+                                               dataType=dataType, dataFormat=dataFormat, logFile=logFile)
+
+    else:
+        raise ValueError('Unknown data type: ' + dataType)
+
     return Brain_Template
+
+
+def setup_brain_template(dir_pnet_dataInput: str, Brain_Template):
+    """
+    setup_brain_template(dir_pnet_result: str, Brain_Template)
+    Set up the Brain_Template
+
+    :param dir_pnet_dataInput: the directory of the Data Input folder
+    :param Brain_Template: a structure created by function compute_brain_template
+
+    Yuncong Ma, 9/18/2023
+    """
+
+    scipy.io.savemat(dir_pnet_dataInput, {'Brain_Template': Brain_Template})
 
 
 def reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None):
@@ -598,7 +650,7 @@ def setup_dataInput(dir_pnet_dataInput: str, dataType='Surface', dataFormat='HCP
 
     :param dir_pnet_dataInput: directory of the folder Data_Input
     :param dataType: 'Surface' or 'Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)'
     :return: setting
 
     Yuncong Ma, 9/14/2023
@@ -607,5 +659,31 @@ def setup_dataInput(dir_pnet_dataInput: str, dataType='Surface', dataFormat='HCP
     setting = {'Data_Type': dataType, 'Data_Format': dataFormat}
     write_json_setting(setting, os.path.join(dir_pnet_dataInput, 'Setting.json'))
     return setting
+
+
+def setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Manual', Combine_Scan=False):
+    """
+    setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Manual',Combine_Scan=False)
+    Set up a few txt files for labeling scans
+    
+    :param dir_pnet_dataInput: 
+    :param file_scan: a txt file that stores directories of all fMRI scans
+    :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
+    :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
+    :param file_group: a txt file that store group information corresponding to fMRI scan in file_scan
+    :param scan_info: 'Automatic' or 'Manual', 'Manual' requires manual input of file_subject_ID, file_subject_folder and file_group
+    :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
+
+    Yuncong Ma, 9/19/2023
+    """
+
+    if scan_info == 'Manual':
+        # file_subject_ID is required for Manual setting
+        if file_subject_ID is None:
+            raise ValueError('When scan_info is set to "Manual", file_subject_ID is required')
+
+        if file_subject_folder is None and file_group is None:
+
+
 
 
