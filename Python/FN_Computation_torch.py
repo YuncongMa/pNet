@@ -855,7 +855,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
     # clustering by NCut
 
     # Get similarity between samples
-    corrVal = mat_corr_torch(gFN_BS, Y=None, dataPrecision=dataPrecision)  # similarity between FNs, [K * n_BS, K * n_BS]
+    corrVal = mat_corr_torch(gFN_BS, dataPrecision=dataPrecision)  # similarity between FNs, [K * n_BS, K * n_BS]
     corrVal[torch.isnan(corrVal)] = -1
     nDis = 1 - corrVal  # Transform Pearson correlation to non-negative values similar to distance
     triuInd = torch.triu(torch.ones(nDis.shape), 1)  # Index of upper triangle
@@ -963,7 +963,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
     for ki in range(K):
         if torch.sum(C == ki) > 1:
             candSet = gFN_BS[:, C == ki]  # Get the candidate set of FNs assigned to cluster ki
-            corrW = torch.abs(mat_corr_torch(candSet, Y=None, dataPrecision=dataPrecision))  # Get the similarity between candidate FNs
+            corrW = torch.abs(mat_corr_torch(candSet, dataPrecision=dataPrecision))  # Get the similarity between candidate FNs
             corrW[torch.isnan(corrW)] = 0
             mInd = torch.argmax(torch.sum(corrW, dim=0), dim=0)  # Find the FN with the highest total similarity to all other FNs
             gFN[:, ki] = candSet[:, mInd]

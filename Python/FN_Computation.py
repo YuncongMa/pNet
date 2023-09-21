@@ -818,7 +818,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
     # clustering by NCut
 
     # Get similarity between samples
-    corrVal = mat_corr(gFN_BS, Y=None, dataPrecision=dataPrecision)  # similarity between FNs, [K * n_BS, K * n_BS]
+    corrVal = mat_corr(gFN_BS, dataPrecision=dataPrecision)  # similarity between FNs, [K * n_BS, K * n_BS]
     corrVal[np.isnan(corrVal)] = -1
     nDis = 1 - corrVal  # Transform Pearson correlation to non-negative values similar to distance
     triuInd = np.triu(np.ones(nDis.shape), 1)  # Index of upper triangle
@@ -920,7 +920,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
     for ki in range(K):
         if np.sum(C == ki) > 1:
             candSet = gFN_BS[:, C == ki]  # Get the candidate set of FNs assigned to cluster ki
-            corrW = np.abs(mat_corr(candSet, Y=None, dataPrecision=dataPrecision))  # Get the similarity between candidate FNs
+            corrW = np.abs(mat_corr(candSet, dataPrecision=dataPrecision))  # Get the similarity between candidate FNs
             corrW[np.isnan(corrW)] = 0
             mInd = np.argmax(np.sum(corrW, axis=0), axis=0)  # Find the FN with the highest total similarity to all other FNs
             gFN[:, ki] = candSet[:, mInd]
