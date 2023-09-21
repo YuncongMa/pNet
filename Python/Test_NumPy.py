@@ -5,9 +5,5 @@ import scipy
 import pNet
 import json
 
-temp=np.random.rand(109,91,109,17)
-mask = np.random.randint(0,2,(109,91,109))
-temp=pNet.reshape_FN(temp, 'Volume', mask)
-print(temp.shape)
-temp=pNet.reshape_FN(temp, 'Volume', mask)
-print(temp.shape)
+pNet.setup_scan_info('/Users/yuncongma/Documents/Document/fMRI/Myworks/pNet/Test/Test_FN17_HCP_XCPD',
+                     '/Users/yuncongma/Documents/Document/fMRI/Myworks/pNet/Test/Test_FN17_HCP_XCPD/Data_Input/Scan_List.txt')

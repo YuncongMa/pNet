@@ -661,28 +661,97 @@ def setup_dataInput(dir_pnet_dataInput: str, dataType='Surface', dataFormat='HCP
     return setting
 
 
-def setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Manual', Combine_Scan=False):
+def setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group_ID=None, scan_info='Automatic', Combine_Scan=False):
     """
-    setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Manual',Combine_Scan=False)
+    setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Automatic',Combine_Scan=False)
     Set up a few txt files for labeling scans
+    file_scan contains the directories of all fMRI scans
+    file_subject_ID contains the subject ID information for each corresponding fMRI scans in file_scan
+    file_subject_folder contains the sub-folder names for each corresponding fMRI scans in file_scan, in order to store results for each fMRI scan or combined scans
+    file_Group_ID contains the group ID for each corresponding fMRI scans in file_scan, in order to do desired sampling based on the group information
+
     
-    :param dir_pnet_dataInput: 
+    :param dir_pnet_dataInput: directory of the Data_Input folder or a directory to save Scan_List.txt, Subject_ID.txt, Subject_Folder.txt and Group_ID.txt
     :param file_scan: a txt file that stores directories of all fMRI scans
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
-    :param file_group: a txt file that store group information corresponding to fMRI scan in file_scan
+    :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
     :param scan_info: 'Automatic' or 'Manual', 'Manual' requires manual input of file_subject_ID, file_subject_folder and file_group
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
 
-    Yuncong Ma, 9/19/2023
+    Yuncong Ma, 9/21/2023
     """
 
     if scan_info == 'Manual':
         # file_subject_ID is required for Manual setting
         if file_subject_ID is None:
             raise ValueError('When scan_info is set to "Manual", file_subject_ID is required')
+        if file_subject_folder is None:
+            raise ValueError('When scan_info is set to "Manual", file_subject_folder is required')
 
-        if file_subject_folder is None and file_group is None:
+        # copy files to dir_pnet_dataInput
+        if os.path.join(dir_pnet_dataInput, 'Scan_List.txt') != file_scan:
+            dest_file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
+            dest_file_scan = open(dest_file_scan, 'w')
+            [print(line.replace('\n', ''), file=dest_file_scan) for line in open(file_scan, 'r')]
+            dest_file_scan.close()
+        if os.path.join(dir_pnet_dataInput, 'Subject_ID.txt') != file_subject_ID:
+            dest_file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
+            dest_file_subject_ID = open(dest_file_subject_ID, 'w')
+            [print(line.replace('\n', ''), file=dest_file_subject_ID) for line in open(file_subject_ID, 'r')]
+            dest_file_subject_ID.close()
+        if os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt') != file_subject_folder:
+            dest_file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+            dest_file_subject_folder = open(dest_file_subject_folder, 'w')
+            [print(line.replace('\n', ''), file=dest_file_subject_folder) for line in open(file_subject_folder, 'r')]
+            dest_file_subject_folder.close()
+        if file_group_ID is not None and os.path.join(dir_pnet_dataInput, 'Group_ID.txt') != file_group_ID:
+            dest_file_group_ID = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
+            dest_file_group_ID = open(dest_file_group_ID, 'w')
+            [print(line.replace('\n', ''), file=dest_file_group_ID) for line in open(file_group_ID, 'r')]
+            dest_file_group_ID.close()
+
+    elif scan_info == 'Automatic':
+        # read the scan list file
+        list_scan = [line.replace('\n', '') for line in open(file_scan, 'r')]
+        N_Scan = len(list_scan)
+        # Automatically extract the common directory in list_scan as the root_directory to generate subject_ID and subject_folder
+        # Subject ID is extracted as the first level sub-folder names
+        # Subject folder will be either subject_ID/ numbers starting from 1 to N, or subject_ID when Combine_Scan is enabled
+        if file_subject_ID is None and file_subject_folder is None:
+            common_prefix = os.path.commonprefix(list_scan)
+            root_directory = os.path.dirname(common_prefix)
+            list_subject_ID = [os.path.normpath(list_scan[i][len(root_directory)+1 : -1]).split(os.path.sep)[0] for i in range(N_Scan)]
+            list_subject_ID_unique = np.unique(np.array(list_subject_ID))
+            N_Subject = list_subject_ID_unique.shape[0]
+            list_subject_folder = list_subject_ID.copy()
+            if not Combine_Scan:
+                for i in range(N_Subject):
+                    ps = [j for j, x in enumerate(list_subject_ID) if x == list_subject_ID_unique[i]]
+                    for j in range(len(ps)):
+                        list_subject_folder[ps[j]] = os.path.join(list_subject_folder[ps[j]], str(j+1))
+
+            # Output
+            # copy files to dir_pnet_dataInput
+            if os.path.join(dir_pnet_dataInput, 'Scan_List.txt') != file_scan:
+                dest_file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
+                dest_file_scan = open(dest_file_scan, 'w')
+                [print(line.replace('\n', ''), file=dest_file_scan) for line in open(file_scan, 'r')]
+                dest_file_scan.close()
+            file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
+            file_subject_ID = open(file_subject_ID, 'w')
+            for i in range(len(list_subject_ID)):
+                print(list_subject_ID[i], file=file_subject_ID)
+            file_subject_ID.close()
+            file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+            file_subject_folder = open(file_subject_folder, 'w')
+            for i in range(len(list_subject_folder)):
+                print(list_subject_folder[i], file=file_subject_folder)
+            file_subject_folder.close()
+
+
+
+
 
 
 

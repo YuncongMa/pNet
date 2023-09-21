@@ -66,7 +66,7 @@ def run_workflow(dir_pnet_result: str, dataType: str, dataFormat: str,
     :param N_Thread: positive integers, used for parallel computation
     :param dataPrecision: 'double' or 'single'
 
-    Yuncong Ma, 9/19/2023
+    Yuncong Ma, 9/21/2023
     """
 
     # setup all sub-folders in the pNet result folder
@@ -75,14 +75,17 @@ def run_workflow(dir_pnet_result: str, dataType: str, dataFormat: str,
     # ============== Data Input ============== #
     # setup_dataInput
     setup_dataInput(dir_pnet_dataInput, dataType=dataType, dataFormat=dataFormat)
-    setup_scan_info(dir_pnet_dataInput=dir_pnet_dataInput, file_scan=file_scan, file_subject_ID=file_subject_ID, file_subject_folder=file_subject_folder, file_group=file_group,
+    setup_scan_info(dir_pnet_dataInput=dir_pnet_dataInput, file_scan=file_scan, file_subject_ID=file_subject_ID,
+                    file_subject_folder=file_subject_folder, file_group_ID=file_group,
                     scan_info=scan_info, Combine_Scan=Combine_Scan)
     # ============================================= #
 
     # ============== FN Computation ============== #
     # setup parameters for FN computation
-    setup_NMF_setting(dir_pnet_result, K=K, Combine_Scan=Combine_Scan, Compute_gFN=Compute_gFN, samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, maxIter=maxIter,
-                      minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW, Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta, nRepeat=nRepeat,
+    setup_NMF_setting(dir_pnet_result, K=K, Combine_Scan=Combine_Scan, Compute_gFN=Compute_gFN,
+                      samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, maxIter=maxIter,
+                      minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
+                      Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta, nRepeat=nRepeat,
                       Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread, dataPrecision=dataPrecision)
     # perform FN computation
     run_FN_Computation(dir_pnet_result)

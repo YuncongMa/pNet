@@ -1071,7 +1071,7 @@ def compute_gNb(Brain_Template, logFile=None):
     return gNb
 
 
-def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, combineScan=0,
+def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group_ID=None, combineScan=0,
                    samplingMethod='Subject', sampleSize=10, nBS=50, logFile=None):
     """
     bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, combineScan=0, samplingMethod='Subject', sampleSize=10, nBS=50, logFile=None)
@@ -1081,7 +1081,7 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
     :param file_scan: a txt file that stores directories of all fMRI scans
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
-    :param file_group: a txt file that store group information corresponding to fMRI scan in file_scan
+    :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
     :param combineScan: 0 or 1, whether to combine multiple fMRI scans for each subject
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
     :param sampleSize: number of subjects selected for each bootstrapping run
@@ -1089,7 +1089,7 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
     :param logFile: directory of a txt file
     :return: None
 
-    Yuncong Ma, 9/18/2023
+    Yuncong Ma, 9/21/2023
     """
 
     if logFile is not None:
@@ -1101,17 +1101,17 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
     subject_ID_unique = np.unique(list_subject_ID)
     N_Subject = subject_ID_unique.shape[0]
     list_subject_folder = np.array([line.replace('\n', '') for line in open(file_subject_folder, 'r')])
-    if file_group is not None:
-        list_group = ''
+    if file_group_ID is not None:
+        list_group_D = ''
     else:
-        list_group = None
-    if list_group is not None:
+        list_group_D = None
+    if list_group_D is not None:
         group_unique = np.unique(list_subject_ID)
 
     # check parameter
     if sampleSize >= N_Subject:
         raise ValueError('The number of randomly selected subjects should be fewer than the total number of subjects')
-    if samplingMethod == 'Group_Subject' and (list_group is None or len(list_group) == 0):
+    if samplingMethod == 'Group_Subject' and (list_group_D is None or len(list_group_D) == 0):
         raise ValueError('Group information is absent')
     if samplingMethod != 'Subject' and samplingMethod != 'Group_Subject':
         raise ValueError('Unknown sampling method for bootstrapping: ' + samplingMethod)
@@ -1255,7 +1255,7 @@ def run_FN_Computation(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 9/18/2023
+    Yuncong Ma, 9/19/2023
     """
 
     # get directories of sub-folders
@@ -1281,31 +1281,29 @@ def run_FN_Computation(dir_pnet_result: str):
     else:
         Brain_Mask = None
 
+    # ============== gFN Computation ============== #
     # Start computation using SP-NMF
     if setting['FN_Computation']['Method'] == 'SR-NMF':
 
-        # Generate additional parameters
-        gNb = compute_gNb(Brain_Template)
-        scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb})
-
-        # ============== Bootstrap ============== #
-        # sub-folder in FNC for storing bootstrapped results
-        dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-        if not os.path.exists(dir_pnet_BS):
-            os.makedirs(dir_pnet_BS)
-        # Log
-        logFile = os.path.join(dir_pnet_BS, 'Log.log')
-
-        # ============== gFN Computation ============== #
         if setting['FN_Computation']['Compute_gFN']:
             # 2 steps
             # step 1 ============== bootstrap
+            # sub-folder in FNC for storing bootstrapped results
+            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
+            if not os.path.exists(dir_pnet_BS):
+                os.makedirs(dir_pnet_BS)
+            # Log
+            logFile = os.path.join(dir_pnet_BS, 'Log.log')
+
+            # Generate additional parameters
+            gNb = compute_gNb(Brain_Template)
+            scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb})
             # Input files
             file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
             file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
             file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
-            file_group = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
-            if not os.path.exists(file_group):
+            file_group_ID = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
+            if not os.path.exists(file_group_ID):
                 file_group = None
             # Parameters
             combineScan = setting['FN_Computation']['combineScan']
@@ -1313,8 +1311,8 @@ def run_FN_Computation(dir_pnet_result: str):
             sampleSize = setting['FN_Computation']['BootStrap']['sampleSize']
             nBS = setting['FN_Computation']['BootStrap']['nBS']
 
-            # Perform bootstrap
-            bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder, file_group=file_group, combineScan=combineScan,
+            # create scan lists for bootstrap
+            bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder, file_group_ID=file_group_ID, combineScan=combineScan,
                            samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, logFile=logFile)
 
             # Parameters
