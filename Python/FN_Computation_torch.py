@@ -13,7 +13,7 @@ import torch
 
 # other functions of pNet
 from Data_Input import *
-from FN_Computation import construct_Laplacian_gNb, compute_gNb, bootstrap_scan
+from FN_Computation import construct_Laplacian_gNb, compute_gNb, bootstrap_scan, setup_NMF_setting
 
 
 def mat_corr_torch(X, Y=None, dataPrecision='double'):
@@ -603,7 +603,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
         oldLogL = LogL.clone()
 
         # QC Control
-        temp = mat_corr_torch(initV, V)
+        temp = mat_corr_torch(initV, V, dataPrecision=dataPrecision)
         QC_Spatial_Correspondence = torch.clone(torch.diag(temp))
         temp -= torch.diag(torch.diag(temp))
         QC_Spatial_Correspondence_Control = torch.max(temp, dim=1)[0]
@@ -855,7 +855,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
     # clustering by NCut
 
     # Get similarity between samples
-    corrVal = mat_corr_torch(gFN_BS)  # similarity between FNs, [K * n_BS, K * n_BS]
+    corrVal = mat_corr_torch(gFN_BS, Y=None, dataPrecision=dataPrecision)  # similarity between FNs, [K * n_BS, K * n_BS]
     corrVal[torch.isnan(corrVal)] = -1
     nDis = 1 - corrVal  # Transform Pearson correlation to non-negative values similar to distance
     triuInd = torch.triu(torch.ones(nDis.shape), 1)  # Index of upper triangle
@@ -963,7 +963,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
     for ki in range(K):
         if torch.sum(C == ki) > 1:
             candSet = gFN_BS[:, C == ki]  # Get the candidate set of FNs assigned to cluster ki
-            corrW = torch.abs(mat_corr_torch(candSet))  # Get the similarity between candidate FNs
+            corrW = torch.abs(mat_corr_torch(candSet, Y=None, dataPrecision=dataPrecision))  # Get the similarity between candidate FNs
             corrW[torch.isnan(corrW)] = 0
             mInd = torch.argmax(torch.sum(corrW, dim=0), dim=0)  # Find the FN with the highest total similarity to all other FNs
             gFN[:, ki] = candSet[:, mInd]
@@ -1017,3 +1017,45 @@ def bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, 
     """
 
     bootstrap_scan(dir_output, file_scan, file_subject_ID, file_subject_folder, file_group, BS, N_BS, combineFLag, samplingMethod, logFile)
+
+
+def setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
+                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1):
+    """
+    setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
+                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1)
+    Setup the setting for NMF-based method to compute gFNs and pFNs
+
+    :param dir_pnet_result: directory of the pNet result folder
+    :param K: number of FNs
+    :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
+    :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
+    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
+    :param sampleSize: number of subjects selected for each bootstrapping run
+    :param nBS: number of runs for bootstrap
+    :param maxIter: maximum iteration number for multiplicative update
+    :param minIter: minimum iteration in case fast convergence
+    :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
+    :param error: difference of cost function for convergence
+    :param normW: 1 or 2, normalization method for W used in Laplacian regularization
+    :param Alpha: hyper parameter for spatial sparsity
+    :param Beta: hyper parameter for Laplacian sparsity
+    :param alphaS: internally determined, the coefficient for spatial sparsity based Alpha, data size, K, and gNb
+    :param alphaL: internally determined, the coefficient for Laplacian sparsity based Beta, data size, K, and gNb
+    :param vxI: flag for using the temporal correlation between nodes (vertex, voxel)
+    :param ard: 0 or 1, flat for combining similar clusters
+    :param eta: a hyper parameter for the ard regularization term
+    :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
+    :param Parallel: False or True, whether to enable parallel computation
+    :param Computation_Mode: 'CPU'
+    :param N_Thread: positive integers, used for parallel computation
+    :return: setting: a structure
+
+    Yuncong Ma, 9/18/2023
+    """
+
+    setting = setup_NMF_setting(dir_pnet_result, K=K, Combine_Scan=Combine_Scan, Compute_gFN=Compute_gFN, samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
+                                maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW, Alpha=Alpha, Beta=Beta,
+                                alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta, nRepeat=nRepeat, Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread)
+
+    return setting
