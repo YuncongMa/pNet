@@ -16,6 +16,7 @@ from FN_Computation import *
 from FN_Computation_torch import *
 from Computation_Environment import *
 from Quality_Control import *
+from Quality_Control_torch import *
 
 
 def run_workflow(dir_pnet_result: str, dataType: str, dataFormat: str,
@@ -24,7 +25,7 @@ def run_workflow(dir_pnet_result: str, dataType: str, dataFormat: str,
                  Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50,
                  maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
                  Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
-                 Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
+                 Parallel=False, Computation_Mode='CPU_Numpy', N_Thread=1, dataPrecision='double'):
     """
     run_workflow(dir_pnet_result: str, dataType: str, dataFormat: str, file_scan: str, file_subjectID: str,
     file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group: str, scan_info='Manual',
@@ -62,7 +63,7 @@ def run_workflow(dir_pnet_result: str, dataType: str, dataFormat: str,
     :param eta: a hyper parameter for the ard regularization term
     :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
     :param Parallel: False or True, whether to enable parallel computation
-    :param Computation_Mode: 'CPU'
+    :param Computation_Mode: 'CPU_Numpy', 'CPU_Torch'
     :param N_Thread: positive integers, used for parallel computation
     :param dataPrecision: 'double' or 'single'
 
@@ -88,14 +89,18 @@ def run_workflow(dir_pnet_result: str, dataType: str, dataFormat: str,
                       Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta, nRepeat=nRepeat,
                       Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread, dataPrecision=dataPrecision)
     # perform FN computation
-    run_FN_Computation(dir_pnet_result)
+    if Computation_Mode == 'CPU_Numpy':
+        run_FN_Computation(dir_pnet_result)
+    elif Computation_Mode == 'CPU_Torch':
+        run_FN_Computation_torch(dir_pnet_result)
     # ============================================= #
 
     # ============== Quality Control ============== #
     # perform quality control
-    run_quality_control(dir_pnet_result)
+    if Computation_Mode == 'CPU_Numpy':
+        run_quality_control(dir_pnet_result)
+    elif Computation_Mode == 'CPU_Torch':
+        run_quality_control_torch(dir_pnet_result)
     # ============================================= #
-
-
 
 
