@@ -3,7 +3,7 @@
 import os
 import pNet
 
-Test = 4
+Test = 3
 
 if Test == 1:
     file_scan = '/Volumes/Scratch_0/pNet/Test/Test_FN17_UKBB/Data_Input/Scan_List.txt'

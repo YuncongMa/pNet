@@ -9,6 +9,7 @@
 
 # Example
 from Example import Example
+from Brain_Template import Brain_Template
 
 # Module
 # This script builds the five modules of pNet

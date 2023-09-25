@@ -21,33 +21,35 @@ from Quality_Control_torch import *
 
 def run_workflow(dir_pnet_result: str,
                  dataType: str, dataFormat: str,
-                 file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Manual',
+                 file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Automatic',
                  file_Brain_Template=None,
                  file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
                  file_mask_vol=None, file_overlayImage=None, maskValue=0, file_surfL_inflated=None,
                  file_surfR_inflated=None,
                  K=17, Combine_Scan=False,
-                 Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50,
+                 Compute_gFN=True, file_gFN=None,
+                 samplingMethod='Subject', sampleSize=10, nBS=50,
                  maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
                  Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
                  Parallel=False, Computation_Mode='CPU_Numpy', N_Thread=1, dataPrecision='double'):
     """
     run_workflow(dir_pnet_result: str,
     dataType: str, dataFormat: str,
-    file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group: str, scan_info='Manual',
+    file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group: str, scan_info='Automatic',
     file_Brain_Template=None,
     file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
     file_mask_vol=None, file_overlayImage=None, maskValue=0, file_surfL_inflated=None,
     file_surfR_inflated=None,
     K=17, Combine_Scan=False,
-    Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30,
+    Compute_gFN=True, file_gFN=None,
+    samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30,
     meanFitRatio=0.1, error=1e-6, normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
     Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
 
     :param dir_pnet_result: directory of the pNet result folder
     :param dataType: 'Surface', 'Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'
     :param file_scan: a txt file that stores directories of all fMRI scans
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
@@ -66,6 +68,7 @@ def run_workflow(dir_pnet_result: str,
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
+    :param file_gFN: directory of a precomputed gFN in .mat format
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
     :param sampleSize: number of subjects selected for each bootstrapping run
     :param nBS: number of runs for bootstrap
@@ -90,28 +93,40 @@ def run_workflow(dir_pnet_result: str,
     Yuncong Ma, 9/25/2023
     """
 
+    # Check setting
+    check_data_type_format(dataType, dataFormat)
+
     # setup all sub-folders in the pNet result folder
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT = setup_result_folder(dir_pnet_result)
 
     # ============== Data Input ============== #
     # setup dataInput
-    setup_dataInput(dir_pnet_dataInput,
-                    dataType=dataType, dataFormat=dataFormat)
     setup_scan_info(dir_pnet_dataInput=dir_pnet_dataInput,
+                    dataType=dataType, dataFormat=dataFormat,
                     file_scan=file_scan, file_subject_ID=file_subject_ID,
                     file_subject_folder=file_subject_folder, file_group_ID=file_group,
                     scan_info=scan_info, Combine_Scan=Combine_Scan)
     # setup brain template
+    # Volume and surface data types require different inputs to compute the brain template
     if file_Brain_Template is None:
-        Brain_Template = \
-            compute_brain_template(dataType=dataType, dataFormat=dataFormat,
-                                   file_surfL=file_surfL, file_surfR=file_surfR, file_maskL=file_maskL, file_maskR=file_maskR,
-                                   file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
-                                   maskValue=maskValue,
-                                   file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
-                                   logFile=None)
+        if dataType == 'Volume':
+            Brain_Template = \
+                compute_brain_template(dataType=dataType, dataFormat=dataFormat,
+                                       file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
+                                       maskValue=maskValue,
+                                       logFile=None)
+        elif dataType == 'Surface':
+            Brain_Template = \
+                compute_brain_template(dataType=dataType, dataFormat=dataFormat,
+                                       file_surfL=file_surfL, file_surfR=file_surfR,
+                                       file_maskL=file_maskL, file_maskR=file_maskR,
+                                       maskValue=maskValue,
+                                       file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
+                                       logFile=None)
+
     else:
         Brain_Template = load_brain_template(file_Brain_Template)
+        setup_brain_template(dir_pnet_dataInput, Brain_Template)
     # save brain template
     setup_brain_template(dir_pnet_dataInput, Brain_Template)
     # ============================================= #
@@ -120,7 +135,8 @@ def run_workflow(dir_pnet_result: str,
     # setup parameters for FN computation
     setup_NMF_setting(dir_pnet_result,
                       K=K,
-                      Combine_Scan=Combine_Scan, Compute_gFN=Compute_gFN,
+                      Combine_Scan=Combine_Scan,
+                      Compute_gFN=Compute_gFN, file_gFN=file_gFN,
                       samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
                       maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
                       Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
@@ -140,6 +156,67 @@ def run_workflow(dir_pnet_result: str,
         run_quality_control(dir_pnet_result)
     elif Computation_Mode == 'CPU_Torch':
         run_quality_control_torch(dir_pnet_result)
+    # ============================================= #
+
+
+def run_workflow_simple(dir_pnet_result: str,
+                        dataType: str, dataFormat: str,
+                        file_scan: str,
+                        file_Brain_Template: str,
+                        K=17,
+                        Combine_Scan=False,
+                        sampleSize=10, nBS=50):
+    """
+    run_workflow_simple(dir_pnet_result: str,
+    dataType: str, dataFormat: str,
+    file_scan: str,
+    file_Brain_Template: str,
+    K=17,
+    Combine_Scan=False,
+    sampleSize=10, nBS=50)
+    Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
+
+    :param dir_pnet_result: directory of the pNet result folder
+    :param dataType: 'Surface', 'Volume'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param file_scan: a txt file that stores directories of all fMRI scans
+    :param file_Brain_Template: file directory of a brain template file in json format
+    :param K: number of FNs
+    :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
+    :param sampleSize: number of subjects selected for each bootstrapping run
+    :param nBS: number of runs for bootstrap
+
+    Yuncong Ma, 9/25/2023
+    """
+
+    # setup all sub-folders in the pNet result folder
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT = setup_result_folder(dir_pnet_result)
+
+    # ============== Data Input ============== #
+    # setup dataInput
+    setup_scan_info(dir_pnet_dataInput=dir_pnet_dataInput,
+                    dataType=dataType, dataFormat=dataFormat,
+                    file_scan=file_scan,
+                    Combine_Scan=Combine_Scan)
+    # setup brain template
+    Brain_Template = load_brain_template(file_Brain_Template)
+    # save brain template
+    setup_brain_template(dir_pnet_dataInput, Brain_Template)
+    # ============================================= #
+
+    # ============== FN Computation ============== #
+    # setup parameters for FN computation
+    setup_NMF_setting(dir_pnet_result,
+                      K=K,
+                      Combine_Scan=Combine_Scan,
+                      sampleSize=sampleSize, nBS=nBS)
+    # perform FN computation
+    run_FN_Computation_torch(dir_pnet_result)
+    # ============================================= #
+
+    # ============== Quality Control ============== #
+    # perform quality control
+    run_quality_control_torch(dir_pnet_result)
     # ============================================= #
 
 

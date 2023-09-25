@@ -281,7 +281,7 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
 
     :param file_scan_list: Directory of a single txt file storing fMRI file directories, or a directory of a single scan file
     :param dataType: 'Surface', 'Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'
     :param Reshape: False or True, whether to reshape 4D volume-based fMRI data to 2D
     :param Brain_Mask: None or a brain mask [X Y Z]
     :param Normalization: False, 'vp-vmax'
@@ -289,8 +289,11 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
     :param logFile: a log file to save the output
     :return: Data: a 2D or 4D NumPy array [dim_time dim_space]
 
-    By Yuncong Ma, 9/24/2023
+    By Yuncong Ma, 9/25/2023
     """
+
+    # Check setting
+    check_data_type_format(dataType, dataFormat, logFile=logFile)
 
     # Suppress warning messages when loading CIFTI 2 formatted files
     nib.imageglobals.logger.setLevel(40)
@@ -313,8 +316,10 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
         if logFile is not None:
             print(f' loading scan ' + scan_list[i], file=logFile)
 
-        if not os.path.isfile(scan_list[i]):
-            raise ValueError('The file does not exist: ' + scan_list[i])
+        file_list = str.split(scan_list[i], ';')
+        for file in file_list:
+            if not os.path.isfile(file):
+                raise ValueError('The file does not exist: ' + file)
 
         # Loading a single fMRI scan
         # 2D or 4D matrix with dimension definition [dim_space dim_time] or [X, Y, Z, T]
@@ -339,6 +344,29 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
             else:
                 raise ValueError('Unsupported data format ' + scan_list[i])
 
+        elif dataFormat == 'MGH Surface (*.mgh)':
+            # need to split each line to two directories for left and right hemispheres
+            if len(str.split(scan_list[i], ';')) != 2:
+                raise ValueError("For MGH surface data format, directories of two hemisphere data need to be combined into one line with ';' as separator")
+
+            # get files for two hemispheres
+            file_L = str.split(scan_list[i], ';')[0]
+            file_R = str.split(scan_list[i], ';')[1]
+
+            # check extension
+            if not file_L.endswith('.mgh') or not file_R.endswith('.mgh'):
+                raise ValueError('For MGH surface format, the file extension should be .mgh')
+
+            scan_data = np.array(nib.load(file_L).get_fdata(dtype=np.float32))  # [dim_space, _, _, dim_time]
+            scan_data = np.squeeze(scan_data)
+            scan_data = np.append(scan_data, np.squeeze(np.array(nib.load(file_R).get_fdata(dtype=np.float32))), axis=0)
+            scan_data = scan_data.T
+
+        elif dataFormat == 'MGZ Surface (*.mgz)':
+            mgz = nib.load(scan_list[i])
+            scan_data = mgz.get_fdata(dtype=np.float32)  # [dim_space dim_time]
+            scan_data = np.squeeze(np.array(scan_data)).T
+
         elif dataFormat == 'Volume (*.nii, *.nii.gz, *.mat)':
             if len(scan_list) > 1 and Reshape is False and Concatenation:
                 raise ValueError('4D fMRI data must be reshaped to 2D first before concatenation')
@@ -357,10 +385,12 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
                 scan_data = reshape_fmri_data(scan_data, dataType, Brain_Mask)
 
         else:
-             raise ValueError('Unsupported data format ' + dataFormat)
+            raise ValueError('Unsupported data format ' + dataFormat)
 
+        # scan_data should be in [dim_time dim_space]
         # Convert to NumPy array
-        scan_data = np.array(scan_data)
+        if not isinstance(scan_data, np.ndarray):
+            scan_data = np.array(scan_data)
         if logFile is not None:
             print(f' loaded data size is ' + str(scan_data.shape), file=logFile)
 
@@ -433,7 +463,7 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     :param logFile:
     :return: Brain_Surface: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R)
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/25/2023
     """
 
     if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
@@ -447,12 +477,12 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
         if file_surfL_inflated is not None and file_surfR_inflated is not None:
             shapeL_inflated = nib.load(file_surfL_inflated)
             shapeR_inflated = nib.load(file_surfR_inflated)
-            Brain_Surface = {'Data_Type': 'Surface', 'Data_Format': 'HCP Surface (*.cifti, *.mat)',
+            Brain_Surface = {'Data_Type': dataType, 'Data_Format': dataFormat,
                              'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Shape_Inflated': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Brain_Mask': {'L': [], 'R': []}}
         else:
-            Brain_Surface = {'Data_Type': 'Surface', 'Data_Format': 'HCP Surface (*.cifti, *.mat)',
+            Brain_Surface = {'Data_Type': 'Surface', 'Data_Format': dataFormat,
                              'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Brain_Mask': {'L': [], 'R': []}}
         # Surface shape
@@ -571,12 +601,13 @@ def setup_brain_template(dir_pnet_dataInput: str, Brain_Template):
         raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
 
 
-def load_brain_template(dir_Brain_Template: str):
+def load_brain_template(dir_Brain_Template: str, logFile=None):
     """
     load_brain_template(dir_Brain_Template: str)
     Load a brain template file
 
     :param dir_Brain_Template: directory of the brain_template file, in json format. Python cannot read the MATLAB version
+    :param logFile: directory of a log file
     :return: Brain_Template: nested dictionary storing information and matrices of brain template. Matrices are converted to np.ndarray
 
     Yuncong Ma, 9/25/2023
@@ -584,12 +615,33 @@ def load_brain_template(dir_Brain_Template: str):
 
     Brain_Template = load_json_setting(dir_Brain_Template)
 
+    # Check Brain_Template
+    if 'Data_Type' not in Brain_Template.keys() or 'Data_Format' not in Brain_Template.keys():
+        raise ValueError('Cannot find Data_type or Data_Format in the Brain_Template file')
+
     # Convert list to np.ndarray
     if Brain_Template['Data_Type'] == 'Volume':
+        if 'Brain_Mask' not in Brain_Template.keys() or 'Overlay_Image' not in Brain_Template.keys():
+            raise ValueError('Cannot find Brain_Mask and Overlay_Image in the Brain_Template file')
+        # convert to np.ndarray
         Brain_Template['Brain_Mask'] = np.array(Brain_Template['Brain_Mask'])
         Brain_Template['Overlay_Image'] = np.array(Brain_Template['Overlay_Image'])
 
     elif Brain_Template['Data_Type'] == 'Surface':
+        # check sub-keys
+        if 'Brain_Mask' not in Brain_Template.keys() or 'Shape' not in Brain_Template.keys():
+            raise ValueError('Cannot find Brain_Mask and Shape in the Brain_Template file')
+        if 'L' not in Brain_Template['Shape'].keys() or 'R' not in Brain_Template['Shape'].keys():
+            raise ValueError("Cannot find L or R in Brain_Template['Shape']")
+        if 'vertices' not in Brain_Template['Shape']['L'].keys() or 'vertices' not in Brain_Template['Shape']['L'].keys():
+            raise ValueError("Cannot find vertices in Brain_Template['Shape']['L']")
+        if 'faces' not in Brain_Template['Shape']['L'].keys() or 'faces' not in Brain_Template['Shape']['L'].keys():
+            raise ValueError("Cannot find faces in Brain_Template['Shape']['L']")
+        if 'vertices' not in Brain_Template['Shape']['R'].keys() or 'vertices' not in Brain_Template['Shape']['R'].keys():
+            raise ValueError("Cannot find vertices in Brain_Template['Shape']['R']")
+        if 'faces' not in Brain_Template['Shape']['R'].keys() or 'faces' not in Brain_Template['Shape']['R'].keys():
+            raise ValueError("Cannot find faces in Brain_Template['Shape']['R']")
+        # convert to np.ndarray
         Brain_Template['Brain_Mask']['L'] = np.array(Brain_Template['Brain_Mask']['L'])
         Brain_Template['Brain_Mask']['R'] = np.array(Brain_Template['Brain_Mask']['R'])
         Brain_Template['Shape']['L']['vertices'] = np.array(Brain_Template['Shape']['L']['vertices'])
@@ -597,6 +649,16 @@ def load_brain_template(dir_Brain_Template: str):
         Brain_Template['Shape']['L']['faces'] = np.array(Brain_Template['Shape']['L']['faces'])
         Brain_Template['Shape']['R']['faces'] = np.array(Brain_Template['Shape']['R']['faces'])
         if 'Shape_Inflated' in Brain_Template.keys():
+            # check sub-keys
+            if 'vertices' not in Brain_Template['Shape_Inflated']['L'].keys() or 'vertices' not in Brain_Template['Shape_Inflated']['L'].keys():
+                raise ValueError("Cannot find vertices in Brain_Template['Shape_Inflated']['L']")
+            if 'faces' not in Brain_Template['Shape_Inflated']['L'].keys() or 'faces' not in Brain_Template['Shape_Inflated']['L'].keys():
+                raise ValueError("Cannot find faces in Brain_Template['Shape_Inflated']['L']")
+            if 'vertices' not in Brain_Template['Shape_Inflated']['R'].keys() or 'vertices' not in Brain_Template['Shape_Inflated']['R'].keys():
+                raise ValueError("Cannot find vertices in Brain_Template['Shape_Inflated']['R']")
+            if 'faces' not in Brain_Template['Shape_Inflated']['R'].keys() or 'faces' not in Brain_Template['Shape_Inflated']['R'].keys():
+                raise ValueError("Cannot find faces in Brain_Template['Shape_Inflated']['R']")
+            # convert to np.ndarray
             Brain_Template['Shape_Inflated']['L']['vertices'] = np.array(Brain_Template['Shape_Inflated']['L']['vertices'])
             Brain_Template['Shape_Inflated']['R']['vertices'] = np.array(Brain_Template['Shape_Inflated']['R']['vertices'])
             Brain_Template['Shape_Inflated']['L']['faces'] = np.array(Brain_Template['Shape_Inflated']['L']['faces'])
@@ -725,25 +787,34 @@ def setup_result_folder(dir_pnet_result: str):
     return dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT
 
 
-def setup_dataInput(dir_pnet_dataInput: str, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat'):
+def check_data_type_format(dataType: str,  dataFormat: str, logFile=None):
     """
-    setup_dataInput(dir_pnet_dataInput: str, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat')
-    Setup the setting file for the data input module, named as 'Setting.json'
+    check_data_type_format(dataType: str,  dataFormat: str, logFile=None)
+    Check setting for dataType and dataFormat
 
-    :param dir_pnet_dataInput: directory of the folder Data_Input
-    :param dataType: 'Surface' or 'Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)'
-    :return: setting
+    :param dataType: 'Volume', 'Surface'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param logFile:
 
-    Yuncong Ma, 9/14/2023
+    Yuncong Ma, 9/25/2023
     """
 
-    setting = {'Data_Type': dataType, 'Data_Format': dataFormat}
-    write_json_setting(setting, os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    return setting
+    if dataType not in ('Volume', 'Surface'):
+        if logFile is None:
+            raise ValueError("Data type should be 'Volume' or 'Surface'")
+        else:
+            logFile = open(logFile, 'a')
+            print("Data type should be 'Volume' or 'Surface'", file=logFile, flush=True)
+
+    if dataFormat not in ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'):
+        if logFile is None:
+            raise ValueError("Data format should be 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'")
+        else:
+            logFile = open(logFile, 'a')
+            print("Data format should be 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'", file=logFile, flush=True)
 
 
-def setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group_ID=None, scan_info='Automatic', Combine_Scan=False):
+def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group_ID=None, scan_info='Automatic', Combine_Scan=False, logFile=None):
     """
     setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Automatic',Combine_Scan=False)
     Set up a few txt files for labeling scans
@@ -754,15 +825,27 @@ def setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=Non
 
     
     :param dir_pnet_dataInput: directory of the Data_Input folder or a directory to save Scan_List.txt, Subject_ID.txt, Subject_Folder.txt and Group_ID.txt
+    :param dataType: 'Surface', 'Volume'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'
     :param file_scan: a txt file that stores directories of all fMRI scans
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
     :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
     :param scan_info: 'Automatic' or 'Manual', 'Manual' requires manual input of file_subject_ID, file_subject_folder and file_group
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
+    :param logFile: directory of a txt formatted log file
 
-    Yuncong Ma, 9/21/2023
+    Yuncong Ma, 9/25/2023
     """
+
+    # Check setting
+    check_data_type_format(dataType, dataFormat, logFile=logFile)
+
+    # output setting file
+    setting = {'Data_Type': dataType, 'Data_Format': dataFormat,
+               'file_scan': file_scan, 'file_subject_ID': file_subject_ID, 'file_subject_folder': file_subject_folder,
+               'file_group_ID': file_group_ID, 'scan_info': scan_info, 'Combine_Scan': Combine_Scan}
+    write_json_setting(setting, os.path.join(dir_pnet_dataInput, 'Setting.json'))
 
     if scan_info == 'Manual':
         # file_subject_ID is required for Manual setting
@@ -830,6 +913,7 @@ def setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=Non
             for i in range(len(list_subject_folder)):
                 print(list_subject_folder[i], file=file_subject_folder)
             file_subject_folder.close()
+
 
 
 

@@ -1066,6 +1066,10 @@ def compute_gNb(Brain_Template, logFile=None):
     else:
         raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + Brain_Template['Data_Type'] + ' : ' + Brain_Template['Data_Format'])
 
+    if len(np.unique(gNb[:, 0])) != max(np.unique(gNb[:, 0])):
+        if logFile is not None:
+            print('\ngNb contains isolated voxel or vertex which will affect the subsequent analysis', file=logFile, flush=True)
+
     if logFile is not None:
         print('\ngNb is generated successfully', file=logFile, flush=True)
 
@@ -1149,7 +1153,7 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
         FID.close()
 
 
-def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
+def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, file_gFN=None, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
     """
     setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
@@ -1160,6 +1164,7 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gF
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
+    :param file_gFN: directory of a precomputed gFN in .mat format
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
     :param sampleSize: number of subjects selected for each bootstrapping run
     :param nBS: number of runs for bootstrap
@@ -1182,19 +1187,31 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gF
     :param dataPrecision: 'double' or 'single'
     :return: setting: a structure
 
-    Yuncong Ma, 9/14/2023
+    Yuncong Ma, 9/25/2023
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
 
     BootStrap = {'samplingMethod': samplingMethod, 'sampleSize': sampleSize, 'nBS': nBS}
-    Group_FN = {'Compute_gFN': Compute_gFN, 'BootStrap': BootStrap, 'maxIter': maxIter, 'minIter': minIter, 'error': error,
-                'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL, 'vxI': vxI, 'ard': ard, 'eta': eta, 'nRepeat': nRepeat}
+    Group_FN = {'Compute_gFN': Compute_gFN, 'file_gFN': file_gFN,
+                'BootStrap': BootStrap,
+                'maxIter': maxIter, 'minIter': minIter, 'error': error,
+                'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL, 'vxI': vxI,
+                'ard': ard, 'eta': eta, 'nRepeat': nRepeat}
     Personalized_FN = {'maxIter': maxIter, 'minIter': minIter, 'meanFitRatio': meanFitRatio, 'error': error,
-                       'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL, 'vxI': vxI, 'ard': ard, 'eta': eta}
-    Computation = {'Parallel': Parallel, 'Model': Computation_Mode, 'N_Thread': N_Thread, 'dataPrecision': dataPrecision}
+                       'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL,
+                       'vxI': vxI, 'ard': ard, 'eta': eta}
+    Computation = {'Parallel': Parallel,
+                   'Model': Computation_Mode,
+                   'N_Thread': N_Thread,
+                   'dataPrecision': dataPrecision}
 
-    setting = {'Method': 'SR-NMF', 'K': K, 'Combine_Scan': Combine_Scan, 'Group_FN': Group_FN, 'Personalized_FN': Personalized_FN, 'Computation': Computation}
+    setting = {'Method': 'SR-NMF',
+               'K': K,
+               'Combine_Scan': Combine_Scan,
+               'Group_FN': Group_FN,
+               'Personalized_FN': Personalized_FN,
+               'Computation': Computation}
 
     write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
     return setting
@@ -1366,6 +1383,11 @@ def run_FN_Computation(dir_pnet_result: str):
             gFN = gFN_fusion_NCut(gFN_BS, K, logFile=logFile)
             # output
             gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+
+        else:  # use precomputed gFNs
+            file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
+            gFN = load_matlab_single_array(file_gFN)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
         # ============================================= #
 

@@ -1092,7 +1092,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/25/2023
     """
 
     # get directories of sub-folders
@@ -1198,6 +1198,11 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             gFN = gFN_fusion_NCut_torch(gFN_BS, K, logFile=logFile)
             # output
             gFN = reshape_FN(gFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
+            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+
+        else:  # use precomputed gFNs
+            file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
+            gFN = load_matlab_single_array(file_gFN)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
         # ============================================= #
 
