@@ -946,7 +946,7 @@ def compute_gNb(Brain_Template, logFile=None):
     :param logFile:
     :return: gNb: a 2D matrix [N, 2], which labels the non-zero elements in a graph. Index starts from 1
 
-    Yuncong Ma, 9/13/2023
+    Yuncong Ma, 9/25/2023
     """
 
     # Check Brain_Template
@@ -965,8 +965,8 @@ def compute_gNb(Brain_Template, logFile=None):
         Nf_L = Brain_Surface['Shape']['L']['faces'].shape[0]  # left hemisphere
         Nf_R = Brain_Surface['Shape']['R']['faces'].shape[0]
         # Index of useful vertices, starting from 1
-        vL = np.sort(np.where(Brain_Surface['Mask']['L'] == 1)[0]) + int(1)  # left hemisphere
-        vR = np.sort(np.where(Brain_Surface['Mask']['R'] == 1)[0]) + int(1)
+        vL = np.sort(np.where(Brain_Surface['Brain_Mask']['L'] == 1)[0]) + int(1)  # left hemisphere
+        vR = np.sort(np.where(Brain_Surface['Brain_Mask']['R'] == 1)[0]) + int(1)
         # Create gNb using matrix format
         # Exclude the medial wall or other vertices outside the mask
         # Set the maximum size to avoid unnecessary memory allocation
@@ -1006,7 +1006,7 @@ def compute_gNb(Brain_Template, logFile=None):
                 Count_R += 3
             else:
                 continue
-        gNb_R = gNb_L[0:Count_R, :]  # Remove unused part
+        gNb_R = gNb_R[0:Count_R, :]  # Remove unused part
 
         # Map the index from all vertices to useful ones
         mapL = np.zeros(Nv_L, dtype=np.int64)
@@ -1208,18 +1208,18 @@ def setup_pFN_folder(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pNet result folder
     :return: list_subject_folder_unique: unique subject folder array for getting sub-folders in Personalized_FN
 
-    Yuncong Ma, 9/19/2023
+    Yuncong Ma, 9/25/2023
     """
 
     # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, _, dir_pnet_pFN, _, _, _ = setup_result_folder(dir_pnet_result)
+    dir_pnet_dataInput, dir_pnet_FNC, _, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
 
     # load settings for data input and FN computation
     if not os.path.isfile(os.path.join(dir_pnet_FNC, 'Setting.json')):
         raise ValueError('Cannot find the setting json file in folder FN_Computation')
     setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
 
-    combineScan = setting['combineScan']
+    combineScan = setting['Combine_Scan']
 
     file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
     file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
@@ -1241,6 +1241,8 @@ def setup_pFN_folder(dir_pnet_result: str):
         # find scan indexes that match to the subject folder
         scan_index = [i for i, x in enumerate(list_subject_folder) if x == template]
         dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, template)
+        if not os.path.exists(dir_pnet_pFN_indv):
+            os.makedirs(dir_pnet_pFN_indv)
         file_scan_ind = os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt')
         file_scan_ind = open(file_scan_ind, 'w')
         for j in range(len(scan_index)):
@@ -1356,7 +1358,7 @@ def run_FN_Computation(dir_pnet_result: str):
             FN_BS = np.empty(nBS, dtype=np.ndarray)
             # load bootstrapped results
             for rep in range(1, nBS+1):
-                FN_BS[rep-1] = np.array(reshape_fmri_data(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
+                FN_BS[rep-1] = np.array(reshape_FN(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
             gFN_BS = np.concatenate(FN_BS, axis=1)
             # log
             logFile = os.path.join(dir_pnet_gFN, 'Log.log')
@@ -1370,6 +1372,8 @@ def run_FN_Computation(dir_pnet_result: str):
         # ============== pFN Computation ============== #
         # load precomputed gFNs
         gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
+        # additional parameter
+        gNb = load_matlab_single_array(os.path.join(dir_pnet_FNC, 'gNb.mat'))
         # reshape to 2D if required
         gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
         # setup folders in Personalized_FN
@@ -1389,17 +1393,18 @@ def run_FN_Computation(dir_pnet_result: str):
             alphaS = setting['FN_Computation']['Personalized_FN']['alphaS']
             alphaL = setting['FN_Computation']['Personalized_FN']['alphaL']
             vxI = setting['FN_Computation']['Personalized_FN']['vxI']
-            initConv = setting['FN_Computation']['Personalized_FN']['initConv']
             ard = setting['FN_Computation']['Personalized_FN']['ard']
             eta = setting['FN_Computation']['Personalized_FN']['eta']
             dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
             # log file
             logFile = os.path.join(dir_pnet_pFN_indv, 'Log.log')
             # load data
-            Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'), dataType, dataFormat=dataFormat, logFile=logFile)
+            Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'),
+                                  dataType=dataType, dataFormat=dataFormat,
+                                  Reshape=True, Brain_Mask=Brain_Mask, logFile=logFile)
             # perform NMF
             TC, pFN = pFN_NMF(Data, gFN, gNb, maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
-                              Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, initConv=initConv, ard=ard, eta=eta,
+                              Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
                               dataPrecision=dataPrecision, logFile=logFile)
             # output
             pFN = reshape_FN(pFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)

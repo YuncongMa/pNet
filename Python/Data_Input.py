@@ -307,6 +307,9 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
 
     Data = None
     for i in range(len(scan_list)):
+        if len(scan_list[i]) == 0:
+            break
+
         if logFile is not None:
             print(f' loading scan ' + scan_list[i], file=logFile)
 
@@ -430,7 +433,7 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     :param logFile:
     :return: Brain_Surface: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R)
 
-    Yuncong Ma, 9/18/2023
+    Yuncong Ma, 9/24/2023
     """
 
     if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
@@ -447,11 +450,11 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
             Brain_Surface = {'Data_Type': 'Surface', 'Data_Format': 'HCP Surface (*.cifti, *.mat)',
                              'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Shape_Inflated': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
-                             'Mask': {'L': [], 'R': []}}
+                             'Brain_Mask': {'L': [], 'R': []}}
         else:
             Brain_Surface = {'Data_Type': 'Surface', 'Data_Format': 'HCP Surface (*.cifti, *.mat)',
                              'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
-                             'Mask': {'L': [], 'R': []}}
+                             'Brain_Mask': {'L': [], 'R': []}}
         # Surface shape
         # Index starts from 1
         Brain_Surface['Shape']['L']['vertices'], Brain_Surface['Shape']['L']['faces'] = shapeL.darrays[0].data, shapeL.darrays[1].data + int(1)
@@ -461,13 +464,13 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
             Brain_Surface['Shape_Inflated']['L']['vertices'], Brain_Surface['Shape_Inflated']['L']['faces'] = shapeL_inflated.darrays[0].data, shapeL_inflated.darrays[1].data + int(1)
             Brain_Surface['Shape_Inflated']['R']['vertices'], Brain_Surface['Shape_Inflated']['R']['faces'] = shapeR_inflated.darrays[0].data, shapeR_inflated.darrays[1].data + int(1)
         # Index for brain mask
-        Brain_Surface['Mask']['L'] = maskL.darrays[0].data
-        Brain_Surface['Mask']['R'] = maskR.darrays[0].data
+        Brain_Surface['Brain_Mask']['L'] = maskL.darrays[0].data
+        Brain_Surface['Brain_Mask']['R'] = maskR.darrays[0].data
 
         # Change 0 to 1 if the mask is to label unused vertices
         if maskValue == 0:
-            Brain_Surface['Mask']['L'] = (Brain_Surface['Mask']['L'] == 0)
-            Brain_Surface['Mask']['R'] = (Brain_Surface['Mask']['R'] == 0)
+            Brain_Surface['Brain_Mask']['L'] = (Brain_Surface['Brain_Mask']['L'] == 0)
+            Brain_Surface['Brain_Mask']['R'] = (Brain_Surface['Brain_Mask']['R'] == 0)
 
     else:
         raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + dataType + ' : ' + dataFormat)
@@ -576,7 +579,7 @@ def load_brain_template(dir_Brain_Template: str):
     :param dir_Brain_Template: directory of the brain_template file, in json format. Python cannot read the MATLAB version
     :return: Brain_Template: nested dictionary storing information and matrices of brain template. Matrices are converted to np.ndarray
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/25/2023
     """
 
     Brain_Template = load_json_setting(dir_Brain_Template)
@@ -590,14 +593,14 @@ def load_brain_template(dir_Brain_Template: str):
         Brain_Template['Brain_Mask']['L'] = np.array(Brain_Template['Brain_Mask']['L'])
         Brain_Template['Brain_Mask']['R'] = np.array(Brain_Template['Brain_Mask']['R'])
         Brain_Template['Shape']['L']['vertices'] = np.array(Brain_Template['Shape']['L']['vertices'])
-        Brain_Template['Shape']['L']['vertices'] = np.array(Brain_Template['Shape']['L']['vertices'])
+        Brain_Template['Shape']['R']['vertices'] = np.array(Brain_Template['Shape']['R']['vertices'])
         Brain_Template['Shape']['L']['faces'] = np.array(Brain_Template['Shape']['L']['faces'])
-        Brain_Template['Shape']['L']['faces'] = np.array(Brain_Template['Shape']['L']['faces'])
+        Brain_Template['Shape']['R']['faces'] = np.array(Brain_Template['Shape']['R']['faces'])
         if 'Shape_Inflated' in Brain_Template.keys():
             Brain_Template['Shape_Inflated']['L']['vertices'] = np.array(Brain_Template['Shape_Inflated']['L']['vertices'])
-            Brain_Template['Shape_Inflated']['L']['vertices'] = np.array(Brain_Template['Shape_Inflated']['L']['vertices'])
+            Brain_Template['Shape_Inflated']['R']['vertices'] = np.array(Brain_Template['Shape_Inflated']['R']['vertices'])
             Brain_Template['Shape_Inflated']['L']['faces'] = np.array(Brain_Template['Shape_Inflated']['L']['faces'])
-            Brain_Template['Shape_Inflated']['L']['faces'] = np.array(Brain_Template['Shape_Inflated']['L']['faces'])
+            Brain_Template['Shape_Inflated']['R']['faces'] = np.array(Brain_Template['Shape_Inflated']['R']['faces'])
 
     else:
         raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])

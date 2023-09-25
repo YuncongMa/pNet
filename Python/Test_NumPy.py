@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/8/2023
+# Yuncong Ma, 9/25/2023
 
 import numpy as np
 import scipy
@@ -7,7 +7,7 @@ import json
 
 import pNet
 
-np_float, np_eps = pNet.set_data_precision('double')
-a = np.inf
-b = 100
-print(np.abs(a - b) / np.maximum(a, 100))
+gNb = pNet.load_matlab_single_array('/Users/yuncongma/Documents/Document/fMRI/Myworks/pNet/Test/Test_FN17_UKBB_Workflow/FN_Computation/gNb.mat')
+
+print(np.unique(gNb[:, 0]).shape[0])
+print(np.max(gNb[:, 0]))

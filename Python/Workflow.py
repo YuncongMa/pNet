@@ -22,6 +22,7 @@ from Quality_Control_torch import *
 def run_workflow(dir_pnet_result: str,
                  dataType: str, dataFormat: str,
                  file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Manual',
+                 file_Brain_Template=None,
                  file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
                  file_mask_vol=None, file_overlayImage=None, maskValue=0, file_surfL_inflated=None,
                  file_surfR_inflated=None,
@@ -34,6 +35,7 @@ def run_workflow(dir_pnet_result: str,
     run_workflow(dir_pnet_result: str,
     dataType: str, dataFormat: str,
     file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group: str, scan_info='Manual',
+    file_Brain_Template=None,
     file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
     file_mask_vol=None, file_overlayImage=None, maskValue=0, file_surfL_inflated=None,
     file_surfR_inflated=None,
@@ -51,6 +53,7 @@ def run_workflow(dir_pnet_result: str,
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
     :param file_group: a txt file that store group information corresponding to fMRI scan in file_scan
     :param scan_info: 'Automatic' or 'Manual', 'Manual' requires manual input of file_subject_ID, file_subject_folder and file_group
+    :param file_Brain_Template: file directory of a brain template file in json format
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
     :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
     :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
@@ -84,7 +87,7 @@ def run_workflow(dir_pnet_result: str,
     :param N_Thread: positive integers, used for parallel computation
     :param dataPrecision: 'double' or 'single'
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/25/2023
     """
 
     # setup all sub-folders in the pNet result folder
@@ -99,13 +102,17 @@ def run_workflow(dir_pnet_result: str,
                     file_subject_folder=file_subject_folder, file_group_ID=file_group,
                     scan_info=scan_info, Combine_Scan=Combine_Scan)
     # setup brain template
-    Brain_Template = \
-        compute_brain_template(dataType=dataType, dataFormat=dataFormat,
-                               file_surfL=file_surfL, file_surfR=file_surfR, file_maskL=file_maskL, file_maskR=file_maskR,
-                               file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
-                               maskValue=maskValue,
-                               file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
-                               logFile=None)
+    if file_Brain_Template is None:
+        Brain_Template = \
+            compute_brain_template(dataType=dataType, dataFormat=dataFormat,
+                                   file_surfL=file_surfL, file_surfR=file_surfR, file_maskL=file_maskL, file_maskR=file_maskR,
+                                   file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
+                                   maskValue=maskValue,
+                                   file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
+                                   logFile=None)
+    else:
+        Brain_Template = load_brain_template(file_Brain_Template)
+    # save brain template
     setup_brain_template(dir_pnet_dataInput, Brain_Template)
     # ============================================= #
 

@@ -1190,7 +1190,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             FN_BS = np.empty(nBS, dtype=np.ndarray)
             # load bootstrapped results
             for rep in range(1, nBS+1):
-                FN_BS[rep-1] = np.array(reshape_fmri_data(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
+                FN_BS[rep-1] = np.array(reshape_FN(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
             gFN_BS = np.concatenate(FN_BS, axis=1)
             # log
             logFile = os.path.join(dir_pnet_gFN, 'Log.log')
@@ -1204,13 +1204,15 @@ def run_FN_Computation_torch(dir_pnet_result: str):
         # ============== pFN Computation ============== #
         # load precomputed gFNs
         gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
+        # additional parameter
+        gNb = load_matlab_single_array(os.path.join(dir_pnet_FNC, 'gNb.mat'))
         # reshape to 2D if required
         gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
         # setup folders in Personalized_FN
         list_subject_folder = setup_pFN_folder(dir_pnet_result)
         N_Scan = len(list_subject_folder)
         for i in range(1, N_Scan+1):
-            print(' Processing ' + str(i))
+            # print(' Processing ' + str(i))
             dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder[i-1])
             # parameter
             maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
@@ -1223,19 +1225,20 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             alphaS = setting['FN_Computation']['Personalized_FN']['alphaS']
             alphaL = setting['FN_Computation']['Personalized_FN']['alphaL']
             vxI = setting['FN_Computation']['Personalized_FN']['vxI']
-            initConv = setting['FN_Computation']['Personalized_FN']['initConv']
             ard = setting['FN_Computation']['Personalized_FN']['ard']
             eta = setting['FN_Computation']['Personalized_FN']['eta']
             dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
             # log file
             logFile = os.path.join(dir_pnet_pFN_indv, 'Log.log')
             # load data
-            Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'), dataType, dataFormat=dataFormat, logFile=logFile)
+            Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'),
+                                  dataType=dataType, dataFormat=dataFormat,
+                                  Reshape=True, Brain_Mask=Brain_Mask, logFile=logFile)
             # perform NMF
             TC, pFN = pFN_NMF_torch(Data, gFN, gNb, maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio,
                                     error=error, normW=normW,
                                     Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
-                                    vxI=vxI, initConv=initConv, ard=ard, eta=eta,
+                                    vxI=vxI,  ard=ard, eta=eta,
                                     dataPrecision=dataPrecision, logFile=logFile)
             pFN = pFN.numpy()
             TC = TC.numpy()

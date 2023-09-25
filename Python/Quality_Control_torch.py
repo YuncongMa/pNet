@@ -33,11 +33,11 @@ def run_quality_control_torch(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 9/21/2023
+    Yuncong Ma, 9/24/2023
     """
 
     # Setup sub-folders in pNet result
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC = setup_result_folder(dir_pnet_result)
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
 
     # Log file
     file_Final_Report = open(os.path.join(dir_pnet_QC, 'Final_Report.txt'), 'w')
@@ -48,7 +48,7 @@ def run_quality_control_torch(dir_pnet_result: str):
     Data_Type = setting['Data_Type']
     Data_Format = setting['Data_Format']
     setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    combineFlag = setting['Personalized_FN']['Combine_Flag']
+    combineScan = setting['Combine_Scan']
     dataPrecision = setting['Computation']['dataPrecision']
 
     # Information about scan list
@@ -66,14 +66,14 @@ def run_quality_control_torch(dir_pnet_result: str):
     # Load gFNs
     gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))  # [dim_space, K]
     if Data_Type == 'Volume':
-        Brain_Mask = load_brain_template(dir_pnet_dataInput, 'Brain_Template.json')['Brain_Mask']
+        Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))['Brain_Mask']
         gFN = reshape_FN(gFN, dataType=Data_Type, Brain_Mask=Brain_Mask)
 
     # data precision
     torch_float, torch_eps = set_data_precision_torch(dataPrecision)
 
     # compute spatial correspondence and functional homogeneity for each scan
-    if combineFlag == 0:
+    if combineScan == 0:
         N_pFN = list_scan.shape[0]
     else:
         N_pFN = subject_ID_unique.shape[0]
@@ -123,9 +123,9 @@ def run_quality_control_torch(dir_pnet_result: str):
 
     # Finish the final report
     if flag_QC == 0:
-        print('\nSummary\n All scans passed QC\n', file=file_Final_Report)
+        print('\nSummary\n All scans passed QC\n', file=file_Final_Report, flush=True)
     else:
-        print('\nSummary\n Number of failed scans = ' + str(flag_QC) + ' \n', file=file_Final_Report)
+        print('\nSummary\n Number of failed scans = ' + str(flag_QC) + ' \n', file=file_Final_Report, flush=True)
 
     print('\nFinished QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
           file=file_Final_Report, flush=True)
@@ -174,7 +174,7 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
     K = gFN.shape[1]
     Spatial_Correspondence = mat_corr_torch(gFN, pFN, dataPrecision=dataPrecision)
     Delta_Spatial_Correspondence = torch.diag(Spatial_Correspondence) - torch.max(
-        Spatial_Correspondence - torch.diag(2 * np.ones(K)), dim=0)[0]
+        Spatial_Correspondence - torch.diag(2 * torch.ones(K)), dim=0)[0]
 
     # Convert back to Numpy array
     Spatial_Correspondence = Spatial_Correspondence.numpy()
