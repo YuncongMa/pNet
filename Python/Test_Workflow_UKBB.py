@@ -64,7 +64,7 @@ pNet.bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder
 # Setup primary parameter
 setting = {'K': 17, 'Data_Type': 'Volume', 'Data_Format': 'Volume (*.nii, *.nii.gz, *.mat)'}
 Brain_Mask = pNet.load_matlab_single_array(os.path.join(dir_pnet, 'Brain_Template/MNI_Volume/Brain_Mask.mat'))
-Brain_Template = {'Data_Type': 'Volume', 'Data_Format': 'Volume (*.nii, *.nii.gz, *.mat)', 'Mask': Brain_Mask}
+Brain_Template = {'Data_Type': 'Volume', 'Data_Format': 'Volume (*.nii, *.nii.gz, *.mat)', 'Brain_Mask': Brain_Mask}
 
 # Additional intermediate parameters
 gNb = pNet.compute_gNb(Brain_Template)

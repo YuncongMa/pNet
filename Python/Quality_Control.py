@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/12/2023
+# Yuncong Ma, 9/24/2023
 # Quality control module of pNet
 
 #########################################
@@ -10,14 +10,14 @@ import re
 import time
 
 # other functions of pNet
-from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_fmri_data, reshape_FN, setup_result_folder
+from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder, load_brain_template
 from FN_Computation import mat_corr, set_data_precision
 
 
-def module_quality_control(dir_pnet_result: str):
+def run_quality_control(dir_pnet_result: str):
     """
-    module_quality_control(dir_pnet_result: str)
-    Quality control module, which computes spatial correspondence and functional homogeneity
+    run_quality_control(dir_pnet_result: str)
+    Run the quality control module, which computes spatial correspondence and functional homogeneity
     The quality control result folder has consistent sub-folder organization as Personalized_FN
     Quality control results of each scan or combined scans are stored into sub-folders
     A single matlab file named Result.mat stores all quantitative values, including
@@ -32,7 +32,7 @@ def module_quality_control(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 9/14/2023
+    Yuncong Ma, 9/24/2023
     """
 
     # Setup sub-folders in pNet result
@@ -48,6 +48,7 @@ def module_quality_control(dir_pnet_result: str):
     Data_Format = setting['Data_Format']
     setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
     combineFlag = setting['Personalized_FN']['Combine_Flag']
+    dataPrecision = setting['Computation']['dataPrecision']
 
     # Information about scan list
     file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
@@ -64,11 +65,10 @@ def module_quality_control(dir_pnet_result: str):
     # Load gFNs
     gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))  # [dim_space, K]
     if Data_Type == 'Volume':
-        Brain_Mask = load_matlab_single_array(dir_pnet_dataInput, 'Brain_Mask.mat')
+        Brain_Mask = load_brain_template(dir_pnet_dataInput, 'Brain_Template.json')['Brain_Mask']
         gFN = reshape_FN(gFN, dataType=Data_Type, Brain_Mask=Brain_Mask)
 
     # data precision
-    dataPrecision = 'double'
     np_float, np_eps = set_data_precision(dataPrecision)
 
     # compute spatial correspondence and functional homogeneity for each scan
@@ -90,12 +90,11 @@ def module_quality_control(dir_pnet_result: str):
 
         # Load the data
         if Data_Type == 'Surface':
-            scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Normalization=None).astype(np_float)
+            scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True, Normalization=None).astype(np_float)
 
         elif Data_Type == 'Volume':
             scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True,
                                        Brain_Mask=Brain_Mask, Normalization=None).astype(np_float)
-            scan_data = reshape_fmri_data(scan_data, dataType=Data_Type, Brain_Mask=Brain_Mask)
 
         # Compute quality control measurement
         Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control =\

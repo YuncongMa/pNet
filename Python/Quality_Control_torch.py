@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/21/2023
+# Yuncong Ma, 9/24/2023
 # Quality control module of pNet using PyTorch
 
 #########################################
@@ -11,7 +11,7 @@ import time
 import torch
 
 # other functions of pNet
-from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder
+from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder, load_brain_template
 from FN_Computation_torch import mat_corr_torch, set_data_precision_torch
 
 
@@ -49,6 +49,7 @@ def run_quality_control_torch(dir_pnet_result: str):
     Data_Format = setting['Data_Format']
     setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
     combineFlag = setting['Personalized_FN']['Combine_Flag']
+    dataPrecision = setting['Computation']['dataPrecision']
 
     # Information about scan list
     file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
@@ -65,7 +66,7 @@ def run_quality_control_torch(dir_pnet_result: str):
     # Load gFNs
     gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))  # [dim_space, K]
     if Data_Type == 'Volume':
-        Brain_Mask = load_matlab_single_array(dir_pnet_dataInput, 'Brain_Mask.mat')
+        Brain_Mask = load_brain_template(dir_pnet_dataInput, 'Brain_Template.json')['Brain_Mask']
         gFN = reshape_FN(gFN, dataType=Data_Type, Brain_Mask=Brain_Mask)
 
     # data precision

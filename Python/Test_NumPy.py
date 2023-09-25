@@ -2,8 +2,12 @@
 
 import numpy as np
 import scipy
-import pNet
+# import pNet
 import json
 
-pNet.setup_scan_info('/Users/yuncongma/Documents/Document/fMRI/Myworks/pNet/Test/Test_FN17_HCP_XCPD',
-                     '/Users/yuncongma/Documents/Document/fMRI/Myworks/pNet/Test/Test_FN17_HCP_XCPD/Data_Input/Scan_List.txt')
+import pNet
+
+np_float, np_eps = pNet.set_data_precision('double')
+a = np.inf
+b = 100
+print(np.abs(a - b) / np.maximum(a, 100))

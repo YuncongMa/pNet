@@ -84,7 +84,7 @@ def load_matlab_single_variable(file_matlab: str):
     :param file_matlab: string
     :return: data as its original format
 
-    By Yuncong Ma, 9/6/2023
+    By Yuncong Ma, 9/24/2023
     """
     version = 0
     try:
@@ -102,7 +102,7 @@ def load_matlab_single_variable(file_matlab: str):
         print('The MATLAB file ' + file_matlab + ' contains more than one variable')
         print('This file contains ' + ', '.join(actual_variable_names))
         data = []
-        return
+        return data
     # Extract the content in the variable
     data = matlab_data[actual_variable_names[0]]
     return data
@@ -272,9 +272,10 @@ def normalize_data(data, algorithm='vp', normalization='vmax'):
     return pX
 
 
-def load_fmri_scan(file_scan_list: str, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat', Reshape=False, Brain_Mask=None, Normalization=None, Concatenation=True, logFile=None):
+def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=False,
+                   Brain_Mask=None, Normalization=None, Concatenation=True, logFile=None):
     """
-    load_fmri_scan(file_scan_list:str, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat', Reshape=False, Brain_Mask=None, Normalization=False, Concatenation=True, logFile=None)
+    load_fmri_scan(file_scan_list:str, dataType: str, dataFormat: str, Reshape=False, Brain_Mask=None, Normalization=False, Concatenation=True, logFile=None)
     Load one or multiple fMRI scans, and concatenate them into a single 2D matrix along the time dimension
     Optional normalization can be added for each scan before concatenation
 
@@ -288,7 +289,7 @@ def load_fmri_scan(file_scan_list: str, dataType='Surface', dataFormat='HCP Surf
     :param logFile: a log file to save the output
     :return: Data: a 2D or 4D NumPy array [dim_time dim_space]
 
-    By Yuncong Ma, 9/12/2023
+    By Yuncong Ma, 9/24/2023
     """
 
     # Suppress warning messages when loading CIFTI 2 formatted files
@@ -297,7 +298,7 @@ def load_fmri_scan(file_scan_list: str, dataType='Surface', dataFormat='HCP Surf
     # setup log file
     if logFile is not None:
         logFile = open(logFile, 'w+')
-        print(f'\nStart loading fMRI data at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+        print(f'\nStart loading fMRI data at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     if os.path.isfile(file_scan_list) and file_scan_list.endswith('.txt'):
         scan_list = [line.replace('\n', '') for line in open(file_scan_list, "r")]
@@ -352,6 +353,9 @@ def load_fmri_scan(file_scan_list: str, dataType='Surface', dataFormat='HCP Surf
                     raise ValueError('Brain_Mask must be provided when Reshape is enabled for 4D fMRI data')
                 scan_data = reshape_fmri_data(scan_data, dataType, Brain_Mask)
 
+        else:
+             raise ValueError('Unsupported data format ' + dataFormat)
+
         # Convert to NumPy array
         scan_data = np.array(scan_data)
         if logFile is not None:
@@ -361,7 +365,13 @@ def load_fmri_scan(file_scan_list: str, dataType='Surface', dataFormat='HCP Surf
         # The Data will be permuted to [dim_time dim_space] for both 2D and 4D matrices
         if i == 0:
             if dataType == 'Surface':
-                if Normalization is not None:
+                if Normalization is not None and Normalization is not False:
+                    if Normalization == 'vp-vmax':
+                        scan_data = normalize_data(scan_data, 'vp', 'vmax')
+                    else:
+                        raise ValueError('Unsupported data normalization: ' + Normalization)
+            elif dataType == 'Volume':
+                if Normalization is not None and Normalization is not False:
                     if Normalization == 'vp-vmax':
                         scan_data = normalize_data(scan_data, 'vp', 'vmax')
                     else:
@@ -372,7 +382,7 @@ def load_fmri_scan(file_scan_list: str, dataType='Surface', dataFormat='HCP Surf
             if dataType == 'Surface':
                 if Data is None or len(Data.shape) != 2 or scan_data.shape[1] != Data.shape[1]:
                     raise ValueError('Scans have different spatial dimensions when loading scan: ' + scan_list[i])
-                if Normalization is not None:
+                if Normalization is not None and Normalization is not False:
                     if Normalization == 'vp-vmax':
                         scan_data = normalize_data(scan_data, 'vp', 'vmax')
                     else:
@@ -383,7 +393,7 @@ def load_fmri_scan(file_scan_list: str, dataType='Surface', dataFormat='HCP Surf
                     raise ValueError('Scans have different spatial dimensions when loading scan: ' + scan_list[i])
                 if Reshape is False:
                     raise ValueError('4D volume-based fMRI scans need to be reshaped before concatenation')
-                if Normalization is not None:
+                if Normalization is not None and Normalization is not False:
                     if Normalization == 'vp-vmax':
                         scan_data = normalize_data(scan_data, 'vp', 'vmax')
                     else:
@@ -463,13 +473,13 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
         raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + dataType + ' : ' + dataFormat)
 
     if logFile is not None:
-        print('\nBrain_Surface is created', file=logFile)
+        print('\nBrain_Surface is created', file=logFile, flush=True)
 
     return Brain_Surface
 
 
-def compute_brain_template(dataType: str, dataFormat: str, file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str,
-                           file_mask_vol: str, file_overlayImage: str, maskValue=0, file_surfL_inflated=None, file_surfR_inflated=None,
+def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
+                           file_mask_vol=None, file_overlayImage=None, maskValue=0, file_surfL_inflated=None, file_surfR_inflated=None,
                            logFile=None):
     """
     compute_brain_template(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
@@ -492,19 +502,29 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL: str, file
     :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
                             a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
 
-    Yuncong Ma, 9/18/2023
+    Yuncong Ma, 9/24/2023
     """
 
     if dataType == 'Volume':
-        Brain_Mask = load_fmri_scan(file_mask_vol, Reshape=None, Normalization=None)
-        Overlay_Image = load_fmri_scan(file_overlayImage, Reshape=None, Normalization=None)
+        if file_mask_vol is None or file_overlayImage is None:
+            raise ValueError('When data type is volume, both file_mask_vol and file_overlayImage are required')
+        Brain_Mask = load_fmri_scan(file_mask_vol, dataType=dataType, dataFormat=dataFormat, Reshape=False, Normalization=None)
+        Overlay_Image = load_fmri_scan(file_overlayImage, dataType=dataType, dataFormat=dataFormat, Reshape=False, Normalization=None)
         Brain_Mask = (Brain_Mask == maskValue)
-        Brain_Template = {'Data_Type': dataType, 'Data_Format': dataFormat, 'Brain_Mask': Brain_Mask, 'Overlay_Image': Overlay_Image}
+        Brain_Template = {'Data_Type': dataType,
+                          'Data_Format': dataFormat,
+                          'Brain_Mask': Brain_Mask,
+                          'Overlay_Image': Overlay_Image}
 
     elif dataType == 'Surface':
-        Brain_Template = compute_brain_surface(file_surfL, file_surfR, file_maskL, file_maskR,
-                                               file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated, maskValue=maskValue,
-                                               dataType=dataType, dataFormat=dataFormat, logFile=logFile)
+        if file_surfL is None or file_surfR is None or file_maskL is None or file_maskR is None:
+            raise ValueError('When data type is surface, file_surfL, file_surfR, file_maskL and file_maskR are required')
+        Brain_Template = \
+            compute_brain_surface(file_surfL, file_surfR, file_maskL, file_maskR,
+                                  file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
+                                  maskValue=maskValue,
+                                  dataType=dataType, dataFormat=dataFormat,
+                                  logFile=logFile)
 
     else:
         raise ValueError('Unknown data type: ' + dataType)
@@ -515,15 +535,74 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL: str, file
 def setup_brain_template(dir_pnet_dataInput: str, Brain_Template):
     """
     setup_brain_template(dir_pnet_result: str, Brain_Template)
-    Set up the Brain_Template
+    Save the Brain_Template.mat
 
     :param dir_pnet_dataInput: the directory of the Data Input folder
     :param Brain_Template: a structure created by function compute_brain_template
 
-    Yuncong Ma, 9/18/2023
+    Yuncong Ma, 9/24/2023
     """
 
-    scipy.io.savemat(dir_pnet_dataInput, {'Brain_Template': Brain_Template})
+    # Use both matlab and json files for convenience
+    scipy.io.savemat(os.path.join(dir_pnet_dataInput, 'Brain_Template.mat'), {'Brain_Template': Brain_Template})
+    if Brain_Template['Data_Type'] == 'Volume':
+        Brain_Template['Brain_Mask'] = Brain_Template['Brain_Mask'].tolist()
+        Brain_Template['Overlay_Image'] = Brain_Template['Overlay_Image'].tolist()
+        write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+
+    elif Brain_Template['Data_Type'] == 'Surface':
+        Brain_Template['Brain_Mask']['L'] = Brain_Template['Brain_Mask']['L'].tolist()
+        Brain_Template['Brain_Mask']['R'] = Brain_Template['Brain_Mask']['R'].tolist()
+        Brain_Template['Shape']['L']['vertices'] = Brain_Template['Shape']['L']['vertices'].tolist()
+        Brain_Template['Shape']['R']['vertices'] = Brain_Template['Shape']['R']['vertices'].tolist()
+        Brain_Template['Shape']['L']['faces'] = Brain_Template['Shape']['L']['faces'].tolist()
+        Brain_Template['Shape']['R']['faces'] = Brain_Template['Shape']['R']['faces'].tolist()
+        if 'Shape_Inflated' in Brain_Template.keys():
+            Brain_Template['Shape_Inflated']['L']['vertices'] = Brain_Template['Shape_Inflated']['L']['vertices'].tolist()
+            Brain_Template['Shape_Inflated']['R']['vertices'] = Brain_Template['Shape_Inflated']['R']['vertices'].tolist()
+            Brain_Template['Shape_Inflated']['L']['faces'] = Brain_Template['Shape_Inflated']['L']['faces'].tolist()
+            Brain_Template['Shape_Inflated']['R']['faces'] = Brain_Template['Shape_Inflated']['R']['faces'].tolist()
+        write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+
+    else:
+        raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
+
+
+def load_brain_template(dir_Brain_Template: str):
+    """
+    load_brain_template(dir_Brain_Template: str)
+    Load a brain template file
+
+    :param dir_Brain_Template: directory of the brain_template file, in json format. Python cannot read the MATLAB version
+    :return: Brain_Template: nested dictionary storing information and matrices of brain template. Matrices are converted to np.ndarray
+
+    Yuncong Ma, 9/24/2023
+    """
+
+    Brain_Template = load_json_setting(dir_Brain_Template)
+
+    # Convert list to np.ndarray
+    if Brain_Template['Data_Type'] == 'Volume':
+        Brain_Template['Brain_Mask'] = np.array(Brain_Template['Brain_Mask'])
+        Brain_Template['Overlay_Image'] = np.array(Brain_Template['Overlay_Image'])
+
+    elif Brain_Template['Data_Type'] == 'Surface':
+        Brain_Template['Brain_Mask']['L'] = np.array(Brain_Template['Brain_Mask']['L'])
+        Brain_Template['Brain_Mask']['R'] = np.array(Brain_Template['Brain_Mask']['R'])
+        Brain_Template['Shape']['L']['vertices'] = np.array(Brain_Template['Shape']['L']['vertices'])
+        Brain_Template['Shape']['L']['vertices'] = np.array(Brain_Template['Shape']['L']['vertices'])
+        Brain_Template['Shape']['L']['faces'] = np.array(Brain_Template['Shape']['L']['faces'])
+        Brain_Template['Shape']['L']['faces'] = np.array(Brain_Template['Shape']['L']['faces'])
+        if 'Shape_Inflated' in Brain_Template.keys():
+            Brain_Template['Shape_Inflated']['L']['vertices'] = np.array(Brain_Template['Shape_Inflated']['L']['vertices'])
+            Brain_Template['Shape_Inflated']['L']['vertices'] = np.array(Brain_Template['Shape_Inflated']['L']['vertices'])
+            Brain_Template['Shape_Inflated']['L']['faces'] = np.array(Brain_Template['Shape_Inflated']['L']['faces'])
+            Brain_Template['Shape_Inflated']['L']['faces'] = np.array(Brain_Template['Shape_Inflated']['L']['faces'])
+
+    else:
+        raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
+
+    return Brain_Template
 
 
 def reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None):

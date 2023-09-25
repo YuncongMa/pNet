@@ -105,7 +105,7 @@ def normalize_data(data, algorithm='vp', normalization='vmax', dataPrecision='do
         data = data + shiftVal
     elif algorithm.lower() == 'vp':
         # remove negative value voxel-wisely
-        minVal = np.min(data, axis=0, keepdim=True)
+        minVal = np.min(data, axis=0, keepdims=True)
         shiftVal = np.abs(np.minimum(minVal, 0))
         data += shiftVal
     else:
@@ -440,7 +440,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
 
     # setup log file
     logFile = open(logFile, 'a')
-    print(f'\nStart NMF for pFN using NumPy at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nStart NMF for pFN using NumPy at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # initialization
     initV = gFN.copy()
@@ -590,15 +590,15 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
             flagQC = 1
             U = oldU.copy()
             V = oldV.copy()
-            print(f'\n  QC: Meet QC constraint: Delta sim = {QC_Delta_Sim}', file=logFile)
-            print(f'    Use results from last iteration', file=logFile)
+            print(f'\n  QC: Meet QC constraint: Delta sim = {QC_Delta_Sim}', file=logFile, flush=True)
+            print(f'    Use results from last iteration', file=logFile, flush=True)
             break
         else:
             oldU = U.copy()
             oldV = V.copy()
-            print(f'        QC: Delta sim = {QC_Delta_Sim}', file=logFile)
+            print(f'        QC: Delta sim = {QC_Delta_Sim}', file=logFile, flush=True)
 
-    print(f'\n Finished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\n Finished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     return U, V
 
@@ -629,12 +629,12 @@ def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/14/2023
+    Yuncong Ma, 9/24/2023
     """
 
     # setup log file
     logFile = open(logFile, 'a')
-    print(f'\nStart NMF for gFN using NumPy at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nStart NMF for gFN using NumPy at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Setup data precision and eps
     np_float, np_eps = set_data_precision(dataPrecision)
@@ -662,14 +662,15 @@ def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
     # Construct the spatial affinity graph
     L, W, D = construct_Laplacian_gNb(gNb, dim_space, vxI, X, alphaL, normW, dataPrecision)
 
-    for repeat in range(nRepeat):
+    flag_Repeat = 0
+    for repeat in range(1, 1 + nRepeat):
         flag_Repeat = 0
-        print(f'\n Starting {repeat}-th repetition\n', file=logFile)
+        print(f'\n Starting {repeat}-th repetition\n', file=logFile, flush=True)
 
         # Initialize U and V
         mean_X = np.sum(X) / (dim_time*dim_space)
-        U = (np.random.rand((dim_time, K), dtype=np_float) + 1) * (np.sqrt(mean_X/K))
-        V = (np.random.rand((dim_space, K), dtype=np_float) + 1) * (np.sqrt(mean_X/K))
+        U = (np.random.rand(dim_time, K) + 1) * (np.sqrt(mean_X/K))
+        V = (np.random.rand(dim_space, K) + 1) * (np.sqrt(mean_X/K))
 
         # Normalize data
         U, V = normalize_u_v(U, V, 1, 1, dataPrecision)
@@ -767,12 +768,12 @@ def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
 
             # Objective function
             LogL = L21 + LDf + LSl + ardU
-            print(f"    Iter = {i}: LogL: {LogL}, dataFit: {LDf}, spaLap: {LSl}, L21: {L21}, ardU: {ardU}", file=logFile)
+            print(f"    Iter = {i}: LogL: {LogL}, dataFit: {LDf}, spaLap: {LSl}, L21: {L21}, ardU: {ardU}", file=logFile, flush=True)
 
             # The iteration needs to meet minimum iteration number and small changes of LogL
-            if i < minIter and abs(oldLogL - LogL) / np.maximum(oldLogL, np_eps) < error:
+            if i > 1 and i < minIter and abs(oldLogL - LogL) / np.maximum(oldLogL, np_eps) < error:
                 flag_Repeat = 1
-                print('\n Iteration stopped before the minimum iteration number. The results might be poor.\n', file=logFile)
+                print('\n Iteration stopped before the minimum iteration number. The results might be poor.\n', file=logFile, flush=True)
                 break
             elif i > minIter and abs(oldLogL - LogL) / np.maximum(oldLogL, np_eps) < error:
                 break
@@ -781,10 +782,10 @@ def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
             break
 
     if flag_Repeat == 1:
-        print('\n All repetition stopped before the minimum iteration number. The final results might be poor\n', file=logFile)
+        print('\n All repetition stopped before the minimum iteration number. The final results might be poor\n', file=logFile, flush=True)
 
     gFN = V
-    print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     return gFN
 
@@ -806,7 +807,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
 
     # setup log file
     logFile = open(logFile, 'a')
-    print(f'\nStart NCut for gFN fusion using NumPy at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nStart NCut for gFN fusion using NumPy at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Setup data precision and eps
     np_float, np_eps = set_data_precision(dataPrecision)
@@ -892,7 +893,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
             # escape the loop when converged or meet max iteration
             if abs(NcutValue - lastObjectiveValue) < np_eps or nbIterationsDiscretisation > nbIterationsDiscretisationMax:
                 exitLoop = 1
-                print(f'    Reach stop criterion of NCut, NcutValue = '+str(NcutValue)+'\n', file=logFile)
+                print(f'    Reach stop criterion of NCut, NcutValue = '+str(NcutValue)+'\n', file=logFile, flush=True)
             else:
                 print(f'    NcutValue = '+str(NcutValue), file=logFile)
                 lastObjectiveValue = NcutValue
@@ -901,7 +902,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
         C = np.argmax(EigenvectorsDiscrete.toarray(), axis=1)  # Assign each sample to K centers in R
 
         if len(np.unique(C)) < K:  # Check whether there are empty results
-            print(f'    Found empty results in iteration '+str(i+1)+'\n', file=logFile)
+            print(f'    Found empty results in iteration '+str(i+1)+'\n', file=logFile, flush=True)
         else:  # Update the best result
             if NcutValue < Best_NCutValue:
                 Best_NCutValue = NcutValue
@@ -912,7 +913,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
         Flag = 1
         Message = "Cannot generate non-empty FN"
 
-    print(f'Best NCut value = '+str(Best_NCutValue)+'\n', file=logFile)
+    print(f'Best NCut value = '+str(Best_NCutValue)+'\n', file=logFile, flush=True)
 
     # Get centroid
     C = Best_C
@@ -929,7 +930,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
             gFN[:, ki] = gFN_BS[:, mInd]
 
     gFN = gFN / np.maximum(np.tile(np.max(gFN, axis=0), (gFN.shape[0], 1)), np_eps)  # Normalize each FN by its max value
-    print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     return gFN
 
@@ -1025,7 +1026,7 @@ def compute_gNb(Brain_Template, logFile=None):
         gNb = np.unique(gNb, axis=0)  # Remove duplicated
 
     elif Brain_Template['Data_Type'] == 'Volume':
-        Brain_Mask = Brain_Template['Mask'] > 0
+        Brain_Mask = Brain_Template['Brain_Mask'] > 0
         if len(Brain_Mask.shape) != 3:
             raise ValueError('Mask in Brain_Template needs to be a 3D matrix when the data type is volume')
 
@@ -1066,7 +1067,7 @@ def compute_gNb(Brain_Template, logFile=None):
         raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + Brain_Template['Data_Type'] + ' : ' + Brain_Template['Data_Format'])
 
     if logFile is not None:
-        print('\ngNb is generated successfully', file=logFile)
+        print('\ngNb is generated successfully', file=logFile, flush=True)
 
     return gNb
 
@@ -1089,11 +1090,12 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
     :param logFile: directory of a txt file
     :return: None
 
-    Yuncong Ma, 9/21/2023
+    Yuncong Ma, 9/24/2023
     """
 
     if logFile is not None:
-        print(f'\nStart preparing bootstrapped scan list files '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+        logFile = open(logFile, 'w+')
+        print(f'\nStart preparing bootstrapped scan list files '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Lists for input
     list_scan = np.array([line.replace('\n', '') for line in open(file_scan, 'r')])
@@ -1255,11 +1257,11 @@ def run_FN_Computation(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 9/19/2023
+    Yuncong Ma, 9/24/2023
     """
 
     # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _, _ = setup_result_folder(dir_pnet_result)
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
 
     # load settings for data input and FN computation
     if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
@@ -1275,9 +1277,10 @@ def run_FN_Computation(dir_pnet_result: str):
     dataFormat = setting['Data_Input']['Data_Format']
 
     # load Brain Template
-    Brain_Template = load_matlab_single_variable(os.path.join(dir_pnet_dataInput, 'Brain_Template.mat'))
+    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+
     if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Mask']
+        Brain_Mask = Brain_Template['Brain_Mask']
     else:
         Brain_Mask = None
 
@@ -1285,7 +1288,7 @@ def run_FN_Computation(dir_pnet_result: str):
     # Start computation using SP-NMF
     if setting['FN_Computation']['Method'] == 'SR-NMF':
 
-        if setting['FN_Computation']['Compute_gFN']:
+        if setting['FN_Computation']['Group_FN']['Compute_gFN']:
             # 2 steps
             # step 1 ============== bootstrap
             # sub-folder in FNC for storing bootstrapped results
@@ -1306,13 +1309,14 @@ def run_FN_Computation(dir_pnet_result: str):
             if not os.path.exists(file_group_ID):
                 file_group = None
             # Parameters
-            combineScan = setting['FN_Computation']['combineScan']
-            samplingMethod = setting['FN_Computation']['BootStrap']['samplingMethod']
-            sampleSize = setting['FN_Computation']['BootStrap']['sampleSize']
-            nBS = setting['FN_Computation']['BootStrap']['nBS']
+            combineScan = setting['FN_Computation']['Combine_Scan']
+            samplingMethod = setting['FN_Computation']['Group_FN']['BootStrap']['samplingMethod']
+            sampleSize = setting['FN_Computation']['Group_FN']['BootStrap']['sampleSize']
+            nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
 
             # create scan lists for bootstrap
-            bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder, file_group_ID=file_group_ID, combineScan=combineScan,
+            bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder,
+                           file_group_ID=file_group_ID, combineScan=combineScan,
                            samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, logFile=logFile)
 
             # Parameters

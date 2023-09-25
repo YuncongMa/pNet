@@ -13,7 +13,7 @@ import torch
 
 # other functions of pNet
 from Data_Input import *
-from FN_Computation import construct_Laplacian_gNb, compute_gNb, bootstrap_scan, setup_NMF_setting
+from FN_Computation import construct_Laplacian_gNb, compute_gNb, bootstrap_scan, setup_NMF_setting, setup_pFN_folder
 
 
 def mat_corr_torch(X, Y=None, dataPrecision='double'):
@@ -459,7 +459,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
 
     # setup log file
     logFile = open(logFile, 'a')
-    print(f'\nStart NMF for pFN using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nStart NMF for pFN using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # initialization
     initV = gFN.clone()
@@ -614,15 +614,15 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
             flagQC = 1
             U = oldU.clone()
             V = oldV.clone()
-            print(f'\n  QC: Meet QC constraint: Delta sim = {QC_Delta_Sim}', file=logFile)
-            print(f'    Use results from last iteration', file=logFile)
+            print(f'\n  QC: Meet QC constraint: Delta sim = {QC_Delta_Sim}', file=logFile, flush=True)
+            print(f'    Use results from last iteration', file=logFile, flush=True)
             break
         else:
             oldU = U.clone()
             oldV = V.clone()
-            print(f'        QC: Delta sim = {QC_Delta_Sim}', file=logFile)
+            print(f'        QC: Delta sim = {QC_Delta_Sim}', file=logFile, flush=True)
 
-    print(f'\n Finished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\n Finished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     return U, V
 
@@ -653,12 +653,12 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/14/2023
+    Yuncong Ma, 9/24/2023
     """
 
     # setup log file
     logFile = open(logFile, 'a')
-    print(f'\nStart NMF for gFN using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nStart NMF for gFN using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Setup data precision and eps
     torch_float, torch_eps = set_data_precision_torch(dataPrecision)
@@ -700,9 +700,10 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
     # Construct the spatial affinity graph
     L, W, D = construct_Laplacian_gNb_torch(gNb, dim_space, vxI, X, alphaL, normW, dataPrecision)
 
-    for repeat in range(nRepeat):
+    flag_Repeat = 0
+    for repeat in range(1, 1 + nRepeat):
         flag_Repeat = 0
-        print(f'\n Starting {repeat}-th repetition\n', file=logFile)
+        print(f'\n Starting {repeat}-th repetition\n', file=logFile, flush=True)
 
         # Initialize U and V
         mean_X = torch.divide(torch.sum(X), torch.tensor(dim_time*dim_space))
@@ -805,11 +806,11 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
 
             # Objective function
             LogL = L21 + LDf + LSl + ardU
-            print(f"    Iter = {i}: LogL: {LogL}, dataFit: {LDf}, spaLap: {LSl}, L21: {L21}, ardU: {ardU}", file=logFile)
+            print(f"    Iter = {i}: LogL: {LogL}, dataFit: {LDf}, spaLap: {LSl}, L21: {L21}, ardU: {ardU}", file=logFile, flush=True)
 
-            if i < minIter and abs(oldLogL - LogL) / torch.maximum(oldLogL, torch_eps) < error:
+            if i > 1 and i < minIter and abs(oldLogL - LogL) / torch.maximum(oldLogL, torch_eps) < error:
                 flag_Repeat = 1
-                print('\n Iteration stopped before the minimum iteration number. The results might be poor.\n', file=logFile)
+                print('\n Iteration stopped before the minimum iteration number. The results might be poor.\n', file=logFile, flush=True)
                 break
             elif i > minIter and abs(oldLogL - LogL) / torch.maximum(oldLogL, torch_eps) < error:
                 break
@@ -818,10 +819,10 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
             break
 
     if flag_Repeat == 1:
-        print('\n All repetition stopped before the minimum iteration number. The final results might be poor\n', file=logFile)
+        print('\n All repetition stopped before the minimum iteration number. The final results might be poor\n', file=logFile, flush=True)
 
     gFN = V
-    print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
     return gFN
 
 
@@ -842,7 +843,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
 
     # setup log file
     logFile = open(logFile, 'a')
-    print(f'\nStart NCut for gFN fusion using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nStart NCut for gFN fusion using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Setup data precision and eps
     torch_float, torch_eps = set_data_precision_torch(dataPrecision)
@@ -935,7 +936,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
             # escape the loop when converged or meet max iteration
             if abs(NcutValue - lastObjectiveValue) < torch_eps or nbIterationsDiscretisation > nbIterationsDiscretisationMax:
                 exitLoop = 1
-                print(f'    Reach stop criterion of NCut, NcutValue = '+str(NcutValue.numpy())+'\n', file=logFile)
+                print(f'    Reach stop criterion of NCut, NcutValue = '+str(NcutValue.numpy())+'\n', file=logFile, flush=True)
             else:
                 print(f'    NcutValue = '+str(NcutValue.numpy()), file=logFile)
                 lastObjectiveValue = NcutValue
@@ -944,7 +945,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
         C = torch.argmax(EigenvectorsDiscrete.to_dense(), dim=1)  # Assign each sample to K centers in R
 
         if len(torch.unique(C)) < K:  # Check whether there are empty results
-            print(f'    Found empty results in iteration '+str(i)+'\n', file=logFile)
+            print(f'    Found empty results in iteration '+str(i)+'\n', file=logFile, flush=True)
         else:  # Update the best result
             if NcutValue < Best_NCutValue:
                 Best_NCutValue = NcutValue
@@ -955,7 +956,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
         Flag = 1
         Message = "Cannot generate non-empty FN"
 
-    print(f'Best NCut value = '+str(Best_NCutValue.numpy())+'\n', file=logFile)
+    print(f'Best NCut value = '+str(Best_NCutValue.numpy())+'\n', file=logFile, flush=True)
 
     # Get centroid
     C = Best_C
@@ -972,7 +973,7 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
             gFN[:, ki] = gFN_BS[:, mInd]
 
     gFN = gFN / torch.maximum(torch.tile(torch.max(gFN, dim=0)[0], (gFN.shape[0], 1)), torch_eps)  # Normalize each FN by its max value
-    print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile)
+    print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     return gFN
 
@@ -996,7 +997,8 @@ def compute_gNb_torch(Brain_Template, logFile=None):
     return gNb
 
 
-def bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, BS=10, N_BS=50, combineFLag=0, samplingMethod='Subject', logFile=None):
+def bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group_ID=None, combineScan=0,
+                         samplingMethod='Subject', sampleSize=10, nBS=50, logFile=None):
     """
     bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, BS=10, N_BS=50, combineFLag=0, samplingMethod='Subject', logFile=None)
     prepare bootstrapped scan file lists
@@ -1005,25 +1007,27 @@ def bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, 
     :param file_scan: a txt file that stores directories of all fMRI scans
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
-    :param file_group: a txt file that store group information corresponding to fMRI scan in file_scan
-    :param BS: number of subjects selected for each bootstrapping run
-    :param N_BS: number of runs for bootstrap
-    :param combineFLag: 0 or 1, whether to combine multiple fMRI scans for each subject
+    :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
+    :param combineScan: 0 or 1, whether to combine multiple fMRI scans for each subject
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
+    :param sampleSize: number of subjects selected for each bootstrapping run
+    :param nBS: number of runs for bootstrap
     :param logFile: directory of a txt file
     :return: None
 
-    Yuncong Ma, 9/8/2023
+    Yuncong Ma, 9/21/2023
     """
 
-    bootstrap_scan(dir_output, file_scan, file_subject_ID, file_subject_folder, file_group, BS, N_BS, combineFLag, samplingMethod, logFile)
+    bootstrap_scan(dir_output, file_scan, file_subject_ID=file_subject_ID, file_subject_folder=file_subject_folder,
+                   file_group_ID=file_group_ID, combineScan=combineScan, samplingMethod=samplingMethod,
+                   sampleSize=sampleSize, nBS=nBS, logFile=logFile)
 
 
 def setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1):
+                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
     """
     setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1)
+                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
     Setup the setting for NMF-based method to compute gFNs and pFNs
 
     :param dir_pnet_result: directory of the pNet result folder
@@ -1049,13 +1053,195 @@ def setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Comp
     :param Parallel: False or True, whether to enable parallel computation
     :param Computation_Mode: 'CPU'
     :param N_Thread: positive integers, used for parallel computation
+    :param dataPrecision: 'double' or 'single'
     :return: setting: a structure
 
-    Yuncong Ma, 9/18/2023
+    Yuncong Ma, 9/21/2023
     """
 
-    setting = setup_NMF_setting(dir_pnet_result, K=K, Combine_Scan=Combine_Scan, Compute_gFN=Compute_gFN, samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
-                                maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW, Alpha=Alpha, Beta=Beta,
-                                alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta, nRepeat=nRepeat, Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread)
+    setting = setup_NMF_setting(dir_pnet_result, K=K, Combine_Scan=Combine_Scan, Compute_gFN=Compute_gFN,
+                                samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
+                                maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
+                                Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
+                                nRepeat=nRepeat,
+                                Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
+                                dataPrecision=dataPrecision)
 
     return setting
+
+
+def setup_pFN_folder_torch(dir_pnet_result: str):
+    """
+    setup_pFN_folder_torch(dir_pnet_result: str)
+    Setup sub-folders in Personalized_FN to
+
+    :param dir_pnet_result: directory of the pNet result folder
+    :return: list_subject_folder_unique: unique subject folder array for getting sub-folders in Personalized_FN
+
+    Yuncong Ma, 9/21/2023
+    """
+
+    list_subject_folder_unique = setup_pFN_folder(dir_pnet_result)
+    return list_subject_folder_unique
+
+
+def run_FN_Computation_torch(dir_pnet_result: str):
+    """
+    run_FN_Computation_torch(dir_pnet_result: str)
+    run the FN Computation module with settings ready in Data_Input and FN_Computation
+
+    :param dir_pnet_result: directory of pNet result folder
+
+    Yuncong Ma, 9/24/2023
+    """
+
+    # get directories of sub-folders
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
+
+    # load settings for data input and FN computation
+    if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
+        raise ValueError('Cannot find the setting json file in folder Data_Input')
+    if not os.path.isfile(os.path.join(dir_pnet_FNC, 'Setting.json')):
+        raise ValueError('Cannot find the setting json file in folder FN_Computation')
+    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
+    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
+
+    # load basic settings
+    dataType = setting['Data_Input']['Data_Type']
+    dataFormat = setting['Data_Input']['Data_Format']
+
+    # load Brain Template
+    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+    if dataType == 'Volume':
+        Brain_Mask = Brain_Template['Brain_Mask']
+    else:
+        Brain_Mask = None
+
+    # ============== gFN Computation ============== #
+    # Start computation using SP-NMF
+    if setting['FN_Computation']['Method'] == 'SR-NMF':
+
+        if setting['FN_Computation']['Group_FN']['Compute_gFN']:
+            # 2 steps
+            # step 1 ============== bootstrap
+            # sub-folder in FNC for storing bootstrapped results
+            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
+            if not os.path.exists(dir_pnet_BS):
+                os.makedirs(dir_pnet_BS)
+            # Log
+            logFile = os.path.join(dir_pnet_BS, 'Log.log')
+
+            # Generate additional parameters
+            gNb = compute_gNb_torch(Brain_Template)
+            scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb})
+            # Input files
+            file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
+            file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
+            file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+            file_group_ID = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
+            if not os.path.exists(file_group_ID):
+                file_group = None
+            # Parameters
+            combineScan = setting['FN_Computation']['Combine_Scan']
+            samplingMethod = setting['FN_Computation']['Group_FN']['BootStrap']['samplingMethod']
+            sampleSize = setting['FN_Computation']['Group_FN']['BootStrap']['sampleSize']
+            nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
+
+            # create scan lists for bootstrap
+            bootstrap_scan_torch(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder,
+                                 file_group_ID=file_group_ID, combineScan=combineScan,
+                                 samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, logFile=logFile)
+
+            # Parameters
+            K = setting['FN_Computation']['K']
+            maxIter = setting['FN_Computation']['Group_FN']['maxIter']
+            minIter = setting['FN_Computation']['Group_FN']['minIter']
+            error = setting['FN_Computation']['Group_FN']['error']
+            normW = setting['FN_Computation']['Group_FN']['normW']
+            Alpha = setting['FN_Computation']['Group_FN']['Alpha']
+            Beta = setting['FN_Computation']['Group_FN']['Beta']
+            alphaS = setting['FN_Computation']['Group_FN']['alphaS']
+            alphaL = setting['FN_Computation']['Group_FN']['alphaL']
+            vxI = setting['FN_Computation']['Group_FN']['vxI']
+            ard = setting['FN_Computation']['Group_FN']['ard']
+            eta = setting['FN_Computation']['Group_FN']['eta']
+            nRepeat = setting['FN_Computation']['Group_FN']['nRepeat']
+            dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
+
+            # NMF on bootstrapped subsets
+            for rep in range(1, 1+nBS):
+                # log file
+                logFile = os.path.join(dir_pnet_BS, str(rep), 'Log.log')
+                # load data
+                file_scan_list = os.path.join(dir_pnet_BS, str(rep), 'Scan_List.txt')
+                Data = load_fmri_scan(file_scan_list, dataType=dataType, dataFormat=dataFormat, Reshape=True, Brain_Mask=Brain_Mask,
+                                      Normalization='vp-vmax', logFile=logFile)
+                # perform NMF
+                FN_BS = gFN_NMF_torch(Data, K, gNb, maxIter=maxIter, minIter=minIter, error=error, normW=normW,
+                                      Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
+                                      nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=logFile)
+                # save results
+                FN_BS = reshape_FN(FN_BS.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
+                sio.savemat(os.path.join(dir_pnet_BS, str(rep), 'FN.mat'), {"FN": FN_BS})
+
+            # step 2 ============== fuse results
+            # Generate gFNs
+            FN_BS = np.empty(nBS, dtype=np.ndarray)
+            # load bootstrapped results
+            for rep in range(1, nBS+1):
+                FN_BS[rep-1] = np.array(reshape_fmri_data(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
+            gFN_BS = np.concatenate(FN_BS, axis=1)
+            # log
+            logFile = os.path.join(dir_pnet_gFN, 'Log.log')
+            # Fuse bootstrapped results
+            gFN = gFN_fusion_NCut_torch(gFN_BS, K, logFile=logFile)
+            # output
+            gFN = reshape_FN(gFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
+            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+        # ============================================= #
+
+        # ============== pFN Computation ============== #
+        # load precomputed gFNs
+        gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
+        # reshape to 2D if required
+        gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+        # setup folders in Personalized_FN
+        list_subject_folder = setup_pFN_folder(dir_pnet_result)
+        N_Scan = len(list_subject_folder)
+        for i in range(1, N_Scan+1):
+            print(' Processing ' + str(i))
+            dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder[i-1])
+            # parameter
+            maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
+            minIter = setting['FN_Computation']['Personalized_FN']['minIter']
+            meanFitRatio = setting['FN_Computation']['Personalized_FN']['meanFitRatio']
+            error = setting['FN_Computation']['Personalized_FN']['error']
+            normW = setting['FN_Computation']['Personalized_FN']['normW']
+            Alpha = setting['FN_Computation']['Personalized_FN']['Alpha']
+            Beta = setting['FN_Computation']['Personalized_FN']['Beta']
+            alphaS = setting['FN_Computation']['Personalized_FN']['alphaS']
+            alphaL = setting['FN_Computation']['Personalized_FN']['alphaL']
+            vxI = setting['FN_Computation']['Personalized_FN']['vxI']
+            initConv = setting['FN_Computation']['Personalized_FN']['initConv']
+            ard = setting['FN_Computation']['Personalized_FN']['ard']
+            eta = setting['FN_Computation']['Personalized_FN']['eta']
+            dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
+            # log file
+            logFile = os.path.join(dir_pnet_pFN_indv, 'Log.log')
+            # load data
+            Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'), dataType, dataFormat=dataFormat, logFile=logFile)
+            # perform NMF
+            TC, pFN = pFN_NMF_torch(Data, gFN, gNb, maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio,
+                                    error=error, normW=normW,
+                                    Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
+                                    vxI=vxI, initConv=initConv, ard=ard, eta=eta,
+                                    dataPrecision=dataPrecision, logFile=logFile)
+            pFN = pFN.numpy()
+            TC = TC.numpy()
+
+            # output
+            pFN = reshape_FN(pFN, dataType=dataType, Brain_Mask=Brain_Mask)
+            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN})
+            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC})
+        # ============================================= #
