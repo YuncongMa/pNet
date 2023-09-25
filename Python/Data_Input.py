@@ -616,8 +616,8 @@ def load_brain_template(dir_Brain_Template: str, logFile=None):
     Brain_Template = load_json_setting(dir_Brain_Template)
 
     # Check Brain_Template
-    if 'Data_Type' not in Brain_Template.keys() or 'Data_Format' not in Brain_Template.keys():
-        raise ValueError('Cannot find Data_type or Data_Format in the Brain_Template file')
+    if 'Data_Type' not in Brain_Template.keys():
+        raise ValueError('Cannot find Data_type in the Brain_Template file')
 
     # Convert list to np.ndarray
     if Brain_Template['Data_Type'] == 'Volume':

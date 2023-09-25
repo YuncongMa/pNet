@@ -12,3 +12,5 @@ gNb = pNet.load_matlab_single_array('/Users/yuncongma/Documents/Document/fMRI/My
 
 print(np.unique(gNb[:, 0]).shape[0])
 print(np.max(gNb[:, 0]))
+
+print(pNet.Brain_Template.dir_HCP_surf)
