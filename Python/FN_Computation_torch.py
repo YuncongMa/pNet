@@ -414,7 +414,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 9/26/2023
     """
 
     # Setup data precision and eps
@@ -482,7 +482,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     # Initialize U
     U = X @ V / torch.tile(torch.sum(V, dim=0), (dim_time, 1))
 
-    U = initialize_u_torch(X, U, V, error, maxIter, minIter, meanFitRatio, initConv)
+    U = initialize_u_torch(X, U, V, error=error, maxIter=100, minIter=minIter, meanFitRatio=meanFitRatio, initConv=initConv)
 
     initV = V.clone()
 
@@ -596,8 +596,8 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
         # QC Control
         temp = mat_corr_torch(gFN, V, dataPrecision=dataPrecision)
         QC_Spatial_Correspondence = torch.clone(torch.diag(temp))
-        temp -= torch.diag(torch.diag(temp))
-        QC_Spatial_Correspondence_Control = torch.max(temp, dim=1)[0]
+        temp -= torch.diag(2 * torch.ones(K))  # set diagonal values to lower than -1
+        QC_Spatial_Correspondence_Control = torch.max(temp, dim=0)[0]
         QC_Delta_Sim = torch.min(QC_Spatial_Correspondence - QC_Spatial_Correspondence_Control)
         QC_Delta_Sim = QC_Delta_Sim.cpu().numpy()
 

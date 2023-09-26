@@ -3,8 +3,9 @@
 import os
 import pNet
 
-Test = 2
+Test = 1
 
+# Desktop
 if Test == 1:
     file_scan = '/Volumes/Scratch_0/pNet/Example/HCP_Surface/Data/Scan_List.txt'
     dir_template = '/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/Template/HCP'
@@ -41,6 +42,7 @@ elif Test == 2:
                       Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
                       Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1, dataPrecision='double')
 
+# Laptop
 elif Test == 3:
     file_scan = '/Users/yuncongma/Documents/Document/fMRI/Myworks/pNet/Example/HCP_Surface/Data/Scan_List.txt'
     dir_template = '/Users/yuncongma/Documents/Document/fMRI/Myworks/Template/HCP'

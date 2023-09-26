@@ -156,15 +156,15 @@ def write_json_setting(setting, file_setting: str):
     :param file_setting: Directory of a json setting file
     :return: none
 
-    By Yuncong Ma, 9/6/2023
+    By Yuncong Ma, 9/26/2023
     """
     file_extension = os.path.splitext(file_setting)[1]
 
     if file_extension != '.json':
         raise ValueError('It is not a JSON file: '+file_setting)
-
+    # save serialized json file
     with open(file_setting, 'w') as file:
-        json.dump(setting, file)
+        json.dump(setting, file, indent=4)
 
 
 def load_json_setting(file_setting: str):

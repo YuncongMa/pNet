@@ -418,7 +418,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 9/26/2023
     """
 
     # Setup data precision and eps
@@ -472,7 +472,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     # Initialize U
     U = X @ V / np.tile(np.sum(V, axis=0), (dim_time, 1))
 
-    U = initialize_u(X, U, V, error, maxIter, minIter, meanFitRatio, initConv, dataPrecision)
+    U = initialize_u(X, U, V, error=error, maxIter=100, minIter=minIter, meanFitRatio=meanFitRatio, initConv=initConv)
 
     initV = V.copy()
 
@@ -582,7 +582,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
         # QC Control
         temp = mat_corr(gFN, V, dataPrecision)
         QC_Spatial_Correspondence = np.copy(np.diag(temp))
-        temp -= np.diag(np.diag(temp))
+        temp -= np.diag(2 * np.ones(K))  # set diagonal values to lower than -1
         QC_Spatial_Correspondence_Control = np.max(temp, axis=1)
         QC_Delta_Sim = np.min(QC_Spatial_Correspondence - QC_Spatial_Correspondence_Control)
 
