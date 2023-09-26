@@ -33,21 +33,9 @@ def run_workflow(dir_pnet_result: str,
                  samplingMethod='Subject', sampleSize=10, nBS=50,
                  maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
                  Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
-                 Parallel=False, Computation_Mode='CPU_Numpy', N_Thread=1,
+                 Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
                  dataPrecision='double'):
     """
-    run_workflow(dir_pnet_result: str,
-    dataType: str, dataFormat: str,
-    file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group: str, scan_info='Automatic',
-    file_Brain_Template=None,
-    file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
-    file_mask_vol=None, file_overlayImage=None, maskValue=0, file_surfL_inflated=None,
-    file_surfR_inflated=None,
-    K=17, Combine_Scan=False,
-    Compute_gFN=True, file_gFN=None,
-    samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30,
-    meanFitRatio=0.1, error=1e-6, normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
-    Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
 
     :param dir_pnet_result: directory of the pNet result folder
@@ -177,13 +165,6 @@ def run_workflow_simple(dir_pnet_result: str,
                         Combine_Scan=False,
                         sampleSize=10, nBS=50):
     """
-    run_workflow_simple(dir_pnet_result: str,
-    dataType: str, dataFormat: str,
-    file_scan: str,
-    file_Brain_Template: str,
-    K=17,
-    Combine_Scan=False,
-    sampleSize=10, nBS=50)
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
 
     :param dir_pnet_result: directory of the pNet result folder

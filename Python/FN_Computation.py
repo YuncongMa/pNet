@@ -418,7 +418,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/7/2023
+    Yuncong Ma, 9/25/2023
     """
 
     # Setup data precision and eps
@@ -580,7 +580,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
         oldLogL = LogL.copy()
 
         # QC Control
-        temp = mat_corr(initV, V, dataPrecision)
+        temp = mat_corr(gFN, V, dataPrecision)
         QC_Spatial_Correspondence = np.copy(np.diag(temp))
         temp -= np.diag(np.diag(temp))
         QC_Spatial_Correspondence_Control = np.max(temp, axis=1)
@@ -603,10 +603,10 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     return U, V
 
 
-def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
+def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, dataPrecision='double', logFile='Log_pFN_NMF.log'):
     """
-    gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
+    gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, dataPrecision='double', logFile='Log_pFN_NMF.log')
     Compute group-level FNs using NMF method
 
@@ -1153,10 +1153,10 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
         FID.close()
 
 
-def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, file_gFN=None, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
+def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, file_gFN=None, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
     """
-    setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
+    setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
     Setup the setting for NMF-based method to compute gFNs and pFNs
 

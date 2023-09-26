@@ -18,7 +18,6 @@ from FN_Computation import construct_Laplacian_gNb, compute_gNb, bootstrap_scan,
 
 def mat_corr_torch(X, Y=None, dataPrecision='double'):
     """
-    mat_corr_torch(X, Y=None, dataPrecision='double')
     Perform corr as in MATLAB, pair-wise Pearson correlation between columns in X and Y
 
     :param X: 1D or 2D matrix, numpy.ndarray or torch.Tensor
@@ -73,7 +72,6 @@ def mat_corr_torch(X, Y=None, dataPrecision='double'):
 
 def normalize_data_torch(data, algorithm='vp', normalization='vmax', dataPrecision='double'):
     """
-    normalize_data_torch(data, algorithm='vp', normalization='vmax', dataPrecision='double')
     Normalize data by algorithm and normalization settings
 
     :param data: data in 2D matrix [dim_time, dim_space], numpy.ndarray or torch.Tensor, recommend to use reference mode to save memory
@@ -151,7 +149,7 @@ def normalize_data_torch(data, algorithm='vp', normalization='vmax', dataPrecisi
 
 def initialize_u_torch(X, U0, V0, error=1e-4, maxIter=1000, minIter=30, meanFitRatio=0.1, initConv=1, dataPrecision='double'):
     """
-    initialize_u_torch(X, U0, V0, error=1e-4, maxIter=1000, minIter=30, meanFitRatio=0.1, initConv=1, dataPrecision='double')
+    Initialize U with fixed V, used for pFN_NMF
 
     :param X: data, 2D matrix [dim_time, dim_space], numpy.ndarray or torch.Tensor
     :param U0: initial temporal component, 2D matrix [dim_time, k], numpy.ndarray or torch.Tensor
@@ -218,7 +216,6 @@ def initialize_u_torch(X, U0, V0, error=1e-4, maxIter=1000, minIter=30, meanFitR
 
 def data_fitting_error_torch(X, U, V, deltaVU=0, dVordU=1, dataPrecision='double'):
     """
-    data_fitting_error(X, U, V, deltaVU, dVordU, dataPrecision='double')
     Calculate the datat fitting of X'=UV' with terms
 
     :param X: 2D matrix, [Space, Time]
@@ -295,7 +292,6 @@ def data_fitting_error_torch(X, U, V, deltaVU=0, dVordU=1, dataPrecision='double
 
 def normalize_u_v_torch(U, V, NormV, Norm, dataPrecision='double'):
     """
-    normalize_u_v_torch(U, V, NormV, Norm, dataPrecision='double')
     Normalize U and V with terms
 
     :param U: 2D matrix, [Time, k]
@@ -347,8 +343,7 @@ def normalize_u_v_torch(U, V, NormV, Norm, dataPrecision='double'):
 
 def construct_Laplacian_gNb_torch(gNb, dim_space, vxI=0, X=None, alphaL=10, normW=1, dataPrecision='double'):
     """
-    construct_Laplacian_gNb_torch(gNb, dim_space, vxI=0, X=None, alphaL=10, normW=1, dataPrecision='double')
-    construct Laplacian matrices for Laplacian spatial regularization term
+    Construct Laplacian matrices for Laplacian spatial regularization term
 
     :param gNb: graph neighborhood, a 2D matrix [N, 2] storing rows and columns of non-zero elements
     :param dim_space: dimension of space (number of voxels or vertices)
@@ -397,10 +392,6 @@ def construct_Laplacian_gNb_torch(gNb, dim_space, vxI=0, X=None, alphaL=10, norm
 def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-4, normW=1,
             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, initConv=1, ard=0, eta=0, dataPrecision='double', logFile='Log_pFN_NMF.log'):
     """
-    pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30,
-            meanFitRatio=0.1, error=1e-4, normW=1,
-            Alpha=2, Beta=30, alphaS=2, alphaL=10, initConv=1, ard=0, eta=0,
-            dataPrecision='double', logFile='Log_pFN_NMF.log')
     Compute personalized FNs by spatially-regularized NMF method with group FNs as initialization
 
     :param Data: 2D matrix [dim_time, dim_space], numpy.ndarray or torch.Tensor. Data will be formatted to Tensor and normalized.
@@ -423,7 +414,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/7/2023
+    Yuncong Ma, 9/25/2023
     """
 
     # Setup data precision and eps
@@ -603,7 +594,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
         oldLogL = LogL.clone()
 
         # QC Control
-        temp = mat_corr_torch(initV, V, dataPrecision=dataPrecision)
+        temp = mat_corr_torch(gFN, V, dataPrecision=dataPrecision)
         QC_Spatial_Correspondence = torch.clone(torch.diag(temp))
         temp -= torch.diag(torch.diag(temp))
         QC_Spatial_Correspondence_Control = torch.max(temp, dim=1)[0]
@@ -627,11 +618,9 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     return U, V
 
 
-def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
+def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, dataPrecision='double', logFile='Log_pFN_NMF.log'):
     """
-    gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
-            Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, dataPrecision='double', logFile='Log_pFN_NMF.log')
     Compute group-level FNs using NMF method
 
     :param Data: 2D matrix [dim_time, dim_space], numpy.ndarray or torch.Tensor, recommend to normalize each fMRI scan before concatenate them along the time dimension
@@ -653,7 +642,7 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/25/2023
     """
 
     # setup log file
@@ -736,8 +725,8 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
 
             if alphaS > 0:
                 tmpl21 = torch.sqrt(tmpl2)
-                tmpl22 = torch.tile(torch.sqrt(torch.sum(tmpl2, dim=0)), (dim_space, 1))
-                tmpl21s = torch.tile(torch.sum(tmpl21, dim=0), (dim_space, 1))
+                tmpl22 = torch.sqrt(torch.sum(tmpl2, dim=0, keepdim=True))  # tmpl22 = torch.tile(torch.sqrt(torch.sum(tmpl2, dim=0)), (dim_space, 1))
+                tmpl21s = torch.sum(tmpl21, dim=0, keepdim=True)  # tmpl21s = torch.tile(torch.sum(tmpl21, dim=0), (dim_space, 1))
                 posTerm = torch.div(V, torch.maximum(torch.mul(tmpl21, tmpl22), torch_eps))
                 negTerm = torch.div(torch.mul(V, tmpl21s), torch.maximum(torch.pow(tmpl22, 3), torch_eps))
 
@@ -828,7 +817,6 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-6, normW=1,
 
 def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFile='Log_gFN_fusion_NCut'):
     """
-    gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double')
     Fuses FN results to generate representative group-level FNs
 
     :param gFN_BS: FNs obtained from bootstrapping method, FNs are concatenated along the K dimension
@@ -980,7 +968,6 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
 
 def compute_gNb_torch(Brain_Template, logFile=None):
     """
-    compute_gNb_torch(Brain_Template, logFile=None)
     Prepare a graph neighborhood variable, using indices as its sparse representation
 
     :param Brain_Template: a structure variable with keys 'Data_Type', 'Data_Format', 'Shape', 'Mask'.
@@ -1000,8 +987,7 @@ def compute_gNb_torch(Brain_Template, logFile=None):
 def bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group_ID=None, combineScan=0,
                          samplingMethod='Subject', sampleSize=10, nBS=50, logFile=None):
     """
-    bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group=None, BS=10, N_BS=50, combineFLag=0, samplingMethod='Subject', logFile=None)
-    prepare bootstrapped scan file lists
+    Prepare bootstrapped scan file lists
 
     :param dir_output: directory of a folder to store bootstrapped files
     :param file_scan: a txt file that stores directories of all fMRI scans
@@ -1023,11 +1009,9 @@ def bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, 
                    sampleSize=sampleSize, nBS=nBS, logFile=logFile)
 
 
-def setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
+def setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
     """
-    setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
     Setup the setting for NMF-based method to compute gFNs and pFNs
 
     :param dir_pnet_result: directory of the pNet result folder
@@ -1087,7 +1071,6 @@ def setup_pFN_folder_torch(dir_pnet_result: str):
 
 def run_FN_Computation_torch(dir_pnet_result: str):
     """
-    run_FN_Computation_torch(dir_pnet_result: str)
     run the FN Computation module with settings ready in Data_Input and FN_Computation
 
     :param dir_pnet_result: directory of pNet result folder

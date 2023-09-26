@@ -17,7 +17,6 @@ from FN_Computation_torch import mat_corr_torch, set_data_precision_torch
 
 def run_quality_control_torch(dir_pnet_result: str):
     """
-    run_quality_control_torch(dir_pnet_result: str)
     Run the quality control module, which computes spatial correspondence and functional homogeneity
     The quality control result folder has consistent sub-folder organization as Personalized_FN
     Quality control results of each scan or combined scans are stored into sub-folders
@@ -134,7 +133,6 @@ def run_quality_control_torch(dir_pnet_result: str):
 
 def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', logFile=None):
     """
-    compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', logFile=None)
     Compute quality control measurements, including spatial correspondence and functional homogeneity
     The spatial correspondence ensures one-to-one match between gFNs and pFNs
     The functional homogeneity ensures that pFNs gives better data fitting

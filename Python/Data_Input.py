@@ -18,7 +18,6 @@ import time
 
 def load_matlab_array(file_matlab: str, variable_name: str):
     """
-    load_matlab_array(file_matlab: str, variable_name: str)
     Load a single matlab variable with variable name into np array
     This support both matrix and cell vector
 
@@ -42,7 +41,6 @@ def load_matlab_array(file_matlab: str, variable_name: str):
 
 def load_matlab_single_array(file_matlab: str):
     """
-    load_matlab_single_array(file_matlab: str)
     Load a matlab file with only one variable stored
     This support both matrix and cell vector
 
@@ -77,7 +75,6 @@ def load_matlab_single_array(file_matlab: str):
 
 def load_matlab_single_variable(file_matlab: str):
     """
-    load_matlab_single_variable(file_matlab: str)
     Load a matlab file with only one variable stored
     This support both matrix and cell vector
 
@@ -110,7 +107,6 @@ def load_matlab_single_variable(file_matlab: str):
 
 def set_data_precision(data_precision: str):
     """
-    set_data_precision(data_precision:str)
     Set the data format and eps
     Support single, float32, double, float64
 
@@ -132,7 +128,6 @@ def set_data_precision(data_precision: str):
 
 def set_data_precision_torch(data_precision: str):
     """
-    set_data_precision_torch(data_precision:str)
     Set the data format and eps
     Support single, float32, double, float64
 
@@ -155,7 +150,6 @@ def set_data_precision_torch(data_precision: str):
 
 def write_json_setting(setting, file_setting: str):
     """
-    write_json_setting(setting, file_setting: str)
     Write setting parameter in json format
 
     :param setting: a json based variable
@@ -175,7 +169,6 @@ def write_json_setting(setting, file_setting: str):
 
 def load_json_setting(file_setting: str):
     """
-    load_json_setting(file_setting: str)
     Load setting variable in a json file
 
     :param file_setting: Directory of a json setting file
@@ -196,7 +189,6 @@ def load_json_setting(file_setting: str):
 
 def normalize_data(data, algorithm='vp', normalization='vmax'):
     """
-    normalize_data(data, algorithm, normalization)
     Normalize data by algorithm and normalization settings
 
     :param data: data in 2D matrix [dim_time, dim_space]
@@ -275,7 +267,6 @@ def normalize_data(data, algorithm='vp', normalization='vmax'):
 def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=False,
                    Brain_Mask=None, Normalization=None, Concatenation=True, logFile=None):
     """
-    load_fmri_scan(file_scan_list:str, dataType: str, dataFormat: str, Reshape=False, Brain_Mask=None, Normalization=False, Concatenation=True, logFile=None)
     Load one or multiple fMRI scans, and concatenate them into a single 2D matrix along the time dimension
     Optional normalization can be added for each scan before concatenation
 
@@ -447,8 +438,6 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
 def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
                           maskValue=0, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None):
     """
-    compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
-                          maskType=0, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None)
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
@@ -515,8 +504,6 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
                            file_mask_vol=None, file_overlayImage=None, maskValue=0, file_surfL_inflated=None, file_surfR_inflated=None,
                            logFile=None):
     """
-    compute_brain_template(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
-                          maskType=0, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None)
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
     :param dataType: 'Surface', 'Volume'
@@ -567,7 +554,6 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
 
 def setup_brain_template(dir_pnet_dataInput: str, Brain_Template):
     """
-    setup_brain_template(dir_pnet_result: str, Brain_Template)
     Save the Brain_Template.mat
 
     :param dir_pnet_dataInput: the directory of the Data Input folder
@@ -603,7 +589,6 @@ def setup_brain_template(dir_pnet_dataInput: str, Brain_Template):
 
 def load_brain_template(dir_Brain_Template: str, logFile=None):
     """
-    load_brain_template(dir_Brain_Template: str)
     Load a brain template file
 
     :param dir_Brain_Template: directory of the brain_template file, in json format. Python cannot read the MATLAB version
