@@ -802,7 +802,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
     :param logFile: str, directory of a txt log file
     :return: gFNs, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/6/2023
+    Yuncong Ma, 9/26/2023
     """
 
     # setup log file
@@ -926,7 +926,7 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
             mInd = np.argmax(np.sum(corrW, axis=0), axis=0)  # Find the FN with the highest total similarity to all other FNs
             gFN[:, ki] = candSet[:, mInd]
         elif np.sum(C == ki) == 1:
-            mInd = C.index(ki)
+            mInd = C.tolist().index(ki)
             gFN[:, ki] = gFN_BS[:, mInd]
 
     gFN = gFN / np.maximum(np.tile(np.max(gFN, axis=0), (gFN.shape[0], 1)), np_eps)  # Normalize each FN by its max value
