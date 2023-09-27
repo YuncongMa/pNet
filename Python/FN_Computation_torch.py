@@ -13,8 +13,12 @@ import torch
 
 # other functions of pNet
 from Data_Input import *
-from FN_Computation import construct_Laplacian_gNb, compute_gNb, bootstrap_scan, setup_NMF_setting, setup_pFN_folder
+from FN_Computation import construct_Laplacian_gNb
 from FN_Computation import check_gFN as check_gFN_torch
+from FN_Computation import compute_gNb as compute_gNb_torch
+from FN_Computation import bootstrap_scan as bootstrap_scan_torch
+from FN_Computation import setup_NMF_setting as setup_NMF_setting_torch
+from FN_Computation import setup_pFN_folder as setup_pFN_folder_torch
 
 
 def mat_corr_torch(X, Y=None, dataPrecision='double'):
@@ -967,109 +971,6 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
     return gFN
 
 
-def compute_gNb_torch(Brain_Template, logFile=None):
-    """
-    Prepare a graph neighborhood variable, using indices as its sparse representation
-
-    :param Brain_Template: a structure variable with keys 'Data_Type', 'Data_Format', 'Shape', 'Mask'.
-        If Brain_Template.Data_Type is 'Surface', Shape contains L and R, with vertices and faces as sub keys. Mask contains L and R.
-        If Brain_Template.Data_Type is 'Volume', Shape is None, Mask is a 3D 0-1 matrix, Overlay_Image is a 3D matrix
-    :param logFile:
-    :return: gNb: a 2D matrix [N, 2], which labels the non-zero elements in a graph. Index starts from 1
-
-    Yuncong Ma, 9/13/2023
-    """
-
-    gNb = compute_gNb(Brain_Template, logFile)
-
-    return gNb
-
-
-def bootstrap_scan_torch(dir_output: str, file_scan: str, file_subject_ID: str, file_subject_folder: str, file_group_ID=None, combineScan=0,
-                         samplingMethod='Subject', sampleSize=10, nBS=50, logFile=None):
-    """
-    Prepare bootstrapped scan file lists
-
-    :param dir_output: directory of a folder to store bootstrapped files
-    :param file_scan: a txt file that stores directories of all fMRI scans
-    :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
-    :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
-    :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
-    :param combineScan: 0 or 1, whether to combine multiple fMRI scans for each subject
-    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
-    :param sampleSize: number of subjects selected for each bootstrapping run
-    :param nBS: number of runs for bootstrap
-    :param logFile: directory of a txt file
-    :return: None
-
-    Yuncong Ma, 9/21/2023
-    """
-
-    bootstrap_scan(dir_output, file_scan, file_subject_ID=file_subject_ID, file_subject_folder=file_subject_folder,
-                   file_group_ID=file_group_ID, combineScan=combineScan, samplingMethod=samplingMethod,
-                   sampleSize=sampleSize, nBS=nBS, logFile=logFile)
-
-
-def setup_NMF_setting_torch(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
-    """
-    Setup the setting for NMF-based method to compute gFNs and pFNs
-
-    :param dir_pnet_result: directory of the pNet result folder
-    :param K: number of FNs
-    :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
-    :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
-    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
-    :param sampleSize: number of subjects selected for each bootstrapping run
-    :param nBS: number of runs for bootstrap
-    :param maxIter: maximum iteration number for multiplicative update
-    :param minIter: minimum iteration in case fast convergence
-    :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
-    :param error: difference of cost function for convergence
-    :param normW: 1 or 2, normalization method for W used in Laplacian regularization
-    :param Alpha: hyper parameter for spatial sparsity
-    :param Beta: hyper parameter for Laplacian sparsity
-    :param alphaS: internally determined, the coefficient for spatial sparsity based Alpha, data size, K, and gNb
-    :param alphaL: internally determined, the coefficient for Laplacian sparsity based Beta, data size, K, and gNb
-    :param vxI: flag for using the temporal correlation between nodes (vertex, voxel)
-    :param ard: 0 or 1, flat for combining similar clusters
-    :param eta: a hyper parameter for the ard regularization term
-    :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
-    :param Parallel: False or True, whether to enable parallel computation
-    :param Computation_Mode: 'CPU'
-    :param N_Thread: positive integers, used for parallel computation
-    :param dataPrecision: 'double' or 'single'
-    :return: setting: a structure
-
-    Yuncong Ma, 9/21/2023
-    """
-
-    setting = setup_NMF_setting(dir_pnet_result, K=K, Combine_Scan=Combine_Scan, Compute_gFN=Compute_gFN,
-                                samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
-                                maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
-                                Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
-                                nRepeat=nRepeat,
-                                Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
-                                dataPrecision=dataPrecision)
-
-    return setting
-
-
-def setup_pFN_folder_torch(dir_pnet_result: str):
-    """
-    setup_pFN_folder_torch(dir_pnet_result: str)
-    Setup sub-folders in Personalized_FN to
-
-    :param dir_pnet_result: directory of the pNet result folder
-    :return: list_subject_folder_unique: unique subject folder array for getting sub-folders in Personalized_FN
-
-    Yuncong Ma, 9/21/2023
-    """
-
-    list_subject_folder_unique = setup_pFN_folder(dir_pnet_result)
-    return list_subject_folder_unique
-
-
 def run_FN_Computation_torch(dir_pnet_result: str):
     """
     run the FN Computation module with settings ready in Data_Input and FN_Computation
@@ -1199,7 +1100,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
         # reshape to 2D if required
         gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
         # setup folders in Personalized_FN
-        list_subject_folder = setup_pFN_folder(dir_pnet_result)
+        list_subject_folder = setup_pFN_folder_torch(dir_pnet_result)
         N_Scan = len(list_subject_folder)
         for i in range(1, N_Scan+1):
             # print(' Processing ' + str(i))

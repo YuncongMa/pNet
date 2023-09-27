@@ -1153,10 +1153,10 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
         FID.close()
 
 
-def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, file_gFN=None, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
+def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
     """
-    setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize=10, nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
+    setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
     Setup the setting for NMF-based method to compute gFNs and pFNs
 
@@ -1166,8 +1166,8 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gF
     :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
     :param file_gFN: directory of a precomputed gFN in .mat format
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
-    :param sampleSize: number of subjects selected for each bootstrapping run
-    :param nBS: number of runs for bootstrap
+    :param sampleSize: 'Automatic' or integer number, number of subjects selected for each bootstrapping run
+    :param nBS: 'Automatic' or integer number, number of runs for bootstrap
     :param maxIter: maximum iteration number for multiplicative update
     :param minIter: minimum iteration in case fast convergence
     :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
@@ -1187,10 +1187,20 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gF
     :param dataPrecision: 'double' or 'single'
     :return: setting: a structure
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 9/27/2023
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
+
+    # Set sampleSize if it is 'Automatic'
+    if sampleSize == 'Automatic':
+        file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
+        list_subject_ID = np.array([line.replace('\n', '') for line in open(file_subject_ID, 'r')])
+        subject_ID_unique = np.unique(list_subject_ID)
+        N_Subject = subject_ID_unique.shape[0]
+        if sampleSize == 'Automatic':
+            sampleSize = np.maximum(100, np.round(N_Subject / 10))
+
 
     BootStrap = {'samplingMethod': samplingMethod, 'sampleSize': sampleSize, 'nBS': nBS}
     Group_FN = {'Compute_gFN': Compute_gFN, 'file_gFN': file_gFN,

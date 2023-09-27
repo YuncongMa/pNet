@@ -165,8 +165,7 @@ def run_workflow_simple(dir_pnet_result: str,
                         K=17,
                         Combine_Scan=False,
                         Compute_gFN=True,
-                        file_gFN=None,
-                        sampleSize=10, nBS=50):
+                        file_gFN=None):
     """
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
     This is a minimal version of run_workflow for fast deployment
@@ -180,8 +179,6 @@ def run_workflow_simple(dir_pnet_result: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
     :param file_gFN: directory of a precomputed gFN in .mat format
-    :param sampleSize: number of subjects selected for each bootstrapping run
-    :param nBS: number of runs for bootstrap
 
     Yuncong Ma, 9/27/2023
     """
@@ -205,8 +202,8 @@ def run_workflow_simple(dir_pnet_result: str,
     setup_NMF_setting(dir_pnet_result,
                       K=K,
                       Combine_Scan=Combine_Scan,
-                      Compute_gFN=Compute_gFN, file_gFN=file_gFN,
-                      sampleSize=sampleSize, nBS=nBS)
+                      Compute_gFN=Compute_gFN,
+                      file_gFN=file_gFN)
     # perform FN computation
     run_FN_Computation_torch(dir_pnet_result)
     # ============================================= #
