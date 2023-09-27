@@ -1,26 +1,31 @@
 # This is a brief description of the Python version of pNet
-The Python version is designed to carry out the pNet setup and computation.
+The Python version is designed to carry out the pNet setup and computation, consistent to the MATLAB version with GUI.
 It has Numpy and PyTorch versions for easy code development and fast computation.
+pNet.py is the main function to import all required packages and functions
 
 # Deployment
 This Python package requires additional toolboxes which can be found in the Install_Toolbox.py
 Specifically, it requires:
-numpy
-pytorch
-scipy
-nibabel
-h5py
+1. numpy
+2. pytorch
+3. scipy
+4. nibabel
+5. h5py
+
+It is recommended to use 'import pNet' to avoid conflicting function names
 
 # Workflow
+The workflow code is in Workflow.py
 This streamlines the setup and computation of pNet, including modules below
 1. Data Input
 2. FN Computation
 3. Quality Control.
 
+
 # Module
-Data Input
-FN Computation
-Quality Control
+1. Data Input
+2. FN Computation
+3. Quality Control
 
 # Additionals
 Example: It includes example results of pNet on HCP, UKBB and PNC datasets
