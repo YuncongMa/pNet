@@ -1,9 +1,10 @@
-# Yuncong Ma, 8/14/2023
+# Yuncong Ma, 9/27/2023
 # Example data information
 
 #########################################
 # Packages
 import os
+from Data_Input import load_matlab_single_array
 #########################################
 
 # Get the directory of pNet based the location of this file
@@ -37,6 +38,8 @@ class Example:
         dir = dir_example_hcp_surf
         dir_data = dir_example_data_hcp_surf
         dir_pnet = dir_example_pnet_hcp_surf
+
+        # load_gFN(K, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)')
 
     class PNC_surf:
         dir = dir_example_pnc_surf

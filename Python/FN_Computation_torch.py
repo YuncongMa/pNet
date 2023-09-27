@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/5/2023
+# Yuncong Ma, 9/27/2023
 # FN Computation module of pNet
 # Pytorch version
 
@@ -14,6 +14,7 @@ import torch
 # other functions of pNet
 from Data_Input import *
 from FN_Computation import construct_Laplacian_gNb, compute_gNb, bootstrap_scan, setup_NMF_setting, setup_pFN_folder
+from FN_Computation import check_gFN as check_gFN_torch
 
 
 def mat_corr_torch(X, Y=None, dataPrecision='double'):
@@ -1075,7 +1076,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 9/27/2023
     """
 
     # get directories of sub-folders
@@ -1185,7 +1186,8 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
         else:  # use precomputed gFNs
             file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
-            gFN = load_matlab_single_array(file_gFN)
+            gFN = load_matlab_single_array(file_gFN, method=setting['FN_Computation']['Method'])
+            check_gFN_torch(gFN)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
         # ============================================= #
 

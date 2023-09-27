@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/25/2023
+# Yuncong Ma, 9/27/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -20,8 +20,9 @@ from Quality_Control_torch import *
 
 
 def run_workflow(dir_pnet_result: str,
-                 dataType: str, dataFormat: str,
-                 file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None,
+                 file_scan: str,
+                 dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
+                 file_subject_ID=None, file_subject_folder=None, file_group=None,
                  scan_info='Automatic',
                  file_Brain_Template=None,
                  file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
@@ -163,9 +164,12 @@ def run_workflow_simple(dir_pnet_result: str,
                         file_Brain_Template: str,
                         K=17,
                         Combine_Scan=False,
+                        Compute_gFN=True,
+                        file_gFN=None,
                         sampleSize=10, nBS=50):
     """
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
+    This is a minimal version of run_workflow for fast deployment
 
     :param dir_pnet_result: directory of the pNet result folder
     :param dataType: 'Surface', 'Volume'
@@ -174,10 +178,12 @@ def run_workflow_simple(dir_pnet_result: str,
     :param file_Brain_Template: file directory of a brain template file in json format
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
+    :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
+    :param file_gFN: directory of a precomputed gFN in .mat format
     :param sampleSize: number of subjects selected for each bootstrapping run
     :param nBS: number of runs for bootstrap
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 9/27/2023
     """
 
     # setup all sub-folders in the pNet result folder
@@ -199,6 +205,7 @@ def run_workflow_simple(dir_pnet_result: str,
     setup_NMF_setting(dir_pnet_result,
                       K=K,
                       Combine_Scan=Combine_Scan,
+                      Compute_gFN=Compute_gFN, file_gFN=file_gFN,
                       sampleSize=sampleSize, nBS=nBS)
     # perform FN computation
     run_FN_Computation_torch(dir_pnet_result)

@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/17/2023
+# Yuncong Ma, 9/27/2023
 # FN Computation module of pNet
 
 #########################################
@@ -1276,7 +1276,7 @@ def run_FN_Computation(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/27/2023
     """
 
     # get directories of sub-folders
@@ -1388,6 +1388,7 @@ def run_FN_Computation(dir_pnet_result: str):
         else:  # use precomputed gFNs
             file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
             gFN = load_matlab_single_array(file_gFN)
+            check_gFN(gFN, method=setting['FN_Computation']['Method'])
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
         # ============================================= #
 
@@ -1433,3 +1434,24 @@ def run_FN_Computation(dir_pnet_result: str):
             sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN})
             sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC})
         # ============================================= #
+
+
+def check_gFN(gFN: np.ndarray, method='SR-NMF', logFile=None):
+    """
+    Check the values in gFNs to ensure compatibility to the desired FN model\
+
+    :param gFN: group level FNs, 2D matrix for surface type [V K], 4D matrix for volume type [X Y Z K], where K is the number of FNs
+    :param method: 'SR-NMF'
+    :param logFile: directory of the log file
+
+    Yuncong Ma, 9/27/2023
+    """
+
+    if method == 'SR-NMF':
+        if np.sum(gFN < 0) > 0:
+            raise ValueError('When using method SR-NMF, all values in gFNs should be non-negative')
+            if logFile is not None:
+                logFile = open(logFile,'a')
+                print('When using method SR-NMF, all values in gFNs should be non-negative', file=logFile, flush=True)
+
+    return
