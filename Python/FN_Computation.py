@@ -1286,11 +1286,17 @@ def run_FN_Computation(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 9/27/2023
+    Yuncong Ma, 9/28/2023
     """
 
     # get directories of sub-folders
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
+
+    # log file
+    logFile_FNC = os.path.join(dir_pnet_FNC, 'log.log')
+    logFile_FNC = open(logFile_FNC, 'w')
+    print('\nStart FN computation using Numpy at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
+          file=logFile_FNC, flush=True)
 
     # load settings for data input and FN computation
     if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
@@ -1300,6 +1306,7 @@ def run_FN_Computation(dir_pnet_result: str):
     settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
     settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
     setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
+    print('Settings are loaded from folder Data_Input and FN_Computation', file=logFile_FNC, flush=True)
 
     # load basic settings
     dataType = setting['Data_Input']['Data_Type']
@@ -1312,15 +1319,18 @@ def run_FN_Computation(dir_pnet_result: str):
         Brain_Mask = Brain_Template['Brain_Mask']
     else:
         Brain_Mask = None
+    print('Brain template is loaded from folder Data_Input', file=logFile_FNC, flush=True)
 
     # ============== gFN Computation ============== #
     # Start computation using SP-NMF
     if setting['FN_Computation']['Method'] == 'SR-NMF':
+        print('FN computation uses spatial-regularized non-negative matrix factorization method', file=logFile_FNC, flush=True)
 
         if setting['FN_Computation']['Group_FN']['Compute_gFN']:
             # 2 steps
             # step 1 ============== bootstrap
             # sub-folder in FNC for storing bootstrapped results
+            print('Start to prepare bootstrap files', file=logFile_FNC, flush=True)
             dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
             if not os.path.exists(dir_pnet_BS):
                 os.makedirs(dir_pnet_BS)
@@ -1365,6 +1375,7 @@ def run_FN_Computation(dir_pnet_result: str):
             dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
 
             # NMF on bootstrapped subsets
+            print('Start to NMF for each bootstrap at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
             for rep in range(1, 1+nBS):
                 # log file
                 logFile = os.path.join(dir_pnet_BS, str(rep), 'Log.log')
@@ -1382,6 +1393,7 @@ def run_FN_Computation(dir_pnet_result: str):
 
             # step 2 ============== fuse results
             # Generate gFNs
+            print('Start to fuse bootstrapped results using NCut at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
             FN_BS = np.empty(nBS, dtype=np.ndarray)
             # load bootstrapped results
             for rep in range(1, nBS+1):
@@ -1400,9 +1412,11 @@ def run_FN_Computation(dir_pnet_result: str):
             gFN = load_matlab_single_array(file_gFN)
             check_gFN(gFN, method=setting['FN_Computation']['Method'])
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+            print('load precomputed gFNs', file=logFile_FNC, flush=True)
         # ============================================= #
 
         # ============== pFN Computation ============== #
+        print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
         # load precomputed gFNs
         gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
         # additional parameter
@@ -1413,7 +1427,7 @@ def run_FN_Computation(dir_pnet_result: str):
         list_subject_folder = setup_pFN_folder(dir_pnet_result)
         N_Scan = len(list_subject_folder)
         for i in range(1, N_Scan+1):
-            print(' Processing ' + str(i))
+            print(f'Start to compute pFNs for {i}-th folder: {list_subject_folder[i-1]}', file=logFile_FNC, flush=True)
             dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder[i-1])
             # parameter
             maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
@@ -1444,6 +1458,8 @@ def run_FN_Computation(dir_pnet_result: str):
             sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN})
             sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC})
         # ============================================= #
+
+    print('Finished FN computation at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
 
 
 def check_gFN(gFN: np.ndarray, method='SR-NMF', logFile=None):

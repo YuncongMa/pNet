@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/27/2023
+# Yuncong Ma, 9/28/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -98,48 +98,54 @@ def run_workflow(dir_pnet_result: str,
 
     # ============== Data Input ============== #
     # setup dataInput
-    setup_scan_info(dir_pnet_dataInput=dir_pnet_dataInput,
-                    dataType=dataType, dataFormat=dataFormat,
-                    file_scan=file_scan, file_subject_ID=file_subject_ID,
-                    file_subject_folder=file_subject_folder, file_group_ID=file_group,
-                    Combine_Scan=Combine_Scan)
+    setup_scan_info(
+        dir_pnet_dataInput=dir_pnet_dataInput,
+        dataType=dataType, dataFormat=dataFormat,
+        file_scan=file_scan, file_subject_ID=file_subject_ID,
+        file_subject_folder=file_subject_folder, file_group_ID=file_group,
+        Combine_Scan=Combine_Scan
+    )
     # setup brain template
     # Volume and surface data types require different inputs to compute the brain template
     if file_Brain_Template is None:
         if dataType == 'Volume':
-            Brain_Template = \
-                compute_brain_template(dataType=dataType, dataFormat=dataFormat,
-                                       file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
-                                       maskValue=maskValue,
-                                       logFile=None)
+            setup_brain_template(
+                dir_pnet_dataInput,
+                dataType=dataType, dataFormat=dataFormat,
+                file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
+                maskValue=maskValue,
+                logFile=None
+            )
         elif dataType == 'Surface':
-            Brain_Template = \
-                compute_brain_template(dataType=dataType, dataFormat=dataFormat,
-                                       file_surfL=file_surfL, file_surfR=file_surfR,
-                                       file_maskL=file_maskL, file_maskR=file_maskR,
-                                       maskValue=maskValue,
-                                       file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
-                                       logFile=None)
+            setup_brain_template(
+                dir_pnet_dataInput,
+                dataType=dataType, dataFormat=dataFormat,
+                file_surfL=file_surfL, file_surfR=file_surfR,
+                file_maskL=file_maskL, file_maskR=file_maskR,
+                maskValue=maskValue,
+                file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
+                logFile=None
+            )
 
     else:
-        Brain_Template = load_brain_template(file_Brain_Template)
-    # save brain template
-    save_brain_template(dir_pnet_dataInput, Brain_Template)
+        setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
     # ============================================= #
 
     # ============== FN Computation ============== #
     # setup parameters for FN computation
-    setup_NMF_setting(dir_pnet_result,
-                      K=K,
-                      Combine_Scan=Combine_Scan,
-                      Compute_gFN=Compute_gFN, file_gFN=file_gFN,
-                      samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
-                      maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
-                      Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
-                      vxI=vxI, ard=ard, eta=eta,
-                      nRepeat=nRepeat,
-                      Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
-                      dataPrecision=dataPrecision)
+    setup_NMF_setting(
+        dir_pnet_result,
+        K=K,
+        Combine_Scan=Combine_Scan,
+        Compute_gFN=Compute_gFN, file_gFN=file_gFN,
+        samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
+        maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
+        Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
+        vxI=vxI, ard=ard, eta=eta,
+        nRepeat=nRepeat,
+        Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
+        dataPrecision=dataPrecision
+    )
     # perform FN computation
     if Computation_Mode == 'CPU_Numpy':
         run_FN_Computation(dir_pnet_result)
@@ -178,7 +184,7 @@ def run_workflow_simple(dir_pnet_result: str,
     :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
     :param file_gFN: directory of a precomputed gFN in .mat format
 
-    Yuncong Ma, 9/27/2023
+    Yuncong Ma, 9/28/2023
     """
 
     # setup all sub-folders in the pNet result folder
@@ -186,21 +192,25 @@ def run_workflow_simple(dir_pnet_result: str,
 
     # ============== Data Input ============== #
     # setup dataInput
-    setup_scan_info(dir_pnet_dataInput=dir_pnet_dataInput,
-                    dataType=dataType, dataFormat=dataFormat,
-                    file_scan=file_scan,
-                    Combine_Scan=Combine_Scan)
+    setup_scan_info(
+        dir_pnet_dataInput=dir_pnet_dataInput,
+        dataType=dataType, dataFormat=dataFormat,
+        file_scan=file_scan,
+        Combine_Scan=Combine_Scan
+    )
     # setup brain template
     setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
     # ============================================= #
 
     # ============== FN Computation ============== #
     # setup parameters for FN computation
-    setup_NMF_setting(dir_pnet_result,
-                      K=K,
-                      Combine_Scan=Combine_Scan,
-                      Compute_gFN=Compute_gFN,
-                      file_gFN=file_gFN)
+    setup_NMF_setting(
+        dir_pnet_result,
+        K=K,
+        Combine_Scan=Combine_Scan,
+        Compute_gFN=Compute_gFN,
+        file_gFN=file_gFN
+    )
     # perform FN computation
     run_FN_Computation_torch(dir_pnet_result)
     # ============================================= #
