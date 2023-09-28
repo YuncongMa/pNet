@@ -133,3 +133,9 @@ pNet.workflow_simple(
         K=K
 )
 ```
+
+## Help
+All the functions in pNet come with detailed description of each input
+![Screenshot 2023-09-28 at 2 58 34 PM](https://github.com/YuncongMa/pNet/assets/20191790/fd0a95b7-9eb6-46e3-9503-eb43b13f63b7)
+
+
