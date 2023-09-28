@@ -23,9 +23,9 @@ This streamlines the setup and computation of pNet, including modules below
 
 
 # Module
-1. Data Input
-2. FN Computation
-3. Quality Control
+1. Data Input: organize fMRI scans based on subject information, prepare brain template for subsequent FN computation and visualization
+2. FN Computation: setup and carry out the FN computation, generating group-level and personalized FNs
+3. Quality Control: ensures that pFNs have the highest spatial similarity to their group-level counterparts
 
 # Additionals
 Example: It includes example results of pNet on HCP, UKBB and PNC datasets
