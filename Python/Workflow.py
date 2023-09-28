@@ -23,7 +23,6 @@ def run_workflow(dir_pnet_result: str,
                  file_scan: str,
                  dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
                  file_subject_ID=None, file_subject_folder=None, file_group=None,
-                 scan_info='Automatic',
                  file_Brain_Template=None,
                  file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
                  file_mask_vol=None, file_overlayImage=None,
@@ -47,7 +46,6 @@ def run_workflow(dir_pnet_result: str,
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
     :param file_group: a txt file that store group information corresponding to fMRI scan in file_scan
-    :param scan_info: 'Automatic' or 'Manual', 'Manual' requires manual input of file_subject_ID, file_subject_folder and file_group
 
     :param file_Brain_Template: file directory of a brain template file in json format
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
@@ -104,7 +102,7 @@ def run_workflow(dir_pnet_result: str,
                     dataType=dataType, dataFormat=dataFormat,
                     file_scan=file_scan, file_subject_ID=file_subject_ID,
                     file_subject_folder=file_subject_folder, file_group_ID=file_group,
-                    scan_info=scan_info, Combine_Scan=Combine_Scan)
+                    Combine_Scan=Combine_Scan)
     # setup brain template
     # Volume and surface data types require different inputs to compute the brain template
     if file_Brain_Template is None:
@@ -126,7 +124,7 @@ def run_workflow(dir_pnet_result: str,
     else:
         Brain_Template = load_brain_template(file_Brain_Template)
     # save brain template
-    setup_brain_template(dir_pnet_dataInput, Brain_Template)
+    save_brain_template(dir_pnet_dataInput, Brain_Template)
     # ============================================= #
 
     # ============== FN Computation ============== #
@@ -174,7 +172,7 @@ def run_workflow_simple(dir_pnet_result: str,
     :param dataType: 'Surface', 'Volume'
     :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'
     :param file_scan: a txt file that stores directories of all fMRI scans
-    :param file_Brain_Template: file directory of a brain template file in json format
+    :param file_Brain_Template: file directory or content of a brain template file in json format
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
@@ -192,9 +190,8 @@ def run_workflow_simple(dir_pnet_result: str,
                     dataType=dataType, dataFormat=dataFormat,
                     file_scan=file_scan,
                     Combine_Scan=Combine_Scan)
-    # load and save brain template
-    Brain_Template = load_brain_template(file_Brain_Template)
-    setup_brain_template(dir_pnet_dataInput, Brain_Template)
+    # setup brain template
+    setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
     # ============================================= #
 
     # ============== FN Computation ============== #

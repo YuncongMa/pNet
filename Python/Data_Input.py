@@ -507,7 +507,7 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
     :param dataType: 'Surface', 'Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'FreeSurfer Surface (*.)', or 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
     :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
     :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
@@ -522,8 +522,22 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
     :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
                             a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/28/2023
     """
+
+    # log file
+    if logFile is not None:
+        logFile = open(logFile, 'a')
+        print('\nCompute brain template at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
+              file=logFile, flush=True)
+        print("Brain template supports both volume and surface data types\n"
+              "For volume data type, a Mask file and a high resolution T1/T2 overlay image are required\n"
+              "For surface data type, files for surface mesh shape including vertices and faces are required.\n"
+              "And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.\n"
+              "Inflated surface mesh shape files are optional for different visualization purposes.\n", file=logFile, flush=True)
+
+    # check data type and format
+    check_data_type_format(dataType, dataFormat, logFile=logFile)
 
     if dataType == 'Volume':
         if file_mask_vol is None or file_overlayImage is None:
@@ -552,14 +566,15 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
     return Brain_Template
 
 
-def setup_brain_template(dir_pnet_dataInput: str, Brain_Template):
+def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
     """
     Save the Brain_Template.mat
 
     :param dir_pnet_dataInput: the directory of the Data Input folder
     :param Brain_Template: a structure created by function compute_brain_template
+    :param logFile: 'Automatic', None, or a file directory
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/28/2023
     """
 
     # Use both matlab and json files for convenience
@@ -653,6 +668,67 @@ def load_brain_template(dir_Brain_Template: str, logFile=None):
         raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
 
     return Brain_Template
+
+
+def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
+                         dataType=None, dataFormat=None,
+                         file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
+                         file_mask_vol=None, file_overlayImage=None,
+                         maskValue=0,
+                         file_surfL_inflated=None, file_surfR_inflated=None,
+                         logFile='Automatic'):
+    """
+
+    :param dir_pnet_dataInput: the directory of the Data Input folder
+    :param file_Brain_Template: file directory or the content of a brain template
+
+    :param dataType: 'Surface', 'Volume'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'
+
+    :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
+    :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
+    :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
+    :param file_maskR: file that stores the mask information of the right hemisphere, a 1D 0-1 vector
+    :param file_surfL_inflated: file that stores the inflated surface shape information of the left hemisphere, including vertices and faces
+    :param file_surfR_inflated: file that stores the inflated surface shape information of the right hemisphere, including vertices and faces
+
+    :param file_mask_vol: file of a mask file for volume-based data type
+    :param file_overlayImage: file of a background image for visualizing volume-based results
+
+    :param maskValue: 0 or 1, 0 means 0s in mask files are useful vertices, otherwise vice versa. maskValue=0 for medial wall in HCP data, and maskValue=1 for brain masks
+
+    :param logFile: 'Automatic', None, or a txt formatted file directory
+    """
+
+    # log file
+    if logFile == 'Automatic':
+        logFile = os.path.join(dir_pnet_dataInput, 'Log_Brain_Template.log')
+    if logFile is not None:
+        print('\nSetup brain template at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
+              file=logFile, flush=True)
+
+    if file_Brain_Template is not None:
+        if isinstance(file_Brain_Template, str):
+            Brain_Template = load_brain_template(file_Brain_Template, logFile=logFile)
+        else:
+            Brain_Template = file_Brain_Template
+
+    else:
+        Brain_Template = compute_brain_template(dataType=dataType, dataFormat=dataFormat,
+                                                file_surfL=file_surfL, file_surfR=file_surfR,
+                                                file_maskL=file_maskL, file_maskR=file_maskR,
+                                                file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
+                                                maskValue=maskValue,
+                                                file_surfL_inflated=file_surfL_inflated,
+                                                file_surfR_inflated=file_surfR_inflated,
+                                                logFile=logFile)
+
+    # save brain template
+    save_brain_template(dir_pnet_dataInput, Brain_Template, logFile=logFile)
+
+
+
+
 
 
 def reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None):
@@ -816,12 +892,13 @@ def print_description_scan_info(logFile: str):
           "Subject ID will be extracted automatically based on the first level sub-folder names in the longest common root directory.\n"
           "In this case, subject ID will be 'Subject_01'. And those information will be saved into 'Subject_ID.txt'\n"
           "If multiple scans are detected, another file 'Subject_ID.txt' will specify the sub-directory names for each scan, which will be used to store results.\n"
-          "If multiple datasets are used, another group ID file 'Group_ID.txt' is recommended to be prepared to specify the group ID for each scan.\n", file=logFile, flush=True)
+          "If multiple datasets are used, another group ID file 'Group_ID.txt' is recommended to be prepared to specify the group ID for each scan.\n"
+          , file=logFile, flush=True)
 
 
-def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group_ID=None, scan_info='Automatic', Combine_Scan=False, logFile='Automatic'):
+def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group_ID=None, Combine_Scan=False, logFile='Automatic'):
     """
-    setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Automatic',Combine_Scan=False)
+    setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, Combine_Scan=False)
     Set up a few txt files for labeling scans
     file_scan contains the directories of all fMRI scans
     file_subject_ID contains the subject ID information for each corresponding fMRI scans in file_scan
@@ -836,7 +913,6 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
     :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
-    :param scan_info: 'Automatic' or 'Manual', 'Manual' requires manual input of file_subject_ID, file_subject_folder and file_group
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param logFile: None, 'Automatic', or a file directory, for a txt formatted log file
 
@@ -858,8 +934,13 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
     # output setting file
     setting = {'Data_Type': dataType, 'Data_Format': dataFormat,
                'file_scan': file_scan, 'file_subject_ID': file_subject_ID, 'file_subject_folder': file_subject_folder,
-               'file_group_ID': file_group_ID, 'scan_info': scan_info, 'Combine_Scan': Combine_Scan}
+               'file_group_ID': file_group_ID, 'Combine_Scan': Combine_Scan}
     write_json_setting(setting, os.path.join(dir_pnet_dataInput, 'Setting.json'))
+
+    if file_subject_ID is None:
+        scan_info = 'Automatic'
+    else:
+        scan_info = 'Manual'
 
     if scan_info == 'Manual':
         # file_subject_ID is required for Manual setting
@@ -888,6 +969,9 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
             dest_file_group_ID = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
             dest_file_group_ID = open(dest_file_group_ID, 'w')
             [print(line.replace('\n', ''), file=dest_file_group_ID) for line in open(file_group_ID, 'r')]
+            dest_file_group_ID.close()
+            list_group_ID = [line.replace('\n', '') for line in open(dest_file_group_ID, 'r')]
+            N_Group = len(np.unique(np.array(list_group_ID)))
             dest_file_group_ID.close()
 
     elif scan_info == 'Automatic':
@@ -930,7 +1014,18 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
 
     # print out summary of the scan info
     if logFile is not None:
-        print('', file=logFile, flush=True)
+        print("\n\n--------------------------------------\n"
+              "Summary of the dataset\n"
+              f"The data type is {dataType} with format as {dataFormat}\n"
+              f"There are {N_Scan} scans, {N_Subject} subjects\n"
+              , file=logFile, flush=True)
+        if file_group_ID is not None:
+            print(f"Group ID is provided, and there are {N_Group} groups", file=logFile, flush=True)
+        if Combine_Scan:
+            print('Multiple scans are combined for each subject', file=logFile, flush=True)
+        else:
+            print('Multiple scans are treated separately for each subject', file=logFile, flush=True)
+
 
 
 
