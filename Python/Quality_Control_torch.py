@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/24/2023
+# Yuncong Ma, 9/27/2023
 # Quality control module of pNet using PyTorch
 
 #########################################
@@ -122,9 +122,13 @@ def run_quality_control_torch(dir_pnet_result: str):
 
     # Finish the final report
     if flag_QC == 0:
-        print('\nSummary\n All scans passed QC\n', file=file_Final_Report, flush=True)
+        print(f'\nSummary\n All {N_pFN} scans passed QC\n'
+              f' This ensures that personalized FNs show highest spatial similarity to their group-level counterparts\n',
+              file=file_Final_Report, flush=True)
     else:
-        print('\nSummary\n Number of failed scans = ' + str(flag_QC) + ' \n', file=file_Final_Report, flush=True)
+        print(f'\nSummary\n Number of failed scans = {flag_QC}\n'
+              f' This means those scans have at least one pFN show higher spatial similarity to a different group-level FN\n',
+              file=file_Final_Report, flush=True)
 
     print('\nFinished QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
           file=file_Final_Report, flush=True)
