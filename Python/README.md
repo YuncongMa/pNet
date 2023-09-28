@@ -100,7 +100,7 @@ file_Brain_Template = pNet.Brain_Template.file_HCP_surf
 K = 17
 
 # Run pNet workflow
-pNet.run_workflow_simple(
+pNet.workflow_simple(
         dir_pnet_result=dir_pnet_result,
         dataType='Surface',
         dataFormat='HCP Surface (*.cifti, *.mat)',
