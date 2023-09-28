@@ -32,4 +32,4 @@ Example: It includes example results of pNet on HCP, UKBB and PNC datasets
 Brain Template: It includes prepared brain template files for HCP, MNI space
 
 # Example script
-Several simple examples are accessible in Example_Workflow.py
+Several simple examples are provided in Example_Workflow.py
