@@ -1,5 +1,6 @@
-# Yuncong Ma, 9/27/2023
+# Yuncong Ma, 9/28/2023
 # Examples of setting up a workflow of pNet
+# Those examples provide minimal settings to run a workflow
 # Each example has a brief description
 
 # load pNet toolbox

@@ -799,7 +799,27 @@ def check_data_type_format(dataType: str,  dataFormat: str, logFile=None):
             print("Data format should be 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'", file=logFile, flush=True)
 
 
-def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group_ID=None, scan_info='Automatic', Combine_Scan=False, logFile=None):
+def print_description_scan_info(logFile: str):
+    """
+    Print the description of scan info
+
+    :param logFile:
+
+    Yuncong Ma, 9/28/2023
+    """
+
+    print("\nThe scan information specifies the data type and format, and how those fMRI scans are organized.\n"
+          "Data type can be 'Surface', 'Volume'.\n"
+          "Data format can be 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'.\n"
+          "Scan information requires a txt formatted file ('Scan_List.txt') to load fMRI scans.\n"
+          "Ex. A txt file contains two lines: './Subject_01/Session_01/REST_01.nii.gz' and './Subject_01/Session_02/REST_01.nii.gz'\n"
+          "Subject ID will be extracted automatically based on the first level sub-folder names in the longest common root directory.\n"
+          "In this case, subject ID will be 'Subject_01'. And those information will be saved into 'Subject_ID.txt'\n"
+          "If multiple scans are detected, another file 'Subject_ID.txt' will specify the sub-directory names for each scan, which will be used to store results.\n"
+          "If multiple datasets are used, another group ID file 'Group_ID.txt' is recommended to be prepared to specify the group ID for each scan.\n", file=logFile, flush=True)
+
+
+def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group_ID=None, scan_info='Automatic', Combine_Scan=False, logFile='Automatic'):
     """
     setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, scan_info='Automatic',Combine_Scan=False)
     Set up a few txt files for labeling scans
@@ -818,10 +838,19 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
     :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
     :param scan_info: 'Automatic' or 'Manual', 'Manual' requires manual input of file_subject_ID, file_subject_folder and file_group
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
-    :param logFile: directory of a txt formatted log file
+    :param logFile: None, 'Automatic', or a file directory, for a txt formatted log file
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 9/28/2023
     """
+
+    # log file
+    if logFile == 'Automatic':
+        logFile = os.path.join(dir_pnet_dataInput, 'Log_Scan_Info.log')
+    if logFile is not None:
+        logFile = open(logFile, 'a')
+        print('\nSetup scan info at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
+              file=logFile, flush=True)
+        print_description_scan_info(logFile)
 
     # Check setting
     check_data_type_format(dataType, dataFormat, logFile=logFile)
@@ -898,6 +927,10 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
             for i in range(len(list_subject_folder)):
                 print(list_subject_folder[i], file=file_subject_folder)
             file_subject_folder.close()
+
+    # print out summary of the scan info
+    if logFile is not None:
+        print('', file=logFile, flush=True)
 
 
 

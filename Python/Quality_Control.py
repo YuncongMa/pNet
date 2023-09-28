@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/27/2023
+# Yuncong Ma, 9/28/2023
 # Quality control module of pNet
 
 #########################################
@@ -12,6 +12,22 @@ import time
 # other functions of pNet
 from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder, load_brain_template
 from FN_Computation import mat_corr, set_data_precision
+
+
+def print_description_QC(logFile: str):
+    """
+    Print the description of quality control module
+
+    :param logFile:
+
+    Yuncong Ma, 9/28/2023
+    """
+
+    print('\nQuality control module checks the spatial correspondence and functional homogeneity.\n'
+          'The spatial correspondence measures the spatial similarity between pFNs and gFNs.\n'
+          'pFNs are supposed to have the highest spatial similarity to their group-level counterparts, otherwise violating the QC.\n'
+          'The functional homogeneity measures the average temporal correlation between time series of each pFN and the whole brain.\n'
+          'pFNs are supposed to show improved functional homogeneity compared to gFNs.\n', file=logFile, flush=True)
 
 
 def run_quality_control(dir_pnet_result: str):
@@ -32,7 +48,7 @@ def run_quality_control(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 9/27/2023
+    Yuncong Ma, 9/28/2023
     """
 
     # Setup sub-folders in pNet result
@@ -42,6 +58,9 @@ def run_quality_control(dir_pnet_result: str):
     file_Final_Report = open(os.path.join(dir_pnet_QC, 'Final_Report.txt'), 'w')
     print('\nStart QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
           file=file_Final_Report, flush=True)
+    # Description of QC
+    if file_Final_Report is not None:
+        print_description_QC(file_Final_Report)
 
     setting = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
     Data_Type = setting['Data_Type']

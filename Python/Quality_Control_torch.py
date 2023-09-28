@@ -13,6 +13,7 @@ import torch
 # other functions of pNet
 from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder, load_brain_template
 from FN_Computation_torch import mat_corr_torch, set_data_precision_torch
+from Quality_Control import print_description_QC
 
 
 def run_quality_control_torch(dir_pnet_result: str):
@@ -32,7 +33,7 @@ def run_quality_control_torch(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 9/28/2023
     """
 
     # Setup sub-folders in pNet result
@@ -42,6 +43,9 @@ def run_quality_control_torch(dir_pnet_result: str):
     file_Final_Report = open(os.path.join(dir_pnet_QC, 'Final_Report.txt'), 'w')
     print('\nStart QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
           file=file_Final_Report, flush=True)
+    # Description of QC
+    if file_Final_Report is not None:
+        print_description_QC(file_Final_Report)
 
     setting = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
     Data_Type = setting['Data_Type']
