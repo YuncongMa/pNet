@@ -109,3 +109,27 @@ pNet.run_workflow_simple(
         K=K
 )
 ```
+
+```
+# This example is to perform pNet using volume-based fMRI in NIFTI format, with co-registration to MNI space
+# 1. Specify the result folder directory in dir_pnet_result
+# 2. Provide a txt formatted scan list file, such as Scan_List.txt
+# 3. Use a prepared brain template file provided in pNet
+# 4. Choose the desired number of FNs
+
+# Setup
+dir_pnet_result = '/Volumes/Scratch_0/pNet/Test/Test_FN17_UKBB_Workflow'
+file_scan = '/Volumes/Scratch_0/pNet/Test/Test_FN17_UKBB/Data_Input/Scan_List.txt'
+file_Brain_Template = pNet.Brain_Template.file_MNI_vol
+K = 17
+
+# Run pNet workflow
+pNet.workflow_simple(
+        dir_pnet_result=dir_pnet_result,
+        dataType='Volume',
+        dataFormat='Volume (*.nii, *.nii.gz, *.mat)',
+        file_scan=file_scan,
+        file_Brain_Template=file_Brain_Template,
+        K=K
+)
+```
