@@ -135,7 +135,8 @@ pNet.workflow_simple(
 ```
 
 ## Help
-All the functions in pNet come with detailed description of each input
-![Screenshot 2023-09-28 at 2 58 34 PM](https://github.com/YuncongMa/pNet/assets/20191790/fd0a95b7-9eb6-46e3-9503-eb43b13f63b7)
+All the functions in pNet come with detailed description of each input <br />
+Example help comment <br />
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/fd0a95b7-9eb6-46e3-9503-eb43b13f63b7" width="600">
 
 
