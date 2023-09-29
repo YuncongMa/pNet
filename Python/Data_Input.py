@@ -9,7 +9,6 @@ import numpy as np
 import scipy.io
 import scipy.io as sio
 import os
-import re
 import json
 import torch
 import h5py
@@ -725,10 +724,6 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
 
     # save brain template
     save_brain_template(dir_pnet_dataInput, Brain_Template, logFile=logFile)
-
-
-
-
 
 
 def reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None):

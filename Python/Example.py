@@ -34,6 +34,7 @@ dir_example_pnet_ukbb_vol = os.path.join(dir_example_ukbb_vol, 'Test_FN17')
 
 class Example:
 
+    # HCP formatted data, surface only
     class HCP_surf:
         dir = dir_example_hcp_surf
         dir_data = dir_example_data_hcp_surf
@@ -41,11 +42,13 @@ class Example:
 
         # load_gFN(K, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)')
 
+    # MGH formatted data, surface only
     class PNC_surf:
         dir = dir_example_pnc_surf
         dir_data = dir_example_data_pnc_surf
         dir_pnet = dir_example_pnet_pnc_surf
 
+    # NIFTI formatted data, volume type, co-registered in MNI space
     class UKBB_vol:
         dir = dir_example_ukbb_vol
         dir_data = dir_example_data_ukbb_vol

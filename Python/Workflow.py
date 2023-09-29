@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/28/2023
+# Yuncong Ma, 9/29/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -19,22 +19,22 @@ from Quality_Control import *
 from Quality_Control_torch import *
 
 
-def run_workflow(dir_pnet_result: str,
-                 file_scan: str,
-                 dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
-                 file_subject_ID=None, file_subject_folder=None, file_group=None,
-                 file_Brain_Template=None,
-                 file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
-                 file_mask_vol=None, file_overlayImage=None,
-                 maskValue=0,
-                 file_surfL_inflated=None, file_surfR_inflated=None,
-                 K=17, Combine_Scan=False,
-                 Compute_gFN=True, file_gFN=None,
-                 samplingMethod='Subject', sampleSize=10, nBS=50,
-                 maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
-                 Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
-                 Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
-                 dataPrecision='double'):
+def workflow(dir_pnet_result: str,
+             file_scan: str,
+             dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
+             file_subject_ID=None, file_subject_folder=None, file_group=None,
+             file_Brain_Template=None,
+             file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
+             file_mask_vol=None, file_overlayImage=None,
+             maskValue=0,
+             file_surfL_inflated=None, file_surfR_inflated=None,
+             K=17, Combine_Scan=False,
+             Compute_gFN=True, file_gFN=None,
+             samplingMethod='Subject', sampleSize=10, nBS=50,
+             maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
+             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
+             Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
+             dataPrecision='double'):
     """
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
 
@@ -162,14 +162,14 @@ def run_workflow(dir_pnet_result: str,
     # ============================================= #
 
 
-def run_workflow_simple(dir_pnet_result: str,
-                        dataType: str, dataFormat: str,
-                        file_scan: str,
-                        file_Brain_Template: str,
-                        K=17,
-                        Combine_Scan=False,
-                        Compute_gFN=True,
-                        file_gFN=None):
+def workflow_simple(dir_pnet_result: str,
+                    dataType: str, dataFormat: str,
+                    file_scan: str,
+                    file_Brain_Template: str,
+                    K=17,
+                    Combine_Scan=False,
+                    Compute_gFN=True,
+                    file_gFN=None):
     """
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
     This is a minimal version of run_workflow for fast deployment

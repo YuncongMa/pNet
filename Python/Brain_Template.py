@@ -24,6 +24,7 @@ dir_pNet = os.path.dirname(dir_python_package)
 dir_Template = os.path.join(dir_pNet, 'Brain_Template')
 # Organize example into a class variable
 
+
 class Brain_Template:
 
     # HCP surface
