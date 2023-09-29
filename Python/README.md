@@ -135,6 +135,12 @@ pNet.workflow_simple(
 )
 ```
 
+## Step-by-step guidance
+This Python version of pNet offers a step-by-step guided setup to generate a Python script for running a desired workflow <br />
+```
+pNet.workflow_guide()
+```
+
 ## Help
 All the functions in pNet come with detailed description of each input <br />
 Example help comment <br />
