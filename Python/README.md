@@ -141,7 +141,8 @@ This Python version of pNet offers a step-by-step guided setup to generate a Pyt
 pNet.workflow_guide()
 ```
 Example terminal interaction <br />
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/cc0fcfef-67c3-4375-a586-1eb7d3a51b10" width="500">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/1486766a-5467-4124-a40f-94f4445c4b4d" width="500">
+
 
 
 ## Help
