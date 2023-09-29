@@ -84,8 +84,9 @@ pNet.Brain_Template.file_HCP_surf
 ```
 
 ## Example script
-Several simple examples are provided in Example_Workflow.py
+Several simple examples are provided in Example_Workflow.py <br />
 
+**Example for HCP format**
 ```
 # This example is to perform pNet using surface-based fMRI in HCP format
 # 1. Specify the result folder directory in dir_pnet_result
@@ -109,7 +110,7 @@ pNet.workflow_simple(
         K=K
 )
 ```
-
+**Example for NIFTI format**
 ```
 # This example is to perform pNet using volume-based fMRI in NIFTI format, with co-registration to MNI space
 # 1. Specify the result folder directory in dir_pnet_result
