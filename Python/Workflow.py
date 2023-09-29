@@ -6,6 +6,7 @@
 # Packages
 
 # Example
+import pNet
 from Example import Example
 
 # Module
@@ -17,7 +18,6 @@ from FN_Computation_torch import *
 from Computation_Environment import *
 from Quality_Control import *
 from Quality_Control_torch import *
-import Levenshtein
 
 
 def workflow(dir_pnet_result: str,
@@ -114,8 +114,7 @@ def workflow(dir_pnet_result: str,
                 dir_pnet_dataInput,
                 dataType=dataType, dataFormat=dataFormat,
                 file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
-                maskValue=maskValue,
-                logFile=None
+                maskValue=maskValue
             )
         elif dataType == 'Surface':
             setup_brain_template(
@@ -124,8 +123,7 @@ def workflow(dir_pnet_result: str,
                 file_surfL=file_surfL, file_surfR=file_surfR,
                 file_maskL=file_maskL, file_maskR=file_maskR,
                 maskValue=maskValue,
-                file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
-                logFile=None
+                file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated
             )
 
     else:
@@ -234,7 +232,7 @@ def guide_YN(prompt: str):
 
     input_YN = None
     while input_YN is None:
-        input_YN = input(prompt)
+        input_YN = input(prompt + "\n[Y/N]\nUser Input > ")
         if input_YN is None:
             print('Unknown choice, try again')
         elif input_YN in ('Y', 'y', 'Yes', 'yes'):
@@ -242,7 +240,7 @@ def guide_YN(prompt: str):
         elif input_YN in ('N', 'n', 'No', 'no'):
             input_YN = 'N'
         else:
-            print('Unknown choice, try again')
+            print('Unknown choice, try again\nUser Input > ')
             input_YN = None
     return input_YN
 
@@ -259,9 +257,9 @@ def guide_dir(prompt: str):
 
     input_dir = None
     while input_dir is None:
-        input_dir = input(prompt)
+        input_dir = input(prompt + "\nUser Input > ")
         if input_dir is None:
-            print('Wrong setup, try again')
+            print('Wrong setup, try again\nUser Input >')
     return input_dir
 
 
@@ -277,43 +275,99 @@ def guide_file(prompt: str):
 
     input_file = None
     while input_file is None:
-        input_file = input(prompt)
+        input_file = input("# "+prompt + "\nUser Input > ")
         if input_file is None:
-            print('Wrong setup, try again')
+            print('Wrong setup, try again\nUser Input >')
         elif not os.path.isfile(input_file):
             print('Cannot find this file, please try again')
     return input_file
 
 
-def guide_choice(prompt: str, list_choice: tuple):
+def guide_number(prompt: str, data_type='Int', data_range=None, skip=False, default_value=0):
+    """
+    terminal guidance for setting up a value
+
+    :param prompt: a string for prompt
+    :param data_type: 'Int' or 'Float'
+    :param data_range: None or (1, 2)
+    :param skip: False or True to skip the setting
+    :param default_value: a default value when skip is enabled
+    :return: input_value
+
+    Yuncong Ma, 9/29/2023
+    """
+
+    input_value = None
+    while input_value is None:
+        if skip is False:
+            input_value = input("# "+prompt + "\nUser Input > ")
+        else:
+            input_value = input("# "+prompt + "\nEnter to use default value" + "\nUser Input > ")
+        if input_value is None:
+            if skip is True:
+                input_value = default_value
+                return input_value
+            print('Wrong setup, try again\nUser Input >')
+        else:
+            input_value = float(input_value)
+            if data_type == 'Int':
+                input_value = int(input_value)
+            elif data_type == 'Float':
+                input_value = float(input_value)
+            if data_range is not None:
+                if data_range[0] <= input_value <= data_range[1]:
+                    return input_value
+                else:
+                    print(f'The value should be within {data_range[0]} and {data_range[1]}, try again\nUser Input >')
+                    input_value = None
+            else:
+                return input_value
+
+    return input_value
+
+
+def guide_choice(prompt: str, list_choice: tuple, skip=False, default_value=None):
     """
     Terminal guidance for getting a directory
     Use sequence ratio to find the most similar option in the list_choice to the user input
 
     :param prompt: a string for prompt
     :param list_choice: a list of choices
+    :param skip: False or True to skip the setting
+    :param default_value: None or value
     :return: choice
 
     Yuncong Ma, 9/29/2023
     """
 
+    for i in range(len(list_choice)):
+        prompt = prompt + "\n" + str(i+1) + ". " + list_choice[i]
+
     choice = None
     while choice is None:
-        choice = input(prompt + 'Type in keywords to select an option\n')
+        if skip is False:
+            choice = input("# "+prompt + "\nChoose by number" + "\nUser Input > ")
+        else:
+            choice = input("# "+prompt + "\nChoose by number or enter to use default" + "\nUser Input > ")
         if choice in list_choice:
             return choice
 
         else:
             if choice is not None:
-                score = [Levenshtein.seqratio(x, choice) for i, x in enumerate(list_choice)]
-                ps = np.argmax(score)
-                if isinstance(ps, np.int64):
-                    choice = list_choice[ps]
-                    print('Selected the most relevant option: ' + choice)
+                choice = int(float(choice))
+                if 0 <= choice < len(list_choice):
+                    choice = list_choice[choice]
                 else:
-                    print('Find more than one potential option matched, try to give more information')
+                    choice = None
+                    print('Wrong choice, try again\nUser Input >')
             else:
-                print('Wrong setup, try again')
+                if skip is True:
+                    if default_value is None:
+                        choice = list_choice[0]
+                    else:
+                        choice = default_value
+                    return choice
+                print('Wrong choice, try again\nUser Input >')
                 choice = None
     return choice
 
@@ -328,65 +382,115 @@ def workflow_guide():
     print('This is a step-by-step guidance for setting up a workflow of pNet')
 
     # Setup result folder
-    dir_pnet_result = guide_dir('Please type in a directory for storing pNet results:\n')
+    dir_pnet_result = guide_dir('Set up a directory for storing pNet results:')
 
     # ============== Data Input ============== #
     print('# ============== Data Input ============== # ')
     # setup dataInput
     print('setup dataInput')
-    dataType = guide_choice("Choose a data type: 'Surface', 'Volume'\n", ('Surface', 'Volume'))
-    dataFormat = guide_choice("Choose a data format: \n"
-                              "'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'\n",
+    dataType = guide_choice("Choose a data type:", ('Surface', 'Volume'))
+    dataFormat = guide_choice("Choose a data format:",
                               ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'))
-    file_scan = guide_file("Provide a txt formatted file containing all fMRI scans:\n")
-    Choice = guide_YN("Do you have a txt formatted file containing subject ID information for each corresponding scan: \n[Y/N]")
+    file_scan = guide_file("Provide a txt formatted file containing all fMRI scans:")
+    Choice = guide_YN("Do you have a txt formatted file containing subject ID information for each corresponding scan?")
     if Choice == 'Y':
-        file_subject_ID = guide_file("Provide a txt formatted file containing subject ID information for each corresponding scan:\n")
-    Choice = guide_YN("Do you have a txt formatted file containing subject folder information for each corresponding scan")
-    if Choice == 'Y':
-        file_subject_folder = guide_file("Provide a txt formatted file containing subject folder information for each corresponding scan:\n[Y/N]\n")
-    Choice = guide_YN("Do you want to concatenate multiple scans for the same subject:\n[Y/N]\n")
+        file_subject_ID = guide_file("Provide a txt formatted file containing subject ID information for each corresponding scan:")
+        Choice = guide_YN("Do you have a txt formatted file containing subject folder information for each corresponding scan?")
+        if Choice == 'Y':
+            file_subject_folder = guide_file("Provide a txt formatted file containing subject folder information for each corresponding scan:")
+        else:
+            file_subject_folder = None
+        Choice = guide_YN("Do you have a txt formatted file containing group ID for each corresponding scan?")
+        if Choice == 'Y':
+            file_group_ID = guide_file("Provide a txt formatted file containing group ID for each corresponding scan:")
+        else:
+            file_group_ID = None
+    else:
+        file_subject_ID = None
+    Choice = guide_YN("Do you want to concatenate multiple scans for the same subject?")
     if Choice == 'Y':
         Combine_Scan = True
     else:
         Combine_Scan = False
     # setup brain template
-    Choice = guide_YN("Would you like to select a built-in brain template file: \n[Y/N]")
+    Choice = guide_YN("Would you like to select a built-in brain template file?")
     if Choice == 'Y':
-        file_Brain_Template = guide_file("Provide a txt formatted file containing all fMRI scans:\n")
+        file_Brain_Template = guide_choice("Select a built-in brain template:", ('HCP Surface', 'MNI Volume'))
+        if file_Brain_Template == 'HCP Surface':
+            file_Brain_Template = pNet.Brain_Template.file_HCP_surf
+        elif file_Brain_Template == 'MNI Volume':
+            file_Brain_Template = pNet.Brain_Template.file_MNI_vol
     else:
-        Choice = guide_YN("Would you like to select a customized brain template file: \n[Y/N]")
+        Choice = guide_YN("Would you like to select a customized brain template file?")
         if Choice == 'Y':
-            file_Brain_Template = guide_file("What is the directory of the brain template file:\n")
+            file_Brain_Template = guide_file("Set up the directory of the brain template file:")
         else:
             # Volume and surface data types require different inputs to compute the brain template
             if dataType == 'Volume':
-                file_mask_vol = guide_file("What is the directory of a brain mask:\n")
-                file_overlayImage = guide_file("What is the directory of a high resolution T1/T2 image as the overlay background:\n")
-                maskValue = guide_number()
-
-
-    # Volume and surface data types require different inputs to compute the brain template
-    if file_Brain_Template is None:
-        if dataType == 'Volume':
-            setup_brain_template(
-                dir_pnet_dataInput,
-                dataType=dataType, dataFormat=dataFormat,
-                file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
-                maskValue=maskValue,
-                logFile=None
-            )
-        elif dataType == 'Surface':
-            setup_brain_template(
-                dir_pnet_dataInput,
-                dataType=dataType, dataFormat=dataFormat,
-                file_surfL=file_surfL, file_surfR=file_surfR,
-                file_maskL=file_maskL, file_maskR=file_maskR,
-                maskValue=maskValue,
-                file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
-                logFile=None
-            )
-
-    else:
-        setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
+                file_mask_vol = guide_file("Set up the directory of a brain mask:")
+                file_overlayImage = guide_file("Set up the directory of a high resolution T1/T2 image as the overlay background:")
+                maskValue = guide_number("What is the value used for labeling useful voxels in the brain mask file?", 'Int')
+            elif dataType == 'Surface':
+                file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.inflated.32k_fs_LR.surf.gii):")
+                file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.inflated.32k_fs_LR.surf.gii):")
+                Choice = guide_YN("Would you like to load an inflated brain surface shape?")
+                if Choice == 'Y':
+                    file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.very_inflated.32k_fs_LR.surf.gii):")
+                    file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.very_inflated.32k_fs_LR.surf.gii):")
+                else:
+                    file_surfL_inflated = None
+                    file_surfR_inflated = None
+                file_maskL = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.L.32k_fs_LR.func.gii):")
+                file_maskR = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.R.32k_fs_LR.func.gii):")
+                maskValue = guide_number("Set up the value used for labeling useful voxels in the brain mask file?", 'Int')
     # ============================================= #
+
+    # ============== FN Computation ============== #
+    print('# ============== FN Computation ============== # ')
+    # setup parameters for FN computation
+    K = guide_number("How many functional networks?", 'Int', (2, 1000))
+    Choice = guide_YN("Do you want to load a precomputed group-level functional networks?")
+    if Choice == 'Y':
+        Compute_gFN = True
+        file_gFN = guide_file('Set up the file directory of the precomputed group-level functional networks?')
+    else:
+        Compute_gFN = False
+    Choice_simple = guide_YN("Would you like to customize the model parameters for computing personalized functional networks?")
+    if Choice_simple == 'Y':
+        if Compute_gFN is True and file_group_ID is not None:
+            samplingMethod = guide_choice("Choose an option for the bootstrap sampling method:", ('Subject', 'Group_Subject'), skip=True)
+        else:
+            samplingMethod = 'Subject'
+        sampleSize = guide_number("Set up the sample size for each bootstrap (ex. 10)?", 'Int', (1, 10000), skip=True, default_value='Automatic')
+        nBS = guide_number("Set up the number of bootstrap runs (default 50)?", 'Int', (1, 10000), skip=True, default_value=50)
+        maxIter = guide_number("Set up the max iteration number (default 1000)?", 'Int', (1, 1000000), skip=True, default_value=1000)
+        minIter = guide_number("Set up the minimum iteration number (default 30)?", 'Int', (1, 1000000), skip=True, default_value=30)
+        meanFitRatio = guide_number("Set up the meanFitRatio (default 0.1)?", 'Float', (0.0001, 0.9999), skip=True, default_value=0.1)
+        error = guide_number("Set up the error for iteration convergence (default 0.00000001)?", 'Float', (0.0000000000001, 0.1), skip=True, default_value=0.00000001)
+        Alpha = guide_number("Set up the Alpha (default 2)?", 'Float', (0.0001, 100000), skip=True, default_value=2)
+        Beta = guide_number("Set up the Beta (default 30)?", 'Float', (0.0001, 100000), skip=True, default_value=30)
+        nRepeat = guide_number("Set up the number of repeat (default 5)?", 'int', (1, 1000), skip=True, default_value=5)
+        Computation_Mode = guide_choice("Choose an option for the computation mode (default CPU_Torch):", ('CPU_Numpy', 'CPU_Torch'), skip=True, default_value='CPU_Torch')
+        dataPrecision = guide_choice("Choose an option for data precision (default double):", ('single', 'double'), skip=True, default_value='double')
+    # ============================================= #
+
+    # Generate a python script for the workflow
+    print('# ============================ #')
+    file_script = guide_file("Setup a Python file directory (*.py) of this customized workflow:")
+
+    file_script = open(file_script, 'w')
+    print('# Customized Python script for pNet workflow, built at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=file_script)
+    print('\n# Load packages', file=file_script)
+    print('import pNet', file=file_script)
+    print('\n', file=file_script)
+
+    if Choice_simple == 'N' and file_Brain_Template is not None:
+        print(f"pNet.workflow_simple(", file=file_script)
+        print(f"    dir_pnet_result='{dir_pnet_result}',", file=file_script)
+        print(f"    file_scan='{file_scan}',", file=file_script)
+        print(f"    dataType='{dataType}',", file=file_script)
+        print(f"    dataFormat='{dataFormat}',", file=file_script)
+        print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
+        print(f"    K='{K}')", file=file_script)
+
+    file_script.close()
