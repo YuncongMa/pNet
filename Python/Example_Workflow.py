@@ -7,7 +7,7 @@
 import pNet
 
 # Choose the example
-Example = 1
+Example = 3
 
 
 if Example == 1:
@@ -55,4 +55,8 @@ elif Example == 2:
         file_Brain_Template=file_Brain_Template,
         K=K
     )
+
+elif Example == 3:
+    # This example use step-by-step guidance to set up a workflow of pNet
+    pNet.workflow_guide()
 

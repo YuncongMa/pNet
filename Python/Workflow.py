@@ -17,6 +17,7 @@ from FN_Computation_torch import *
 from Computation_Environment import *
 from Quality_Control import *
 from Quality_Control_torch import *
+import Levenshtein
 
 
 def workflow(dir_pnet_result: str,
@@ -221,3 +222,171 @@ def workflow_simple(dir_pnet_result: str,
     # ============================================= #
 
 
+def guide_YN(prompt: str):
+    """
+    terminal guidance for choosing yes or no
+
+    :param prompt: a string for prompt
+    :return: input_YN
+
+    Yuncong Ma, 9/29/2023
+    """
+
+    input_YN = None
+    while input_YN is None:
+        input_YN = input(prompt)
+        if input_YN is None:
+            print('Unknown choice, try again')
+        elif input_YN in ('Y', 'y', 'Yes', 'yes'):
+            input_YN = 'Y'
+        elif input_YN in ('N', 'n', 'No', 'no'):
+            input_YN = 'N'
+        else:
+            print('Unknown choice, try again')
+            input_YN = None
+    return input_YN
+
+
+def guide_dir(prompt: str):
+    """
+    terminal guidance for getting a directory
+
+    :param prompt: a string for prompt
+    :return: input_dir
+
+    Yuncong Ma, 9/29/2023
+    """
+
+    input_dir = None
+    while input_dir is None:
+        input_dir = input(prompt)
+        if input_dir is None:
+            print('Wrong setup, try again')
+    return input_dir
+
+
+def guide_file(prompt: str):
+    """
+    terminal guidance for setting up a file
+
+    :param prompt: a string for prompt
+    :return: input_file
+
+    Yuncong Ma, 9/29/2023
+    """
+
+    input_file = None
+    while input_file is None:
+        input_file = input(prompt)
+        if input_file is None:
+            print('Wrong setup, try again')
+        elif not os.path.isfile(input_file):
+            print('Cannot find this file, please try again')
+    return input_file
+
+
+def guide_choice(prompt: str, list_choice: tuple):
+    """
+    Terminal guidance for getting a directory
+    Use sequence ratio to find the most similar option in the list_choice to the user input
+
+    :param prompt: a string for prompt
+    :param list_choice: a list of choices
+    :return: choice
+
+    Yuncong Ma, 9/29/2023
+    """
+
+    choice = None
+    while choice is None:
+        choice = input(prompt + 'Type in keywords to select an option\n')
+        if choice in list_choice:
+            return choice
+
+        else:
+            if choice is not None:
+                score = [Levenshtein.seqratio(x, choice) for i, x in enumerate(list_choice)]
+                ps = np.argmax(score)
+                if isinstance(ps, np.int64):
+                    choice = list_choice[ps]
+                    print('Selected the most relevant option: ' + choice)
+                else:
+                    print('Find more than one potential option matched, try to give more information')
+            else:
+                print('Wrong setup, try again')
+                choice = None
+    return choice
+
+
+def workflow_guide():
+    """
+    This is a step-by-step guidance for setting up a workflow of pNet in terminal
+    It will generate a Python script to run the desired workflow
+    Yuncong Ma, 9/29/2023
+    """
+
+    print('This is a step-by-step guidance for setting up a workflow of pNet')
+
+    # Setup result folder
+    dir_pnet_result = guide_dir('Please type in a directory for storing pNet results:\n')
+
+    # ============== Data Input ============== #
+    print('# ============== Data Input ============== # ')
+    # setup dataInput
+    print('setup dataInput')
+    dataType = guide_choice("Choose a data type: 'Surface', 'Volume'\n", ('Surface', 'Volume'))
+    dataFormat = guide_choice("Choose a data format: \n"
+                              "'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'\n",
+                              ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'))
+    file_scan = guide_file("Provide a txt formatted file containing all fMRI scans:\n")
+    Choice = guide_YN("Do you have a txt formatted file containing subject ID information for each corresponding scan: \n[Y/N]")
+    if Choice == 'Y':
+        file_subject_ID = guide_file("Provide a txt formatted file containing subject ID information for each corresponding scan:\n")
+    Choice = guide_YN("Do you have a txt formatted file containing subject folder information for each corresponding scan")
+    if Choice == 'Y':
+        file_subject_folder = guide_file("Provide a txt formatted file containing subject folder information for each corresponding scan:\n[Y/N]\n")
+    Choice = guide_YN("Do you want to concatenate multiple scans for the same subject:\n[Y/N]\n")
+    if Choice == 'Y':
+        Combine_Scan = True
+    else:
+        Combine_Scan = False
+    # setup brain template
+    Choice = guide_YN("Would you like to select a built-in brain template file: \n[Y/N]")
+    if Choice == 'Y':
+        file_Brain_Template = guide_file("Provide a txt formatted file containing all fMRI scans:\n")
+    else:
+        Choice = guide_YN("Would you like to select a customized brain template file: \n[Y/N]")
+        if Choice == 'Y':
+            file_Brain_Template = guide_file("What is the directory of the brain template file:\n")
+        else:
+            # Volume and surface data types require different inputs to compute the brain template
+            if dataType == 'Volume':
+                file_mask_vol = guide_file("What is the directory of a brain mask:\n")
+                file_overlayImage = guide_file("What is the directory of a high resolution T1/T2 image as the overlay background:\n")
+                maskValue = guide_number()
+
+
+    # Volume and surface data types require different inputs to compute the brain template
+    if file_Brain_Template is None:
+        if dataType == 'Volume':
+            setup_brain_template(
+                dir_pnet_dataInput,
+                dataType=dataType, dataFormat=dataFormat,
+                file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
+                maskValue=maskValue,
+                logFile=None
+            )
+        elif dataType == 'Surface':
+            setup_brain_template(
+                dir_pnet_dataInput,
+                dataType=dataType, dataFormat=dataFormat,
+                file_surfL=file_surfL, file_surfR=file_surfR,
+                file_maskL=file_maskL, file_maskR=file_maskR,
+                maskValue=maskValue,
+                file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
+                logFile=None
+            )
+
+    else:
+        setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
+    # ============================================= #

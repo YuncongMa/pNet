@@ -814,7 +814,7 @@ def setup_result_folder(dir_pnet_result: str):
     :param dir_pnet_result:
     :return: dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT
 
-    Yuncong Ma, 9/13/2023
+    Yuncong Ma, 9/29/2023
     """
 
     if not os.path.exists(dir_pnet_result):
