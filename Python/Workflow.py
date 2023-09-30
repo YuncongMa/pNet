@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/29/2023
+# Yuncong Ma, 9/30/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -23,7 +23,7 @@ from Quality_Control_torch import *
 def workflow(dir_pnet_result: str,
              file_scan: str,
              dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
-             file_subject_ID=None, file_subject_folder=None, file_group=None,
+             file_subject_ID=None, file_subject_folder=None, file_group_ID=None,
              file_Brain_Template=None,
              file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
              file_mask_vol=None, file_overlayImage=None,
@@ -46,7 +46,7 @@ def workflow(dir_pnet_result: str,
     :param file_scan: a txt file that stores directories of all fMRI scans
     :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
     :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
-    :param file_group: a txt file that store group information corresponding to fMRI scan in file_scan
+    :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
 
     :param file_Brain_Template: file directory of a brain template file in json format
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
@@ -88,7 +88,7 @@ def workflow(dir_pnet_result: str,
 
     :param dataPrecision: 'double' or 'single'
 
-    Yuncong Ma, 9/28/2023
+    Yuncong Ma, 9/30/2023
     """
 
     # Check setting
@@ -103,7 +103,7 @@ def workflow(dir_pnet_result: str,
         dir_pnet_dataInput=dir_pnet_dataInput,
         dataType=dataType, dataFormat=dataFormat,
         file_scan=file_scan, file_subject_ID=file_subject_ID,
-        file_subject_folder=file_subject_folder, file_group_ID=file_group,
+        file_subject_folder=file_subject_folder, file_group_ID=file_group_ID,
         Combine_Scan=Combine_Scan
     )
     # setup brain template
@@ -376,7 +376,7 @@ def workflow_guide():
     """
     This is a step-by-step guidance for setting up a workflow of pNet in terminal
     It will generate a Python script to run the desired workflow
-    Yuncong Ma, 9/29/2023
+    Yuncong Ma, 9/30/2023
     """
 
     print('This is a step-by-step guidance for setting up a workflow of pNet')
@@ -416,6 +416,7 @@ def workflow_guide():
     # setup brain template
     file_mask_vol = None
     file_overlayImage = None
+    maskValue = 0
     file_surfL = None
     file_surfR = None
     file_maskL = None
@@ -503,7 +504,8 @@ def workflow_guide():
         print(f"    dataFormat='{dataFormat}',", file=file_script)
         print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
         print(f"    K='{K}',", file=file_script)
-        print(f"    Combine_Scan='{Combine_Scan}')", file=file_script)
+        print(f"    Combine_Scan='{Combine_Scan}'", file=file_script)
+        print(")\n")
 
     else:
         print(f"pNet.workflow(", file=file_script)
@@ -513,32 +515,34 @@ def workflow_guide():
         print(f"    file_scan='{file_scan}',", file=file_script)
         print(f"    file_subject_ID='{file_subject_ID}',", file=file_script)
         print(f"    file_subject_folder='{file_subject_folder}',", file=file_script)
-        print(f"    file_group='{file_group}',", file=file_script)
+        print(f"    file_group_ID='{file_group_ID}',", file=file_script)
         print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
-        print(f"    file_surfL='{file_surfL}',", file=file_script)
-        print(f"    file_surfR='{file_surfR}',", file=file_script)
-        print(f"    file_maskL='{file_maskL}',", file=file_script)
-        print(f"    file_maskR='{file_maskR}',", file=file_script)
-        print(f"    file_surfL_inflated='{file_surfL_inflated}',", file=file_script)
-        print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
-        print(f"    K='{K}')", file=file_script)
-        print(f"    Combine_Scan='{Combine_Scan}')", file=file_script)
+        if dataType == 'Surface':
+            print(f"    file_surfL='{file_surfL}',", file=file_script)
+            print(f"    file_surfR='{file_surfR}',", file=file_script)
+            print(f"    file_maskL='{file_maskL}',", file=file_script)
+            print(f"    file_maskR='{file_maskR}',", file=file_script)
+            print(f"    file_surfL_inflated='{file_surfL_inflated}',", file=file_script)
+            print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
+        else:
+            print(f"    file_mask_vol='{file_mask_vol}',", file=file_script)
+            print(f"    file_overlayImage='{file_overlayImage}',", file=file_script)
+        print(f"    maskValue='{maskValue}',", file=file_script)
+        print(f"    K='{K}',", file=file_script)
+        print(f"    Combine_Scan='{Combine_Scan}',", file=file_script)
+        print(f"    file_gFN='{file_gFN}',", file=file_script)
+        if Choice_simple == 'Y':
+            print(f"    samplingMethod='{samplingMethod}',", file=file_script)
+            print(f"    sampleSize='{sampleSize}',", file=file_script)
+            print(f"    nBS='{nBS}',", file=file_script)
+            print(f"    maxIter='{maxIter}',", file=file_script)
+            print(f"    minIter='{minIter}',", file=file_script)
+            print(f"    error='{error}',", file=file_script)
+            print(f"    Alpha='{Alpha}',", file=file_script)
+            print(f"    Beta='{Beta}',", file=file_script)
+            print(f"    nRepeat='{nRepeat}',", file=file_script)
+            print(f"    Computation_Mode='{Computation_Mode}',", file=file_script)
+            print(f"    dataPrecision='{dataPrecision}'", file=file_script)
+        print(")\n")
 
     file_script.close()
-
-workflow(dir_pnet_result: str,
-             file_scan: str,
-             dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
-             file_subject_ID=None, file_subject_folder=None, file_group=None,
-             file_Brain_Template=None,
-             file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
-             file_mask_vol=None, file_overlayImage=None,
-             maskValue=0,
-             file_surfL_inflated=None, file_surfR_inflated=None,
-             K=17, Combine_Scan=False,
-             Compute_gFN=True, file_gFN=None,
-             samplingMethod='Subject', sampleSize=10, nBS=50,
-             maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
-             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
-             Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
-             dataPrecision='double')
