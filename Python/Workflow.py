@@ -407,12 +407,21 @@ def workflow_guide():
             file_group_ID = None
     else:
         file_subject_ID = None
+        file_subject_folder = None
     Choice = guide_YN("Do you want to concatenate multiple scans for the same subject?")
     if Choice == 'Y':
         Combine_Scan = True
     else:
         Combine_Scan = False
     # setup brain template
+    file_mask_vol = None
+    file_overlayImage = None
+    file_surfL = None
+    file_surfR = None
+    file_maskL = None
+    file_maskR = None
+    file_surfL_inflated = None
+    file_surfR_inflated = None
     Choice = guide_YN("Would you like to select a built-in brain template file?")
     if Choice == 'Y':
         file_Brain_Template = guide_choice("Select a built-in brain template:", ('HCP Surface', 'MNI Volume'))
@@ -425,6 +434,7 @@ def workflow_guide():
         if Choice == 'Y':
             file_Brain_Template = guide_file("Set up the directory of the brain template file:")
         else:
+            file_Brain_Template = None
             # Volume and surface data types require different inputs to compute the brain template
             if dataType == 'Volume':
                 file_mask_vol = guide_file("Set up the directory of a brain mask:")
@@ -455,6 +465,7 @@ def workflow_guide():
         file_gFN = guide_file('Set up the file directory of the precomputed group-level functional networks?')
     else:
         Compute_gFN = False
+        file_gFN = None
     Choice_simple = guide_YN("Would you like to customize the model parameters for computing personalized functional networks?")
     if Choice_simple == 'Y':
         if Compute_gFN is True and file_group_ID is not None:
@@ -487,10 +498,47 @@ def workflow_guide():
     if Choice_simple == 'N' and file_Brain_Template is not None:
         print(f"pNet.workflow_simple(", file=file_script)
         print(f"    dir_pnet_result='{dir_pnet_result}',", file=file_script)
-        print(f"    file_scan='{file_scan}',", file=file_script)
         print(f"    dataType='{dataType}',", file=file_script)
+        print(f"    file_scan='{file_scan}',", file=file_script)
         print(f"    dataFormat='{dataFormat}',", file=file_script)
         print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
+        print(f"    K='{K}',", file=file_script)
+        print(f"    Combine_Scan='{Combine_Scan}')", file=file_script)
+
+    else:
+        print(f"pNet.workflow(", file=file_script)
+        print(f"    dir_pnet_result='{dir_pnet_result}',", file=file_script)
+        print(f"    dataType='{dataType}',", file=file_script)
+        print(f"    dataFormat='{dataFormat}',", file=file_script)
+        print(f"    file_scan='{file_scan}',", file=file_script)
+        print(f"    file_subject_ID='{file_subject_ID}',", file=file_script)
+        print(f"    file_subject_folder='{file_subject_folder}',", file=file_script)
+        print(f"    file_group='{file_group}',", file=file_script)
+        print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
+        print(f"    file_surfL='{file_surfL}',", file=file_script)
+        print(f"    file_surfR='{file_surfR}',", file=file_script)
+        print(f"    file_maskL='{file_maskL}',", file=file_script)
+        print(f"    file_maskR='{file_maskR}',", file=file_script)
+        print(f"    file_surfL_inflated='{file_surfL_inflated}',", file=file_script)
+        print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
         print(f"    K='{K}')", file=file_script)
+        print(f"    Combine_Scan='{Combine_Scan}')", file=file_script)
 
     file_script.close()
+
+workflow(dir_pnet_result: str,
+             file_scan: str,
+             dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
+             file_subject_ID=None, file_subject_folder=None, file_group=None,
+             file_Brain_Template=None,
+             file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
+             file_mask_vol=None, file_overlayImage=None,
+             maskValue=0,
+             file_surfL_inflated=None, file_surfR_inflated=None,
+             K=17, Combine_Scan=False,
+             Compute_gFN=True, file_gFN=None,
+             samplingMethod='Subject', sampleSize=10, nBS=50,
+             maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
+             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
+             Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
+             dataPrecision='double')
