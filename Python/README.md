@@ -23,9 +23,9 @@ import pNet
 ## Workflow
 The workflow code is in Workflow.py
 This streamlines the setup and computation of pNet, including modules below
-1. Data Input
-2. FN Computation
-3. Quality Control.
+1. Data Input (Data_Input.py)
+2. FN Computation (FN_Computation.py)
+3. Quality Control (Quality_Control.py)
 
 ```
 # This is a comprehensive setting for 
