@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/27/2023
+# Yuncong Ma, 10/2/2023
 # FN Computation module of pNet
 
 #########################################
@@ -629,11 +629,12 @@ def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # setup log file
-    logFile = open(logFile, 'a')
+    if isinstance(logFile, str):
+        logFile = open(logFile, 'a')
     print(f'\nStart NMF for gFN using NumPy at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Setup data precision and eps
@@ -771,7 +772,7 @@ def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
             print(f"    Iter = {i}: LogL: {LogL}, dataFit: {LDf}, spaLap: {LSl}, L21: {L21}, ardU: {ardU}", file=logFile, flush=True)
 
             # The iteration needs to meet minimum iteration number and small changes of LogL
-            if i > 1 and i < minIter and abs(oldLogL - LogL) / np.maximum(oldLogL, np_eps) < error:
+            if 1 < i < minIter and abs(oldLogL - LogL) / np.maximum(oldLogL, np_eps) < error:
                 flag_Repeat = 1
                 print('\n Iteration stopped before the minimum iteration number. The results might be poor.\n', file=logFile, flush=True)
                 break
@@ -802,11 +803,12 @@ def gFN_fusion_NCut(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', logFil
     :param logFile: str, directory of a txt log file
     :return: gFNs, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/26/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # setup log file
-    logFile = open(logFile, 'a')
+    if isinstance(logFile, str):
+        logFile = open(logFile, 'a')
     print(f'\nStart NCut for gFN fusion using NumPy at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Setup data precision and eps
@@ -1068,6 +1070,8 @@ def compute_gNb(Brain_Template, logFile=None):
 
     if len(np.unique(gNb[:, 0])) != max(np.unique(gNb[:, 0])):
         if logFile is not None:
+            if isinstance(logFile, str):
+                logFile = open(logFile, 'a')
             print('\ngNb contains isolated voxel or vertex which will affect the subsequent analysis', file=logFile, flush=True)
 
     if logFile is not None:
@@ -1094,11 +1098,12 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
     :param logFile: directory of a txt file
     :return: None
 
-    Yuncong Ma, 9/24/2023
+    Yuncong Ma, 10/2/2023
     """
 
     if logFile is not None:
-        logFile = open(logFile, 'w+')
+        if isinstance(logFile, str):
+            logFile = open(logFile, 'a')
         print(f'\nStart preparing bootstrapped scan list files '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Lists for input

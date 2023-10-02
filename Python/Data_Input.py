@@ -279,7 +279,7 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
     :param logFile: a log file to save the output
     :return: Data: a 2D or 4D NumPy array [dim_time dim_space]
 
-    By Yuncong Ma, 9/25/2023
+    By Yuncong Ma, 10/2/2023
     """
 
     # Check setting
@@ -290,7 +290,8 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
 
     # setup log file
     if logFile is not None:
-        logFile = open(logFile, 'w+')
+        if isinstance(logFile, str):
+            logFile = open(logFile, 'a')
         print(f'\nStart loading fMRI data at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     if os.path.isfile(file_scan_list) and file_scan_list.endswith('.txt'):
@@ -451,7 +452,7 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     :param logFile:
     :return: Brain_Surface: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R)
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 10/2/2023
     """
 
     if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
@@ -494,6 +495,8 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
         raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + dataType + ' : ' + dataFormat)
 
     if logFile is not None:
+        if isinstance(logFile, str):
+            logFile = open(logFile, 'a')
         print('\nBrain_Surface is created', file=logFile, flush=True)
 
     return Brain_Surface
@@ -521,12 +524,13 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
     :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
                             a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
 
-    Yuncong Ma, 9/28/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # log file
     if logFile is not None:
-        logFile = open(logFile, 'a')
+        if isinstance(logFile, str):
+            logFile = open(logFile, 'a')
         print('\nCompute brain template at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
               file=logFile, flush=True)
         print("Brain template supports both volume and surface data types\n"
@@ -598,7 +602,12 @@ def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
         write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
 
     else:
-        raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
+        if logFile is not None:
+            if isinstance(logFile, str):
+                logFile = open(logFile, 'a')
+            print('Unsupported data type: ' + Brain_Template['Data_Type'], file=logFile, flush=True)
+        else:
+            raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
 
 
 def load_brain_template(dir_Brain_Template: str, logFile=None):
@@ -609,7 +618,7 @@ def load_brain_template(dir_Brain_Template: str, logFile=None):
     :param logFile: directory of a log file
     :return: Brain_Template: nested dictionary storing information and matrices of brain template. Matrices are converted to np.ndarray
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 10/2/2023
     """
 
     Brain_Template = load_json_setting(dir_Brain_Template)
@@ -664,7 +673,12 @@ def load_brain_template(dir_Brain_Template: str, logFile=None):
             Brain_Template['Shape_Inflated']['R']['faces'] = np.array(Brain_Template['Shape_Inflated']['R']['faces'])
 
     else:
-        raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
+        if logFile is not None:
+            if isinstance(logFile, str):
+                logFile = open(logFile, 'a')
+                print('Unsupported data type: ' + Brain_Template['Data_Type'], file=logFile, flush=True)
+        else:
+            raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
 
     return Brain_Template
 
@@ -697,12 +711,16 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
     :param maskValue: 0 or 1, 0 means 0s in mask files are useful vertices, otherwise vice versa. maskValue=0 for medial wall in HCP data, and maskValue=1 for brain masks
 
     :param logFile: 'Automatic', None, or a txt formatted file directory
+
+    Yuncong Ma, 10/2/2023
     """
 
     # log file
     if logFile == 'Automatic':
         logFile = os.path.join(dir_pnet_dataInput, 'Log_Brain_Template.log')
     if logFile is not None:
+        if isinstance(logFile, str):
+            logFile = open(logFile, 'a')
         print('\nSetup brain template at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
               file=logFile, flush=True)
 
@@ -911,14 +929,15 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param logFile: None, 'Automatic', or a file directory, for a txt formatted log file
 
-    Yuncong Ma, 9/28/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # log file
     if logFile == 'Automatic':
         logFile = os.path.join(dir_pnet_dataInput, 'Log_Scan_Info.log')
     if logFile is not None:
-        logFile = open(logFile, 'a')
+        if isinstance(logFile, str):
+            logFile = open(logFile, 'a')
         print('\nSetup scan info at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
               file=logFile, flush=True)
         print_description_scan_info(logFile)
@@ -1022,7 +1041,29 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
             print('Multiple scans are treated separately for each subject', file=logFile, flush=True)
 
 
+def print_log(message: str, logFile=None, style='a', stop=False):
+    """
+    print out message in terminal or logfiles
 
+    :param message: A string
+    :param logFile: None or a directory of a log file
+    :param style: 'a', 'w', 'w+' or others used for function open
+    :param stop: False or True, if True, the code execution will be stopped
+
+    Yuncong Ma, 10/2/2023
+    """
+
+    if logFile is None:
+        if stop is False:
+            print(message)
+        else:
+            raise ValueError(message)
+    else:
+        if isinstance(logFile, str):
+            logFile = open(logFile, style)
+        print(message, file=logFile, flush=True)
+        if stop is True:
+            raise ValueError(message)
 
 
 

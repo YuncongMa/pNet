@@ -149,7 +149,7 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
     :param gFN: 2D matrix, [dim_space, K], K is the number of FNs, np.ndarray or torch.Tensor
     :param pFN: 2D matrix, [dim_space, K], K is the number of FNs, np.ndarray or torch.Tensor
     :param dataPrecision: 'double' or 'single'
-    :param logFile:
+    :param logFile: None
     :return: Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control
     Outputs are numpy.ndarray
     Spatial correspondence is a 2D symmetric matrix [K, K], which measures the spatial correlation between gFNs and pFNs
@@ -158,7 +158,7 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
     Functional_Homogeneity is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of pFNs
     Functional_Homogeneity_Control is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of gFNs
 
-    Yuncong Ma, 9/21/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # data precision

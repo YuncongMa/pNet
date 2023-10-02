@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/27/2023
+# Yuncong Ma, 10/2/2023
 # FN Computation module of pNet
 # Pytorch version
 
@@ -414,7 +414,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/26/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # Setup data precision and eps
@@ -449,7 +449,8 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     K = gFN.shape[1]
 
     # setup log file
-    logFile = open(logFile, 'a')
+    if isinstance(logFile, str):
+        logFile = open(logFile, 'a')
     print(f'\nStart NMF for pFN using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # initialization
@@ -642,11 +643,12 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # setup log file
-    logFile = open(logFile, 'a')
+    if isinstance(logFile, str):
+        logFile = open(logFile, 'a')
     print(f'\nStart NMF for gFN using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Setup data precision and eps
@@ -797,7 +799,7 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
             LogL = L21 + LDf + LSl + ardU
             print(f"    Iter = {i}: LogL: {LogL}, dataFit: {LDf}, spaLap: {LSl}, L21: {L21}, ardU: {ardU}", file=logFile, flush=True)
 
-            if i > 1 and i < minIter and abs(oldLogL - LogL) / torch.maximum(oldLogL, torch_eps) < error:
+            if 1 < i < minIter and abs(oldLogL - LogL) / torch.maximum(oldLogL, torch_eps) < error:
                 flag_Repeat = 1
                 print('\n Iteration stopped before the minimum iteration number. The results might be poor.\n', file=logFile, flush=True)
                 break
@@ -826,11 +828,12 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
     :param logFile: str, directory of a txt log file
     :return: gFNs, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/6/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # setup log file
-    logFile = open(logFile, 'a')
+    if isinstance(logFile, str):
+        logFile = open(logFile, 'a')
     print(f'\nStart NCut for gFN fusion using PyTorch at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     # Setup data precision and eps
