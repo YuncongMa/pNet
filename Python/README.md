@@ -140,7 +140,7 @@ This Python version of pNet offers a step-by-step guided setup to generate a Pyt
 **Python code**
 ```
 # run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
-pNet.workflow_guide(
+pNet.workflow_guide()
 ```
 **Terminal code**
 ```
