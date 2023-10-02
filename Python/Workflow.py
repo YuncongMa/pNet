@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/30/2023
+# Yuncong Ma, 10/2/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -30,7 +30,7 @@ def workflow(dir_pnet_result: str,
              maskValue=0,
              file_surfL_inflated=None, file_surfR_inflated=None,
              K=17, Combine_Scan=False,
-             Compute_gFN=True, file_gFN=None,
+             file_gFN=None,
              samplingMethod='Subject', sampleSize=10, nBS=50,
              maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
              Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
@@ -62,8 +62,7 @@ def workflow(dir_pnet_result: str,
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
 
-    :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
-    :param file_gFN: directory of a precomputed gFN in .mat format
+    :param file_gFN: None or a directory of a precomputed gFN in .mat format
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
     :param sampleSize: number of subjects selected for each bootstrapping run
     :param nBS: number of runs for bootstrap
@@ -88,7 +87,7 @@ def workflow(dir_pnet_result: str,
 
     :param dataPrecision: 'double' or 'single'
 
-    Yuncong Ma, 9/30/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # Check setting
@@ -136,7 +135,7 @@ def workflow(dir_pnet_result: str,
         dir_pnet_result,
         K=K,
         Combine_Scan=Combine_Scan,
-        Compute_gFN=Compute_gFN, file_gFN=file_gFN,
+        file_gFN=file_gFN,
         samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
         maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
         Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
@@ -167,7 +166,6 @@ def workflow_simple(dir_pnet_result: str,
                     file_Brain_Template: str,
                     K=17,
                     Combine_Scan=False,
-                    Compute_gFN=True,
                     file_gFN=None):
     """
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
@@ -180,10 +178,9 @@ def workflow_simple(dir_pnet_result: str,
     :param file_Brain_Template: file directory or content of a brain template file in json format
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
-    :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
     :param file_gFN: directory of a precomputed gFN in .mat format
 
-    Yuncong Ma, 9/28/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # setup all sub-folders in the pNet result folder
@@ -207,7 +204,6 @@ def workflow_simple(dir_pnet_result: str,
         dir_pnet_result,
         K=K,
         Combine_Scan=Combine_Scan,
-        Compute_gFN=Compute_gFN,
         file_gFN=file_gFN
     )
     # perform FN computation
@@ -504,8 +500,8 @@ def workflow_guide():
         print(f"    dataFormat='{dataFormat}',", file=file_script)
         print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
         print(f"    K='{K}',", file=file_script)
-        print(f"    Combine_Scan='{Combine_Scan}'", file=file_script)
-        print(")\n")
+        print(f"    Combine_Scan={Combine_Scan}", file=file_script)  # True or False
+        print(")\n", file=file_script)
 
     else:
         print(f"pNet.workflow(", file=file_script)
@@ -522,15 +518,17 @@ def workflow_guide():
             print(f"    file_surfR='{file_surfR}',", file=file_script)
             print(f"    file_maskL='{file_maskL}',", file=file_script)
             print(f"    file_maskR='{file_maskR}',", file=file_script)
-            print(f"    file_surfL_inflated='{file_surfL_inflated}',", file=file_script)
-            print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
+            if file_surfL_inflated is not None:
+                print(f"    file_surfL_inflated='{file_surfL_inflated}',", file=file_script)
+                print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
         else:
             print(f"    file_mask_vol='{file_mask_vol}',", file=file_script)
             print(f"    file_overlayImage='{file_overlayImage}',", file=file_script)
         print(f"    maskValue='{maskValue}',", file=file_script)
         print(f"    K='{K}',", file=file_script)
-        print(f"    Combine_Scan='{Combine_Scan}',", file=file_script)
-        print(f"    file_gFN='{file_gFN}',", file=file_script)
+        print(f"    Combine_Scan={Combine_Scan},", file=file_script)  # True or False
+        if file_gFN is not None:
+            print(f"    file_gFN='{file_gFN}',", file=file_script)
         if Choice_simple == 'Y':
             print(f"    samplingMethod='{samplingMethod}',", file=file_script)
             print(f"    sampleSize='{sampleSize}',", file=file_script)
@@ -543,6 +541,6 @@ def workflow_guide():
             print(f"    nRepeat='{nRepeat}',", file=file_script)
             print(f"    Computation_Mode='{Computation_Mode}',", file=file_script)
             print(f"    dataPrecision='{dataPrecision}'", file=file_script)
-        print(")\n")
+        print(")\n", file=file_script)
 
     file_script.close()

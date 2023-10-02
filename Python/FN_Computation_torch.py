@@ -972,7 +972,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 9/28/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # get directories of sub-folders
@@ -1011,7 +1011,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
     if setting['FN_Computation']['Method'] == 'SR-NMF':
         print('FN computation uses spatial-regularized non-negative matrix factorization method', file=logFile_FNC, flush=True)
 
-        if setting['FN_Computation']['Group_FN']['Compute_gFN']:
+        if setting['FN_Computation']['Group_FN']['file_gFN'] is not None:
             # 2 steps
             # step 1 ============== bootstrap
             # sub-folder in FNC for storing bootstrapped results

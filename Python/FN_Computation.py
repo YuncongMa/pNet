@@ -1153,7 +1153,7 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
         FID.close()
 
 
-def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
+def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
     """
     setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
@@ -1187,7 +1187,7 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gF
     :param dataPrecision: 'double' or 'single'
     :return: setting: a structure
 
-    Yuncong Ma, 9/27/2023
+    Yuncong Ma, 10/2/2023
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
@@ -1201,9 +1201,8 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gF
         if sampleSize == 'Automatic':
             sampleSize = np.maximum(100, np.round(N_Subject / 10))
 
-
     BootStrap = {'samplingMethod': samplingMethod, 'sampleSize': sampleSize, 'nBS': nBS}
-    Group_FN = {'Compute_gFN': Compute_gFN, 'file_gFN': file_gFN,
+    Group_FN = {'file_gFN': file_gFN,
                 'BootStrap': BootStrap,
                 'maxIter': maxIter, 'minIter': minIter, 'error': error,
                 'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL, 'vxI': vxI,
@@ -1286,7 +1285,7 @@ def run_FN_Computation(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 9/28/2023
+    Yuncong Ma, 10/2/2023
     """
 
     # get directories of sub-folders
@@ -1326,7 +1325,7 @@ def run_FN_Computation(dir_pnet_result: str):
     if setting['FN_Computation']['Method'] == 'SR-NMF':
         print('FN computation uses spatial-regularized non-negative matrix factorization method', file=logFile_FNC, flush=True)
 
-        if setting['FN_Computation']['Group_FN']['Compute_gFN']:
+        if setting['FN_Computation']['Group_FN']['file_gFN'] is not None:
             # 2 steps
             # step 1 ============== bootstrap
             # sub-folder in FNC for storing bootstrapped results
