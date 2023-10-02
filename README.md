@@ -2,17 +2,14 @@
 
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
+![Screenshot 2023-10-02 at 4 34 28 PM](https://github.com/YuncongMa/pNet/assets/20191790/44d690f2-429e-43b8-b2ea-34c958a889a0)
+This toolbox is designed to extract personalized functional network from fMRI data <br />
+It works with both MATLAB and Python, and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.
+It supports multiple fMRI data formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.
+It supports multi-cohort datasets.
+It integrates both automatic and customizable visualization of the personalized functional networks.
+It provides statistics and quality control modules.
 
-This toolbox is designed to provide a user-friendly interface to perform personalized functional network computation <br />
-Major functions:
-1. search and organize fMRI files
-2. compute or load pre-computed group-level functional network (FN) results
-3. compute personalized FNs, with quality control
-4. perform statistical analysis to investigate the correlation between FN loading and behavior measurement
-5. provide both pre-computed and interactive visualization for group and personalized FNs and statistical results
-6. provide MATLAB functions and scripts to carry out computation and visualization of group and personalized FNs
-7. provide Python functions and scripts to carry out the computation, using both Numpy and PyTorch for code readbility and fast comptutation
-8. come with a help document that can be accessed directly on the app UI
 
 # Module
 ![Screenshot 2023-06-29 at 10 57 59 AM](https://github.com/YuncongMa/pNet/assets/20191790/9546d31e-aa9a-4a9c-8558-a875c92da27e)
