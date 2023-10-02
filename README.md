@@ -2,7 +2,7 @@
 
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
-![Screenshot 2023-10-02 at 4 34 28 PM](https://github.com/YuncongMa/pNet/assets/20191790/44d690f2-429e-43b8-b2ea-34c958a889a0)
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/44d690f2-429e-43b8-b2ea-34c958a889a0" width="800">
 This toolbox is designed to extract personalized functional network from fMRI data <br />
 It works with both MATLAB and Python, and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.
 It supports multiple fMRI data formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.
@@ -22,14 +22,14 @@ It consists of five main modules: data input, FN computation, visualization, qua
 
 # GUI workflow
 
-![Screenshot 2023-06-29 at 10 58 25 AM](https://github.com/YuncongMa/pNet/assets/20191790/8bd6a580-dd3f-4003-b92e-487dd5c3bf11)
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/8bd6a580-dd3f-4003-b92e-487dd5c3bf11 width="800">
 
 
 
 It consists of six major modules, including data loading, FN computation, group-level FN display, personalized FN display, statistics, and quality control. The six modules correspond to six major UI panels in pNet, and six subfolders in the pNet result folder. The pNet UI is designed to follow the left-to-right workflow direction to setup each step. Curved arrows show alternative workflows. The FN computation module (colored in light red) can use precomputed group-level FNs to derive personalized FNs as one option. Precomputed visualization of group-level and personalized FNs will be used in the two display modules (group FN and personalized FN). pNet features synchronized display to facilitate the comparisons between group-level and personalized FNs, as well as statistical results. The dashed double-sided arrows denote this display synchronization between three modules.
 
 # Snapshot
-![Screenshot 2023-03-06 at 4 46 53 PM](https://user-images.githubusercontent.com/20191790/223241753-b5a0a300-480a-4397-8585-5874f91c6590.jpg)
+<img src="https://user-images.githubusercontent.com/20191790/223241753-b5a0a300-480a-4397-8585-5874f91c6590.jpg" width="800">
 
 (A) Welcome page for the toolbox. <br />
 (B) A module for loading fMRI scans and brain template files. <br />
@@ -40,7 +40,7 @@ It consists of six major modules, including data loading, FN computation, group-
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
 
 # Data Structure
-![Screenshot 2023-06-29 at 10 58 52 AM](https://github.com/YuncongMa/pNet/assets/20191790/a72263c5-0a0d-4507-89f9-f22ba80c9853)
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/a72263c5-0a0d-4507-89f9-f22ba80c9853" width="800">
 
 
 
@@ -79,12 +79,12 @@ We provided three examples for users to learn how to run the pFN computation, an
 
 The data organization is as below.
 
-![Screenshot 2023-03-06 at 11 29 38 PM](https://user-images.githubusercontent.com/20191790/223320985-12aed4d4-6bef-4b23-a9a2-ff67f79eced3.jpg)
+<img src="https://user-images.githubusercontent.com/20191790/223320985-12aed4d4-6bef-4b23-a9a2-ff67f79eced3.jpg" width="600">
 
 # MATLAB and system Compatibility
 Note: it is recommended to run pNet as a MATLAB APP to allow for maximum compatibility. Although we are striving for maximizing the compatibility of pNet on different MATLAB versions and operation systems, it is difficult to conduct comprehensive tests on all cases. Our primary test environment is MATLAB 2022B and macOS Ventura 13.
 
-![Screenshot 2023-03-21 at 10 53 56 PM](https://user-images.githubusercontent.com/20191790/226790097-18b601fa-84ca-4ee6-aab6-19c8322ffc7d.jpg)
+<img src="https://user-images.githubusercontent.com/20191790/226790097-18b601fa-84ca-4ee6-aab6-19c8322ffc7d.jpg" width="600">
 
 
 
