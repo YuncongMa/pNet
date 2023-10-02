@@ -13,18 +13,10 @@ It provides statistics and quality control modules.
 
 # Module
 It consists of five main modules: data input, FN computation, visualization, quality control, and statistics.
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/43ed45b5-43e8-4ac4-a65f-62b925d70efe"  width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/82cd76f2-05a8-44b9-9bf7-de945a1360b9"  width="800">
 
 
-# GUI workflow
-The workflow streamlines the usage of different modules to setup and carry out the whole computation and visualization.
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/8bd6a580-dd3f-4003-b92e-487dd5c3bf11" width="800">
-
-
-
-It consists of six major modules, including data loading, FN computation, group-level FN display, personalized FN display, statistics, and quality control. The six modules correspond to six major UI panels in pNet, and six subfolders in the pNet result folder. The pNet UI is designed to follow the left-to-right workflow direction to setup each step. Curved arrows show alternative workflows. The FN computation module (colored in light red) can use precomputed group-level FNs to derive personalized FNs as one option. Precomputed visualization of group-level and personalized FNs will be used in the two display modules (group FN and personalized FN). pNet features synchronized display to facilitate the comparisons between group-level and personalized FNs, as well as statistical results. The dashed double-sided arrows denote this display synchronization between three modules.
-
-# Snapshot
+# GUI Snapshot
 <img src="https://user-images.githubusercontent.com/20191790/223241753-b5a0a300-480a-4397-8585-5874f91c6590.jpg" width="800">
 
 (A) Welcome page for the toolbox. <br />
