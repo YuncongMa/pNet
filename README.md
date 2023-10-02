@@ -18,7 +18,7 @@ It consists of five main modules: data input, FN computation, visualization, qua
 
 # GUI workflow
 The workflow streamlines the usage of different modules to setup and carry out the whole computation and visualization.
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/8bd6a580-dd3f-4003-b92e-487dd5c3bf11 width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/8bd6a580-dd3f-4003-b92e-487dd5c3bf11" width="800">
 
 
 
