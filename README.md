@@ -4,11 +4,11 @@
 # pNet <br /> A toolbox for personalized functional network modeling <br />
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/44d690f2-429e-43b8-b2ea-34c958a889a0" width="800">
 This toolbox is designed to extract personalized functional networks from fMRI data <br />
-It works with both MATLAB and Python, and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.
-It supports multiple fMRI data formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.
-It supports multi-cohort datasets.
-It integrates both automatic and customizable visualization of the personalized functional networks.
-It provides statistics and quality control modules.
+It works with both MATLAB and Python, and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.<br />
+It supports multiple fMRI data formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
+It supports multi-cohort datasets.<br />
+It integrates both automatic and customizable visualization of the personalized functional networks.<br />
+It provides statistics and quality control modules.<br />
 
 
 # Module
