@@ -13,11 +13,7 @@ It provides statistics and quality control modules.
 
 # Module
 It consists of five main modules: data input, FN computation, visualization, quality control, and statistics.
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/9546d31e-aa9a-4a9c-8558-a875c92da27e"  width="800">
-
-
-
-
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/43ed45b5-43e8-4ac4-a65f-62b925d70efe"  width="800">
 
 
 # GUI workflow
