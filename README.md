@@ -1,4 +1,4 @@
-![Screenshot 2023-10-02 at 2 12 17 PM](https://github.com/YuncongMa/pNet/assets/20191790/dccff00b-424c-47fb-a3fe-351e2a75bd11)
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/dccff00b-424c-47fb-a3fe-351e2a75bd11"  width="800">
 
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
@@ -12,7 +12,8 @@ It provides statistics and quality control modules.
 
 
 # Module
-![Screenshot 2023-06-29 at 10 57 59 AM](https://github.com/YuncongMa/pNet/assets/20191790/9546d31e-aa9a-4a9c-8558-a875c92da27e)
+It consists of five main modules: data input, FN computation, visualization, quality control, and statistics.
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/9546d31e-aa9a-4a9c-8558-a875c92da27e"  width="800">
 
 
 
