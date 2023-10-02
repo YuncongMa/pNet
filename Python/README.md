@@ -79,7 +79,7 @@ pNet.Example.HCP_Surf.dir_pnet
 pNet.Brain_Template.HCP_surf
 ```
 ```
-# Get the file directory the prepared brain template for HCP formatted surface data
+# Get the file directory of the prepared brain template for HCP formatted surface data
 pNet.Brain_Template.file_HCP_surf
 ```
 
