@@ -8,8 +8,6 @@ This toolbox is designed to extract personalized functional networks from fMRI d
 It works with both MATLAB and Python, and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.<br />
 It supports multiple fMRI data formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
 It supports multi-cohort datasets.<br />
-It integrates both automatic and customizable visualization of the personalized functional networks.<br />
-It provides statistics and quality control modules.<br />
 
 
 # Module
