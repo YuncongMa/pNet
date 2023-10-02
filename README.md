@@ -1,4 +1,4 @@
-![Screenshot 2023-03-06 at 2 23 52 PM](https://user-images.githubusercontent.com/20191790/223320724-67f18e53-cda3-41a4-9215-620c991877f4.jpg)
+![Screenshot 2023-10-02 at 2 12 17 PM](https://github.com/YuncongMa/pNet/assets/20191790/dccff00b-424c-47fb-a3fe-351e2a75bd11)
 
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
