@@ -90,16 +90,18 @@ Several simple examples are provided in Example_Workflow.py <br />
 # 4. Choose the desired number of FNs
 
 # Setup
+dataType = 'Surface'  # data type is surface, fixed for this example
+dataFormat = 'HCP Surface (*.cifti, *.mat)'  # data format is HCP surface, usually in CIFTI format, but can also be store as a 2D matrix in MAT file, fixed
 dir_pnet_result = '<User>/Test_FN17_HCP_Workflow'  # Change <User> to a desired directory
-file_scan = '/Volumes/Scratch_0/pNet/Example/HCP_Surface/Data/Scan_List.txt'
-file_Brain_Template = pNet.Brain_Template.file_HCP_surf
-K = 17
+file_scan = '/Volumes/Scratch_0/pNet/Example/HCP_Surface/Data/Scan_List.txt'  # a txt file storing directory of each fMRI scan file
+file_Brain_Template = pNet.Brain_Template.file_HCP_surf  # a built-in brain template file, made for the HCP surface data
+K = 17  # Number of FNs, can be changed to any positive integer number
 
 # Run pNet workflow
 pNet.workflow_simple(
         dir_pnet_result=dir_pnet_result,
-        dataType='Surface',
-        dataFormat='HCP Surface (*.cifti, *.mat)',
+        dataType=dataType,
+        dataFormat=dataFormat,
         file_scan=file_scan,
         file_Brain_Template=file_Brain_Template,
         K=K
