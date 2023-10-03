@@ -1,13 +1,12 @@
-# Yuncong Ma, 10/2/2023
+# Yuncong Ma, 10/3/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
 #########################################
 # Packages
 
-# Example
+import argparse
 import pNet
-from Example import Example
 
 # Module
 # This script builds the five modules of pNet
@@ -259,14 +258,16 @@ def guide_dir(prompt: str):
     return input_dir
 
 
-def guide_file(prompt: str):
+def guide_file(prompt: str, existed=True, extension=None):
     """
-    terminal guidance for setting up a file
+    terminal guidance for setting up an existing or a new file
 
     :param prompt: a string for prompt
+    :param existed: True or False, check the existence of the file if True.
+    :param extension: None or a str, or a tuple of strings, specifying the file extension
     :return: input_file
 
-    Yuncong Ma, 9/29/2023
+    Yuncong Ma, 10/3/2023
     """
 
     input_file = None
@@ -274,8 +275,30 @@ def guide_file(prompt: str):
         input_file = input("# "+prompt + "\nUser Input > ")
         if input_file is None:
             print('Wrong setup, try again\nUser Input >')
-        elif not os.path.isfile(input_file):
+            continue
+
+        if existed is True and not os.path.isfile(input_file):
             print('Cannot find this file, please try again')
+            input_file = None
+            continue
+
+        if extension is not None:
+            if isinstance(extension, str):
+                if not input_file.endswith(extension):
+                    print('Please provide a file directory with the required extension')
+                    input_file = None
+            elif isinstance(extension, tuple):
+                flagMatch = False
+                for i in enumerate(extension):
+                    if input_file.endswith(i):
+                        flagMatch = True
+                        break
+                if flagMatch is False:
+                    print('Please provide a file directory with the required extension')
+                    input_file = None
+            else:
+                raise ValueError('The extension needs to be None, a str, or a tuple of strings')
+
     return input_file
 
 
@@ -333,7 +356,7 @@ def guide_choice(prompt: str, list_choice: tuple, skip=False, default_value=None
     :param default_value: None or value
     :return: choice
 
-    Yuncong Ma, 9/29/2023
+    Yuncong Ma, 10/3/2023
     """
 
     for i in range(len(list_choice)):
@@ -351,8 +374,8 @@ def guide_choice(prompt: str, list_choice: tuple, skip=False, default_value=None
         else:
             if choice is not None:
                 choice = int(float(choice))
-                if 0 <= choice < len(list_choice):
-                    choice = list_choice[choice]
+                if 1 <= choice <= len(list_choice):
+                    choice = list_choice[choice-1]
                 else:
                     choice = None
                     print('Wrong choice, try again\nUser Input >')
@@ -372,7 +395,7 @@ def workflow_guide():
     """
     This is a step-by-step guidance for setting up a workflow of pNet in terminal
     It will generate a Python script to run the desired workflow
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 10/3/2023
     """
 
     print('This is a step-by-step guidance for setting up a workflow of pNet')
@@ -387,18 +410,18 @@ def workflow_guide():
     dataType = guide_choice("Choose a data type:", ('Surface', 'Volume'))
     dataFormat = guide_choice("Choose a data format:",
                               ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'))
-    file_scan = guide_file("Provide a txt formatted file containing all fMRI scans:")
+    file_scan = guide_file("Provide a txt formatted file containing all fMRI scans:", existed=True, extension='.txt')
     Choice = guide_YN("Do you have a txt formatted file containing subject ID information for each corresponding scan?")
     if Choice == 'Y':
-        file_subject_ID = guide_file("Provide a txt formatted file containing subject ID information for each corresponding scan:")
+        file_subject_ID = guide_file("Provide a txt formatted file containing subject ID information for each corresponding scan:", existed=True, extension='.txt')
         Choice = guide_YN("Do you have a txt formatted file containing subject folder information for each corresponding scan?")
         if Choice == 'Y':
-            file_subject_folder = guide_file("Provide a txt formatted file containing subject folder information for each corresponding scan:")
+            file_subject_folder = guide_file("Provide a txt formatted file containing subject folder information for each corresponding scan:", existed=True, extension='.txt')
         else:
             file_subject_folder = None
         Choice = guide_YN("Do you have a txt formatted file containing group ID for each corresponding scan?")
         if Choice == 'Y':
-            file_group_ID = guide_file("Provide a txt formatted file containing group ID for each corresponding scan:")
+            file_group_ID = guide_file("Provide a txt formatted file containing group ID for each corresponding scan:", existed=True, extension='.txt')
         else:
             file_group_ID = None
     else:
@@ -429,26 +452,26 @@ def workflow_guide():
     else:
         Choice = guide_YN("Would you like to select a customized brain template file?")
         if Choice == 'Y':
-            file_Brain_Template = guide_file("Set up the directory of the brain template file:")
+            file_Brain_Template = guide_file("Set up the directory of the brain template file in json format:", existed=True, extension='.json')
         else:
             file_Brain_Template = None
             # Volume and surface data types require different inputs to compute the brain template
             if dataType == 'Volume':
-                file_mask_vol = guide_file("Set up the directory of a brain mask:")
-                file_overlayImage = guide_file("Set up the directory of a high resolution T1/T2 image as the overlay background:")
+                file_mask_vol = guide_file("Set up the directory of a brain mask:", existed=True, extension=('.mat', '.nii', '.nii.gz'))
+                file_overlayImage = guide_file("Set up the directory of a high resolution T1/T2 image as the overlay background:", existed=True, extension=('.mat', '.nii', '.nii.gz'))
                 maskValue = guide_number("What is the value used for labeling useful voxels in the brain mask file?", 'Int')
             elif dataType == 'Surface':
-                file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.inflated.32k_fs_LR.surf.gii):")
-                file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.inflated.32k_fs_LR.surf.gii):")
+                file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
+                file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
                 Choice = guide_YN("Would you like to load an inflated brain surface shape?")
                 if Choice == 'Y':
-                    file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.very_inflated.32k_fs_LR.surf.gii):")
-                    file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.very_inflated.32k_fs_LR.surf.gii):")
+                    file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.very_inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
+                    file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.very_inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
                 else:
                     file_surfL_inflated = None
                     file_surfR_inflated = None
-                file_maskL = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.L.32k_fs_LR.func.gii):")
-                file_maskR = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.R.32k_fs_LR.func.gii):")
+                file_maskL = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.L.32k_fs_LR.func.gii):", existed=True, extension='.surf.gii')
+                file_maskR = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.R.32k_fs_LR.func.gii):", existed=True, extension='.surf.gii')
                 maskValue = guide_number("Set up the value used for labeling useful voxels in the brain mask file?", 'Int')
     # ============================================= #
 
@@ -459,7 +482,7 @@ def workflow_guide():
     Choice = guide_YN("Do you want to load a precomputed group-level functional networks?")
     if Choice == 'Y':
         Compute_gFN = True
-        file_gFN = guide_file('Set up the file directory of the precomputed group-level functional networks?')
+        file_gFN = guide_file('Set up the file directory of the precomputed group-level functional networks in matlab format?', existed=True, extension='.mat')
     else:
         Compute_gFN = False
         file_gFN = None
@@ -484,15 +507,17 @@ def workflow_guide():
 
     # Generate a python script for the workflow
     print('# ============================ #')
-    file_script = guide_file("Setup a Python file directory (*.py) of this customized workflow:")
+    file_script = guide_file("Setup a Python file directory (*.py) of this customized workflow:", existed=False, extension='.py')
 
     file_script = open(file_script, 'w')
     print('# Customized Python script for pNet workflow, built at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=file_script)
-    print('# Generated by running python pNet.workflow_guide()')
+    print('# Generated by running python pNet.workflow_guide()', file=file_script)
+    print('# To run this python code, use the terminal command line below', file=file_script)
+    print(f"# python {file_script.name}", file=file_script)
     print('\n# Load packages', file=file_script)
     print('import pNet', file=file_script)
-    print('\n', file=file_script)
 
+    print('# setup and run a customized workflow', file=file_script)
     if Choice_simple == 'N' and file_Brain_Template is not None:
         print(f"pNet.workflow_simple(", file=file_script)
         print(f"    dir_pnet_result='{dir_pnet_result}',", file=file_script)
@@ -536,6 +561,7 @@ def workflow_guide():
             print(f"    nBS={nBS},", file=file_script)
             print(f"    maxIter={maxIter},", file=file_script)
             print(f"    minIter={minIter},", file=file_script)
+            print(f"    meanFitRatio={meanFitRatio},", file=file_script)
             print(f"    error={error},", file=file_script)
             print(f"    Alpha={Alpha},", file=file_script)
             print(f"    Beta={Beta},", file=file_script)
