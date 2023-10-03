@@ -116,16 +116,18 @@ pNet.workflow_simple(
 # 4. Choose the desired number of FNs
 
 # Setup
-dir_pnet_result = '/Volumes/Scratch_0/pNet/Test/Test_FN17_UKBB_Workflow'
-file_scan = '/Volumes/Scratch_0/pNet/Test/Test_FN17_UKBB/Data_Input/Scan_List.txt'
-file_Brain_Template = pNet.Brain_Template.file_MNI_vol
-K = 17
+dataType = 'Volume'  # data type is volume, fixed for this example
+dataFormat = 'Volume (*.nii, *.nii.gz, *.mat)'  # data format is NIFTI, which stores a 4D matrix, fixed for this example
+dir_pnet_result = '<User>/Test_FN17_UKBB_Workflow'   # Change <User> to a desired directory
+file_scan = '/Volumes/Scratch_0/pNet/Test/Test_FN17_UKBB/Data_Input/Scan_List.txt'  # a txt file storing directory of each fMRI scan file
+file_Brain_Template = pNet.Brain_Template.file_MNI_vol  # a built-in brain template file, made for the HCP surface data
+K = 17  # Number of FNs, can be changed to any positive integer number
 
 # Run pNet workflow
 pNet.workflow_simple(
         dir_pnet_result=dir_pnet_result,
-        dataType='Volume',
-        dataFormat='Volume (*.nii, *.nii.gz, *.mat)',
+        dataType=dataType,
+        dataFormat=dataFormat,
         file_scan=file_scan,
         file_Brain_Template=file_Brain_Template,
         K=K
