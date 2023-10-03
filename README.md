@@ -2,7 +2,7 @@
 
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/67f8fbb5-ce4c-4dd2-9bd7-73791e4f8962" width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/ff466c7f-42a1-4020-9691-311b6aaf4537" width="800">
 
 This toolbox is designed to extract personalized functional networks from fMRI data <br />
 It works with both MATLAB and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.<br />
