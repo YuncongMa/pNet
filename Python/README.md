@@ -4,19 +4,25 @@ It has Numpy and PyTorch versions for easy code development and fast computation
 pNet.py is the main function to import all required packages and functions. <br />
 
 ## Deployment
-This Python package requires additional toolboxes
-Specifically, it requires:
+It is recommended to use Anaconda (https://www.anaconda.com) to create an environment. <br />
+**Create a conda environment for pNet**
+```
+conda create --name pnet python=3.8
+```
+
+**Install required toolboxes in conda environment**
+It requires additional toolboxes:
 1. numpy
 2. pytorch
 3. scipy
 4. nibabel
 5. h5py
 ```
-# Install required toolboxes
 python Install_Toolbox.py
 ```
+
+**Add pNet**
 ```
-# Add pNet
 import pNet
 ```
 
