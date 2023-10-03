@@ -34,7 +34,7 @@ pNet.workflow(dir_pnet_result: str,
                  maskValue=0,
                  file_surfL_inflated=None, file_surfR_inflated=None,
                  K=17, Combine_Scan=False,
-                 Compute_gFN=True, file_gFN=None,
+                 file_gFN=None,
                  samplingMethod='Subject', sampleSize=10, nBS=50,
                  maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
                  Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
@@ -50,7 +50,6 @@ pNet.workflow_simple(dir_pnet_result: str,
                         file_Brain_Template: str,
                         K=17,
                         Combine_Scan=False,
-                        Compute_gFN=True,
                         file_gFN=None)
 ```
 
