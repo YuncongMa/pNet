@@ -23,7 +23,7 @@ This streamlines the setup and computation of pNet, including modules below
 3. Quality Control (Quality_Control.py)
 
 ```
-# This is a comprehensive setting for 
+# This is a comprehensive setting for pNet workflow 
 pNet.workflow(dir_pnet_result: str,
                  file_scan: str,
                  dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
