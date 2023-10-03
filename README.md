@@ -4,7 +4,7 @@
 # pNet <br /> A toolbox for personalized functional network modeling <br />
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/ff466c7f-42a1-4020-9691-311b6aaf4537" width="800">
 
-This toolbox is designed to extract personalized functional networks from fMRI data using spatial-regularized non-negative matrix factorization (**NMF**) method <br />
+This toolbox is designed to extract personalized functional networks from fMRI data using spatial-regularized non-negative matrix factorization (**NMF**) method (https://doi.org/10.1016/j.neuroimage.2017.05.004) <br />
 It works with both MATLAB and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.<br />
 It supports both surface and volume based fMRI data in multiple formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
 It supports multi-cohort datasets and precomputed group-level FNs.<br />
