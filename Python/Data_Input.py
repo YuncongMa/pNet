@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/18/2023
+# Yuncong Ma, 10/4/2023
 # Data Input module of pNet
 
 
@@ -866,26 +866,34 @@ def check_data_type_format(dataType: str,  dataFormat: str, logFile=None):
     check_data_type_format(dataType: str,  dataFormat: str, logFile=None)
     Check setting for dataType and dataFormat
 
-    :param dataType: 'Volume', 'Surface'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param dataType: 'Surface', 'Volume', 'Surface-Volume'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)'
     :param logFile:
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 10/4/2023
     """
 
-    if dataType not in ('Volume', 'Surface'):
+    # Check dataType and dataFormat separately
+    if dataType not in ('Volume', 'Surface', 'Surface-Volume'):
         if logFile is None:
-            raise ValueError("Data type should be 'Volume' or 'Surface'")
-        else:
-            logFile = open(logFile, 'a')
-            print("Data type should be 'Volume' or 'Surface'", file=logFile, flush=True)
+            print_log("Data type should be 'Surface', 'Volume', or 'Surface-Volume'",
+                      logFile=logFile, stop=True)
 
-    if dataFormat not in ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'):
+    if dataFormat not in ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)'):
         if logFile is None:
-            raise ValueError("Data format should be 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'")
-        else:
-            logFile = open(logFile, 'a')
-            print("Data format should be 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'", file=logFile, flush=True)
+            print_log("Data format should be 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', or 'HCP Surface-Volume (*.cifti)'",
+                      logFile=logFile, stop=True)
+
+    # Check whether dataType and dataFormat are matched
+    if dataType == 'Surface' and dataFormat not in ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'):
+        print_log("When dataType is surface, dataFormat should be one of 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'",
+                  logFile=logFile, stop=True)
+    if dataType == 'Volume' and dataFormat != 'Volume (*.nii, *.nii.gz, *.mat)':
+        print_log("When dataType is volume, dataFormat should be 'Volume (*.nii, *.nii.gz, *.mat)'",
+                  logFile=logFile, stop=True)
+    if dataType == 'Surface-Volume' and dataFormat != 'HCP Surface-Volume (*.cifti)':
+        print_log("When dataType is surface-volume, dataFormat should be HCP Surface-Volume (*.cifti)",
+                  logFile=logFile, stop=True)
 
 
 def print_description_scan_info(logFile: str):
