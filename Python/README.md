@@ -164,5 +164,6 @@ Example terminal interaction <br />
 ## Help
 All the functions in pNet come with detailed description of each input <br />
 Example help comment <br />
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/fd0a95b7-9eb6-46e3-9503-eb43b13f63b7" width="500">
+
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/2b040a86-2212-4a48-9081-8d89983babf8" width="500">
 
