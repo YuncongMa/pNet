@@ -97,7 +97,7 @@ dataFormat = 'HCP Surface (*.cifti, *.mat)'
 dir_pnet_result = '<User>/Test_FN17_HCP_Workflow'
 # a txt file storing directory of each fMRI scan file, required to provide
 file_scan = '/Volumes/Scratch_0/pNet/Example/HCP_Surface/Data/Scan_List.txt'
-# a built-in brain template file, made for the HCP surface data, optional to change
+# a built-in brain template file, made for the HCP surface data (59412 vertices for cortical gray matter), optional to change
 file_Brain_Template = pNet.Brain_Template.file_HCP_surf
 # number of FNs, can be changed to any positive integer number
 K = 17
@@ -121,12 +121,18 @@ pNet.workflow_simple(
 # 4. Choose the desired number of FNs
 
 # Setup
-dataType = 'Volume'  # data type is volume, fixed for this example
-dataFormat = 'Volume (*.nii, *.nii.gz, *.mat)'  # data format is NIFTI, which stores a 4D matrix, fixed for this example
-dir_pnet_result = '<User>/Test_FN17_UKBB_Workflow'   # Change <User> to a desired directory
-file_scan = '/Volumes/Scratch_0/pNet/Test/Test_FN17_UKBB/Data_Input/Scan_List.txt'  # a txt file storing directory of each fMRI scan file
-file_Brain_Template = pNet.Brain_Template.file_MNI_vol  # a built-in brain template file, made for the HCP surface data
-K = 17  # Number of FNs, can be changed to any positive integer number
+# data type is volume, fixed for this example
+dataType = 'Volume'
+# data format is NIFTI, which stores a 4D matrix, fixed for this example
+dataFormat = 'Volume (*.nii, *.nii.gz, *.mat)'
+# directory of the pNet result folder. Change <User> to a desired directory
+dir_pnet_result = '<User>/Test_FN17_UKBB_Workflow'
+# a txt file storing directory of each fMRI scan file, required to provide
+file_scan = '/Volumes/Scratch_0/pNet/Test/Test_FN17_UKBB/Data_Input/Scan_List.txt'
+# a built-in brain template file, MNI standard space (2mm isotropic), made for the HCP surface data, optional to change
+file_Brain_Template = pNet.Brain_Template.file_MNI_vol
+# number of FNs, can be changed to any positive integer number
+K = 17
 
 # Run pNet workflow
 pNet.workflow_simple(
