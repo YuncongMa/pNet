@@ -1,11 +1,14 @@
 # This is a brief description of the Python version of pNet
+
 The Python version is designed to carry out the pNet setup and computation, consistent to the MATLAB version with GUI. <br />
 It has Numpy and PyTorch versions for easy code development and fast computation. <br />
 pNet.py is the main function to import all required packages and functions. <br />
 
 ## Deployment
+
 It is recommended to use Anaconda (https://www.anaconda.com) to create an environment. <br />
 **Create a conda environment for pNet**
+
 Create a new enviroment called pnet with other setups listed in environment.yml
 ```
 conda env create --name pnet -f environment.yml
@@ -17,6 +20,7 @@ pip install -r requirements.txt
 
 
 **Download pNet**
+
 Change <User's directory> to a desired directory
 ```
 git clone https://github.com/YuncongMa/pNet <User's directory>
