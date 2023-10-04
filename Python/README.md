@@ -1,5 +1,8 @@
 # This is a brief description of the Python version of pNet
 
+![GMP_RmlsZXNHSDAx](https://github.com/YuncongMa/pNet/assets/20191790/10425845-1378-4b5a-abe5-e91efc1206ff)
+
+
 The Python version is designed to carry out the pNet setup and computation, consistent to the MATLAB version with GUI. <br />
 It has Numpy and PyTorch versions for easy code development and fast computation. <br />
 pNet.py is the main function to import all required packages and functions. <br />
