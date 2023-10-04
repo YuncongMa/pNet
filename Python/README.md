@@ -16,9 +16,9 @@ pip install -r requirements.txt
 ```
 
 
-**Add pNet**
+**Download pNet**
 ```
-import pNet
+git clone https://github.com/YuncongMa/pNet
 ```
 
 ## Workflow
