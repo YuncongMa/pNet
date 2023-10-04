@@ -7,17 +7,14 @@ pNet.py is the main function to import all required packages and functions. <br 
 ## Deployment
 
 It is recommended to use Anaconda (https://www.anaconda.com) to create an environment. <br />
-**Create a conda environment for pNet**
-
-Create a new enviroment called pnet with other setups listed in environment.yml
+**Create a new conda environment for pNet**
 ```
 conda env create --name pnet -f environment.yml
 ```
-Or install required tools in conda for an existing environment
+**Or install required tools in conda for an existing environment**
 ```
 pip install -r requirements.txt
 ```
-
 
 **Download pNet**
 
