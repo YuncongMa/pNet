@@ -24,6 +24,22 @@ Change <User's directory> to a desired directory
 git clone https://github.com/YuncongMa/pNet <User's directory>
 ```
 
+## Step-by-step guidance
+This Python version of pNet provides a step-by-step guidance to customize a Python script for running a desired workflow <br />
+**Python code**
+```
+# run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
+pNet.workflow_guide()
+```
+**Terminal code**
+```
+# run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
+python Workflow_guide.py
+```
+
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/c083cb5b-764c-4c3f-a6ab-00c072c43f73" width="800">
+
+
 ## Workflow
 The workflow code is in Workflow.py
 This streamlines the setup and computation of pNet, including modules below
@@ -155,23 +171,6 @@ pNet.workflow_simple(
         K=K
 )
 ```
-
-## Step-by-step guidance
-This Python version of pNet offers a step-by-step guided setup to generate a Python script for running a desired workflow <br />
-**Python code**
-```
-# run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
-pNet.workflow_guide()
-```
-**Terminal code**
-```
-# run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
-python Workflow_guide.py
-```
-
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/c083cb5b-764c-4c3f-a6ab-00c072c43f73" width="800">
-
-
 
 ## Help
 All the functions in pNet come with detailed description of each input <br />
