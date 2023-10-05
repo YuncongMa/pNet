@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/4/2023
+# Yuncong Ma, 10/5/2023
 # Data Input module of pNet
 
 
@@ -900,7 +900,7 @@ def print_description_scan_info(logFile: str):
     """
     Print the description of scan info
 
-    :param logFile:
+    :param logFile: a string of directory
 
     Yuncong Ma, 9/28/2023
     """
