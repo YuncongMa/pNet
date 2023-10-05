@@ -168,7 +168,6 @@ pNet.workflow_guide()
 # run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
 python Workflow_guide.py
 ```
-Example terminal interaction <br />
 
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/c083cb5b-764c-4c3f-a6ab-00c072c43f73" width="800">
 
