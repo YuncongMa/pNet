@@ -1,4 +1,4 @@
-# This is a brief description of the Python version of pNet
+# This is a brief description for the Python version of pNet
 
 
 * It is designed to carry out the pNet setup and computation, consistent to the MATLAB version with GUI. 
