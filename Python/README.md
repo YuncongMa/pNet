@@ -26,11 +26,6 @@ git clone https://github.com/YuncongMa/pNet <User's directory>
 
 ## Step-by-step guidance
 This Python version of pNet provides a step-by-step guidance to customize a Python script for running a desired workflow <br />
-**Python code**
-```
-# run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
-pNet.workflow_guide()
-```
 **Terminal code**
 ```
 # run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
