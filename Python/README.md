@@ -170,7 +170,8 @@ python Workflow_guide.py
 ```
 Example terminal interaction <br />
 
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/c61650b9-2794-48ef-b146-f1a7d32abc77" width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/c083cb5b-764c-4c3f-a6ab-00c072c43f73" width="800">
+
 
 
 ## Help
