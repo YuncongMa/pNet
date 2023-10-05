@@ -10,11 +10,6 @@
 * It supports multi-cohort datasets and precomputed group-level FNs.<br />
 
 
-# Module
-It consists of five main modules: data input, FN computation, visualization, quality control, and statistics.
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/82cd76f2-05a8-44b9-9bf7-de945a1360b9"  width="800">
-
-
 # GUI Snapshot
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/f5168794-63d2-4076-92c9-8ca3d78e478f" width="800">
 
@@ -25,6 +20,12 @@ It consists of five main modules: data input, FN computation, visualization, qua
 (E) Surface-based visualization of a personalized FN. <br />
 (F) Surface-based visualization of the maximum t value (two sample t-test, FDR correction, p-value=0.001) of sex differences of individualized FNs (k=50) of the HCP S1200 dataset. <br />
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
+
+
+# Module
+It consists of five main modules: data input, FN computation, visualization, quality control, and statistics.
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/82cd76f2-05a8-44b9-9bf7-de945a1360b9"  width="800">
+
 
 # Data Structure
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/a72263c5-0a0d-4507-89f9-f22ba80c9853" width="800">
