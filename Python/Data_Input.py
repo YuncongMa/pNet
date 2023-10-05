@@ -270,8 +270,8 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
     Optional normalization can be added for each scan before concatenation
 
     :param file_scan_list: Directory of a single txt file storing fMRI file directories, or a directory of a single scan file
-    :param dataType: 'Surface', 'Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param dataType: 'Surface', 'Volume', 'Surface-Volume'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)'
     :param Reshape: False or True, whether to reshape 4D volume-based fMRI data to 2D
     :param Brain_Mask: None or a brain mask [X Y Z]
     :param Normalization: False, 'vp-vmax'
@@ -279,7 +279,7 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
     :param logFile: a log file to save the output
     :return: Data: a 2D or 4D NumPy array [dim_time dim_space]
 
-    By Yuncong Ma, 10/2/2023
+    By Yuncong Ma, 10/5/2023
     """
 
     # Check setting
@@ -321,10 +321,7 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
                 cifti = nib.load(scan_list[i])  # [dim_time dim_space]
                 cifti_data = cifti.get_fdata(dtype=np.float32)
                 # Extract desired parts of the data
-                if dataType == 'Surface':
-                    scan_data = cifti_data[:, range(59412)]
-                else:
-                    raise ValueError('Unsupported data type ' + dataType + ' for data format HCP Surface')
+                scan_data = cifti_data[:, range(59412)]
 
             elif scan_list[i].endswith('.mat'):
                 scan_data = load_matlab_single_array(scan_list[i])  # [dim_space dim_time]
@@ -375,6 +372,14 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
                     raise ValueError('Brain_Mask must be provided when Reshape is enabled for 4D fMRI data')
                 scan_data = reshape_fmri_data(scan_data, dataType, Brain_Mask)
 
+        elif dataFormat == 'HCP Surface-Volume (*.cifti)':
+            if scan_list[i].endswith('.dtseries.nii'):
+                cifti = nib.load(scan_list[i])  # [dim_time dim_space]
+                cifti_data = cifti.get_fdata(dtype=np.float32)
+                scan_data = cifti_data
+            else:
+                raise ValueError('Unsupported scan extension for data format HCP Surface-Volume')
+
         else:
             raise ValueError('Unsupported data format ' + dataFormat)
 
@@ -388,7 +393,7 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
         # Combine scans along the time dimension
         # The Data will be permuted to [dim_time dim_space] for both 2D and 4D matrices
         if i == 0:
-            if dataType == 'Surface':
+            if dataType in ('Surface', 'Surface-Volume'):
                 if Normalization is not None and Normalization is not False:
                     if Normalization == 'vp-vmax':
                         scan_data = normalize_data(scan_data, 'vp', 'vmax')
@@ -403,7 +408,7 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
             Data = scan_data
 
         else:
-            if dataType == 'Surface':
+            if dataType in ('Surface', 'Surface-Volume'):
                 if Data is None or len(Data.shape) != 2 or scan_data.shape[1] != Data.shape[1]:
                     raise ValueError('Scans have different spatial dimensions when loading scan: ' + scan_list[i])
                 if Normalization is not None and Normalization is not False:
@@ -508,8 +513,8 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
     """
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
-    :param dataType: 'Surface', 'Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param dataType: 'Surface', 'Volume', 'Surface-Volume'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)'
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
     :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
     :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
@@ -524,7 +529,7 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
     :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
                             a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 10/5/2023
     """
 
     # log file
@@ -562,6 +567,36 @@ def compute_brain_template(dataType: str, dataFormat: str, file_surfL=None, file
                                   maskValue=maskValue,
                                   dataType=dataType, dataFormat=dataFormat,
                                   logFile=logFile)
+
+    elif dataType == 'Surface-Volume':
+        # maskValue could be one value for both surface and volume parts, or a tuple containing two integers
+        if isinstance(maskValue, int) == 1:
+            maskValue = (maskValue, maskValue)
+            print_log(f'Setting mask value = {maskValue} for both surface and volume', stop=False)
+        elif isinstance(maskValue, tuple) and len(maskValue) == 2:
+            print_log(f'Setting mask value = {maskValue[0]} for surface, and mask value = {maskValue[1]} for volume', stop=False)
+        else:
+            print_log('maskValue could be one integer for both surface and volume parts, or a tuple containing two integers', stop=True)
+
+        if file_surfL is None or file_surfR is None or file_maskL is None or file_maskR is None:
+            raise ValueError('When data type is surface-volume, file_surfL, file_surfR, file_maskL and file_maskR are required')
+        Brain_Template = \
+            compute_brain_surface(file_surfL, file_surfR, file_maskL, file_maskR,
+                                  file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
+                                  maskValue=maskValue,
+                                  dataType=dataType, dataFormat=dataFormat,
+                                  logFile=logFile)
+        # Change Brain_Mask to Surface_Mask
+        Brain_Template['Surface_Mask'] = Brain_Template['Brain_Mask']
+        del Brain_Template['Brain_Mask']
+
+        if file_mask_vol is None or file_overlayImage is None:
+            raise ValueError('When data type is surface-volume, both file_mask_vol and file_overlayImage are required')
+        Volume_Mask = load_fmri_scan(file_mask_vol, dataType=dataType, dataFormat=dataFormat, Reshape=False, Normalization=None)
+        Overlay_Image = load_fmri_scan(file_overlayImage, dataType=dataType, dataFormat=dataFormat, Reshape=False, Normalization=None)
+        Volume_Mask = (Volume_Mask == maskValue)
+        Brain_Template['Volume_Mask'] = Volume_Mask
+        Brain_Template['Overlay_Image'] = Overlay_Image
 
     else:
         raise ValueError('Unknown data type: ' + dataType)
@@ -695,7 +730,7 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
     :param dir_pnet_dataInput: the directory of the Data Input folder
     :param file_Brain_Template: file directory or the content of a brain template
 
-    :param dataType: 'Surface', 'Volume'
+    :param dataType: 'Surface', 'Volume', 'Surface-Volume'
     :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'
 
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
@@ -712,7 +747,7 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
 
     :param logFile: 'Automatic', None, or a txt formatted file directory
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 10/5/2023
     """
 
     # log file
@@ -751,12 +786,12 @@ def reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarr
     Reshape 2D fMRI data back to 4D volume type
 
     :param scan_data: 4D or 2D matrix [X Y Z dim_time] [dim_time dim_space]
-    :param dataType: 'Surface' or 'Volume'
+    :param dataType: 'Surface', 'Volume', or 'Surface-Volume'
     :param Brain_Mask: 3D matrix
     :param logFile:
     :return: reshaped_data: 2D matrix if input is 4D, vice versa
 
-    Yuncong Ma, 9/13/2023
+    Yuncong Ma, 10/5/2023
     """
 
     if dataType == 'Volume':
@@ -791,12 +826,12 @@ def reshape_FN(FN: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=No
     Reshape 2D FNs back to 4D for storage and visualization
 
     :param FN: 4D or 2D matrix [X Y Z K] [dim_space K]
-    :param dataType: 'Surface' or 'Volume'
+    :param dataType: 'Surface', 'Volume', or 'Surface-Volume'
     :param Brain_Mask: 3D matrix
     :param logFile:
     :return: reshaped_FN: 2D matrix if input is 4D, vice versa
 
-    Yuncong Ma, 9/13/2023
+    Yuncong Ma, 10/5/2023
     """
 
     if dataType == 'Volume':
