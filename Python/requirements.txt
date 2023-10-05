@@ -72,3 +72,6 @@ xz=5.4.2=h80987f9_0
 zipp=3.16.2=pypi_0
 zlib=1.2.13=h5a0b063_0
 zstd=1.5.5=hd90d995_0
+numpy=1.24.4=pypi_0
+pytorch=2.0.1=py3.8_0
+nibabel=5.0.1=pyhd8ed1ab_0
