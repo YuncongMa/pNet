@@ -39,8 +39,7 @@ python Workflow_guide.py
 
 **Generated script**
 
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/53139c7d-d5c0-4aaa-bda5-65a0f72c7a08" width="800">
-
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/96df4f6d-a24c-4d7c-afb8-482cba5ad682" width="800">
 
 
 ## Workflow
