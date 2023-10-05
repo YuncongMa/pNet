@@ -10,7 +10,7 @@
 * It supports multi-cohort datasets and precomputed group-level FNs.<br />
 
 
-# GUI Snapshot
+# GUI
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/f5168794-63d2-4076-92c9-8ca3d78e478f" width="800">
 
 (A) The data input module for loading fMRI scans and brain template files. <br />
