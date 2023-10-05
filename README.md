@@ -22,6 +22,11 @@
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
 
 
+# Step-by-step guidance
+Configure a customized workflow using command line
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/38efac5d-631a-47d8-a34f-fd686f84602d" width="800">
+
+
 # Module
 It consists of five main modules: data input, FN computation, visualization, quality control, and statistics.
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/82cd76f2-05a8-44b9-9bf7-de945a1360b9"  width="800">
