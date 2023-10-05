@@ -32,6 +32,8 @@ This Python version of pNet provides a step-by-step guidance to customize a Pyth
 python Workflow_guide.py
 ```
 
+**Example video**
+
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/c083cb5b-764c-4c3f-a6ab-00c072c43f73" width="800">
 
 **Generated script**
