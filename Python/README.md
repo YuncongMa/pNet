@@ -169,7 +169,8 @@ pNet.workflow_guide()
 python Workflow_guide.py
 ```
 Example terminal interaction <br />
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/ef4ee829-7be3-400a-a18f-777361890c2e" width="500">
+
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/c61650b9-2794-48ef-b146-f1a7d32abc77" width="800">
 
 
 ## Help
