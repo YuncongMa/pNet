@@ -39,6 +39,11 @@ python Workflow_guide.py
 
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/c083cb5b-764c-4c3f-a6ab-00c072c43f73" width="800">
 
+**Generated script**
+
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/53139c7d-d5c0-4aaa-bda5-65a0f72c7a08" width="800">
+
+
 
 ## Workflow
 The workflow code is in Workflow.py
