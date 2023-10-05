@@ -215,22 +215,35 @@ def workflow_simple(dir_pnet_result: str,
     # ============================================= #
 
 
-def guide_YN(prompt: str):
+def guide_YN(prompt: str, skip=False, default_value='Y'):
     """
     terminal guidance for choosing yes or no
     Users can type Y, y, Yes, yes, N, n, No, or no
 
     :param prompt: a string for prompt
+    :param skip: False or True to skip the setting
+    :param default_value: a default value when skip is enabled
     :return: input_YN, 'Y' or 'N'
 
-    Yuncong Ma, 10/3/2023
+    Yuncong Ma, 10/5/2023
     """
 
     input_YN = None
     while input_YN is None:
-        input_YN = input(prompt + "\n[Y/N]\nUser Input > ")
+        print(prompt + "\n[Y/N]")
+        time.sleep(0.1)
+        if skip is True:
+            print(f"Enter to use default value {default_value}")
+            time.sleep(0.1)
+
+        input_YN = input("User Input > ")
+
         if input_YN is None:
-            print('Unknown choice, try again')
+            if skip is True:
+                input_YN = default_value
+            else:
+                print('Unknown choice, try again')
+
         elif input_YN in ('Y', 'y', 'Yes', 'yes'):
             input_YN = 'Y'
         elif input_YN in ('N', 'n', 'No', 'no'):
@@ -248,12 +261,14 @@ def guide_dir(prompt: str):
     :param prompt: a string for prompt
     :return: input_dir
 
-    Yuncong Ma, 9/29/2023
+    Yuncong Ma, 10/5/2023
     """
 
     input_dir = None
     while input_dir is None:
-        input_dir = input(prompt + "\nUser Input > ")
+        print(prompt)
+        time.sleep(0.1)
+        input_dir = input("User Input > ")
         if input_dir is None:
             print('Wrong setup, try again\nUser Input >')
     return input_dir
@@ -268,12 +283,14 @@ def guide_file(prompt: str, existed=True, extension=None):
     :param extension: None or a str, or a tuple of strings, specifying the file extension
     :return: input_file
 
-    Yuncong Ma, 10/3/2023
+    Yuncong Ma, 10/5/2023
     """
 
     input_file = None
     while input_file is None:
-        input_file = input("# "+prompt + "\nUser Input > ")
+        print("# "+prompt)
+        time.sleep(0.1)
+        input_file = input("User Input > ")
         if input_file is None:
             print('Wrong setup, try again\nUser Input >')
             continue
@@ -314,18 +331,24 @@ def guide_number(prompt: str, data_type='Int', data_range=None, skip=False, defa
     :param default_value: a default value when skip is enabled
     :return: input_value
 
-    Yuncong Ma, 9/29/2023
+    Yuncong Ma, 10/5/2023
     """
 
     input_value = None
     while input_value is None:
-        if skip is False:
-            input_value = input("# "+prompt + "\nUser Input > ")
-        else:
-            input_value = input("# "+prompt + "\nEnter to use default value" + "\nUser Input > ")
+        print("# "+prompt)
+        time.sleep(0.1)
+
+        if skip is True:
+            print(f"Enter to use default value {default_value}")
+            time.sleep(0.1)
+
+        input_value = input("User Input > ")
+
         if input_value is None:
             if skip is True:
                 input_value = default_value
+                print(f'Set to the default value {default_value}')
                 return input_value
             print('Wrong setup, try again\nUser Input >')
         else:
@@ -357,18 +380,25 @@ def guide_choice(prompt: str, list_choice: tuple, skip=False, default_value=None
     :param default_value: None or value
     :return: choice
 
-    Yuncong Ma, 10/3/2023
+    Yuncong Ma, 10/5/2023
     """
-
-    for i in range(len(list_choice)):
-        prompt = prompt + "\n" + str(i+1) + ". " + list_choice[i]
 
     choice = None
     while choice is None:
+        print("# "+prompt)
+        time.sleep(0.1)
+        for i in range(len(list_choice)):
+            print(str(i+1) + ". " + list_choice[i])
+        time.sleep(0.1)
         if skip is False:
-            choice = input("# "+prompt + "\nChoose by number" + "\nUser Input > ")
+            print("Choose by number")
+            time.sleep(0.1)
         else:
-            choice = input("# "+prompt + "\nChoose by number or enter to use default" + "\nUser Input > ")
+            print(f"Choose by number or enter to use default {default_value}")
+            time.sleep(0.1)
+
+        choice = input("User Input > ")
+
         if choice in list_choice:
             return choice
 
@@ -386,6 +416,7 @@ def guide_choice(prompt: str, list_choice: tuple, skip=False, default_value=None
                         choice = list_choice[0]
                     else:
                         choice = default_value
+                        print(f'Set to the default value {default_value}')
                     return choice
                 print('Wrong choice, try again\nUser Input >')
                 choice = None
@@ -415,7 +446,7 @@ def workflow_guide():
         dataFormat = 'Volume (*.nii, *.nii.gz, *.mat)'
         print("data format is automatically set to 'Volume (*.nii, *.nii.gz, *.mat)'")
     file_scan = guide_file("Provide a txt formatted file containing all fMRI scans:", existed=True, extension='.txt')
-    Choice = guide_YN("Do you have a txt formatted file containing subject ID information for each corresponding scan?")
+    Choice = guide_YN("Do you have a txt formatted file containing subject ID information for each corresponding scan?", skip=True, default_value='N')
     if Choice == 'Y':
         file_subject_ID = guide_file("Provide a txt formatted file containing subject ID information for each corresponding scan:", existed=True, extension='.txt')
         Choice = guide_YN("Do you have a txt formatted file containing subject folder information for each corresponding scan?")
@@ -431,7 +462,7 @@ def workflow_guide():
     else:
         file_subject_ID = None
         file_subject_folder = None
-    Choice = guide_YN("Do you want to concatenate multiple scans for the same subject?")
+    Choice = guide_YN("Do you want to concatenate multiple scans for the same subject?", skip=True, default_value='N')
     if Choice == 'Y':
         Combine_Scan = True
     else:
@@ -446,7 +477,7 @@ def workflow_guide():
     file_maskR = None
     file_surfL_inflated = None
     file_surfR_inflated = None
-    Choice = guide_YN("Would you like to select a built-in brain template file?")
+    Choice = guide_YN("Would you like to select a built-in brain template file?", skip=True, default_value='Y')
     if Choice == 'Y':
         file_Brain_Template = guide_choice("Select a built-in brain template:", ('HCP Surface', 'MNI Volume'))
         if file_Brain_Template == 'HCP Surface':
@@ -467,7 +498,7 @@ def workflow_guide():
             elif dataType == 'Surface':
                 file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
                 file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
-                Choice = guide_YN("Would you like to load an inflated brain surface shape?")
+                Choice = guide_YN("Would you like to load an inflated brain surface shape?", skip=True, default_value='N')
                 if Choice == 'Y':
                     file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.very_inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
                     file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.very_inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
@@ -482,8 +513,8 @@ def workflow_guide():
     # ============== FN Computation ============== #
     print('# ============== FN Computation ============== # ')
     # setup parameters for FN computation
-    K = guide_number("How many functional networks?", 'Int', (2, 1000))
-    Choice = guide_YN("Do you want to load a precomputed group-level functional networks?")
+    K = guide_number("How many functional networks (default 17)?", 'Int', (2, 1000), skip=True, default_value=17)
+    Choice = guide_YN("Do you want to load a precomputed group-level functional networks?", skip=True, default_value='N')
     if Choice == 'Y':
         Compute_gFN = True
         file_gFN = guide_file('Set up the file directory of the precomputed group-level functional networks in matlab format?', existed=True, extension='.mat')
@@ -575,3 +606,4 @@ def workflow_guide():
         print(")\n", file=file_script)
 
     file_script.close()
+    print('Customized workflow script is generated successfully, please open to check the details.')
