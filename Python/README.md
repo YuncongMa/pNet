@@ -34,7 +34,8 @@ python Workflow_guide.py
 
 **Video tutorial**
 
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/c083cb5b-764c-4c3f-a6ab-00c072c43f73" width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/38efac5d-631a-47d8-a34f-fd686f84602d" width="800">
+
 
 **Generated script**
 
