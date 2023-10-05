@@ -425,8 +425,8 @@ def guide_choice(prompt: str, list_choice: tuple, skip=False, default_value=None
 
 def workflow_guide():
     """
-    This is a step-by-step guidance for setting up a workflow of pNet in terminal command line
-    It will generate a Python script to run the desired workflow
+    This is a step-by-step guidance for configuring a workflow of pNet in command line
+    It will generate a Python script to run the desired workflow with comments
     Yuncong Ma, 10/5/2023
     """
 
