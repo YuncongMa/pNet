@@ -31,6 +31,10 @@ class Brain_Template:
     file_HCP_surf = os.path.join(dir_Template, 'HCP_Surface', 'Brain_Template.json')
     HCP_surf = load_json_setting(file_HCP_surf)
 
+    # HCP surface-volume
+    file_HCP_surf_vol = os.path.join(dir_Template, 'HCP_Surface_Volume', 'Brain_Template.json')
+    HCP_surf_vol = load_json_setting(file_HCP_surf_vol)
+
     # FreeSurfer surface
     # FS_surf = load_json_setting(os.path.join(dir_Template, 'FreeSurfer_fsaverage5', 'Brain_Template.json'))
 

@@ -6,6 +6,14 @@
 
 #########################################
 # Packages
+import os
+
+# path of pNet
+dir_python = os.path.dirname(os.path.abspath(__file__))
+dir_pNet = os.path.dirname(dir_python)
+dir_brain_template = os.path.join(dir_pNet, 'Brain_Template')
+dir_example = os.path.join(dir_pNet, 'Example')
+
 
 # Example
 from Example import Example
