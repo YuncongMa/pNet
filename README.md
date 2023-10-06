@@ -24,6 +24,7 @@
 
 # Step-by-step guidance
 Configure a customized workflow using command line
+This will generate a Python script to run a workflow
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/38efac5d-631a-47d8-a34f-fd686f84602d" width="800">
 
 
