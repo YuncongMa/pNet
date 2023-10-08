@@ -39,3 +39,12 @@ pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Surface_Vol
                           file_overlayImage=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/T1.nii.gz'),
                           logFile=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/Brain_Template.log')
                           )
+
+
+# =============== HCP Volume =============== #
+
+
+# =============== MNI Volume =============== #
+
+
+# =============== FreeSurfer Surface =============== #
