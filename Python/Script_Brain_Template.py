@@ -1,6 +1,6 @@
-# Yuncong Ma, 10/6/2023
+# Yuncong Ma, 10/7/2023
 # A script to generate built-in brain template files
-# Some data are missing due to data license
+# Some data are missing due to data license, but can be downloaded online
 
 import pNet
 import os
@@ -8,7 +8,7 @@ import os
 
 # =============== HCP Surface =============== #
 # Use shape file
-dir_template = '/Users/yuncongma/Documents/Document/fMRI/Myworks/HCP'
+dir_template = os.path.join(pNet.dir_brain_template, 'HCP')
 file_surfL = os.path.join(dir_template, '32k_ConteAtlas_v2', 'Conte69.L.inflated.32k_fs_LR.surf.gii')
 file_surfR = os.path.join(dir_template, '32k_ConteAtlas_v2', 'Conte69.R.inflated.32k_fs_LR.surf.gii')
 file_maskL = os.path.join(dir_template, 'Gordon/Gordon2016Surface_parcellation_distribute-20agwt4', 'medial_wall.L.32k_fs_LR.func.gii')
@@ -27,7 +27,7 @@ pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Surface'),
 
 # =============== HCP Surface-Volume =============== #
 # Use a real HCP fMRI data to generate the volume parts
-pNet.setup_cifti_volume('/Users/yuncongma/Documents/Document/fMRI/Myworks/pNet/Example/HCP_Surface-Volume/Data/100206/rfMRI_REST1_LR_Atlas_MSMAll_hp2000_clean.dtseries.nii',
+pNet.setup_cifti_volume(os.path.join(pNet.dir_example, 'HCP_Surface-Volume/Data/100206/rfMRI_REST1_LR_Atlas_MSMAll_hp2000_clean.dtseries.nii'),
                         os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/CIFTI_Volume.nii.gz'))
 # Use shape files to generate the surface part and combine the previously generated volume parts
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume'),
