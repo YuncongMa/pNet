@@ -1,7 +1,7 @@
-# Yuncong Ma, 9/27/2023
+# Yuncong Ma, 10/9/2023
 # Brain template information and data
 # Brain template is a dictionary containing 'Data_Type' and 'Data_Format'
-# 'Data_Type' is 'Surface', 'Volume'
+# 'Data_Type' is 'Surface', 'Volume', 'Surface-Volume'
 # Brain template is categorized into surface and volume types
 # If data type is volume, 'Brain_Mask' and 'Overlay_Image' are required, and both are 3D images
 # If data type is surface, 'Shape' and 'Brain_Mask' are required, and 'Shape_Inflated' is optional
@@ -28,16 +28,16 @@ dir_Template = os.path.join(dir_pNet, 'Brain_Template')
 class Brain_Template:
 
     # HCP surface
-    file_HCP_surf = os.path.join(dir_Template, 'HCP_Surface', 'Brain_Template.json')
-    HCP_surf = load_json_setting(file_HCP_surf)
+    file_HCP_surf = os.path.join(dir_Template, 'HCP_Surface', 'Brain_Template.json.zip')
 
     # HCP surface-volume
-    file_HCP_surf_vol = os.path.join(dir_Template, 'HCP_Surface_Volume', 'Brain_Template.json')
-    HCP_surf_vol = load_json_setting(file_HCP_surf_vol)
+    file_HCP_surf_vol = os.path.join(dir_Template, 'HCP_Surface_Volume', 'Brain_Template.json.zip')
+
+    # HCP volume
+    file_HCP_vol = os.path.join(dir_Template, 'HCP_Volume', 'Brain_Template.json.zip')
 
     # FreeSurfer surface
-    # FS_surf = load_json_setting(os.path.join(dir_Template, 'FreeSurfer_fsaverage5', 'Brain_Template.json'))
+    file_FS_surf = os.path.join(dir_Template, 'FreeSurfer_fsaverage5', 'Brain_Template.json.zip')
 
     # MNI volume
-    file_MNI_vol = os.path.join(dir_Template, 'MNI_Volume', 'Brain_Template.json')
-    MNI_vol = load_json_setting(file_MNI_vol)
+    file_MNI_vol = os.path.join(dir_Template, 'MNI_Volume', 'Brain_Template.json.zip')
