@@ -1,0 +1,137 @@
+
+Setup brain template at 2023-10-06 15:44:15
+
+
+Compute brain template at 2023-10-06 15:44:15
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+When dataType is surface, dataFormat should be one of 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'
+
+Setup brain template at 2023-10-06 15:46:18
+
+
+Compute brain template at 2023-10-06 15:46:18
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Setup brain template at 2023-10-06 15:47:43
+
+
+Compute brain template at 2023-10-06 15:47:43
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Brain_Surface is created
+
+Setup brain template at 2023-10-06 15:49:59
+
+
+Compute brain template at 2023-10-06 15:49:59
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Brain_Surface is created
+
+Setup brain template at 2023-10-06 15:50:12
+
+
+Compute brain template at 2023-10-06 15:50:12
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Brain_Surface is created
+
+Setup brain template at 2023-10-06 15:51:03
+
+
+Compute brain template at 2023-10-06 15:51:03
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Brain_Surface is created
+
+Setup brain template at 2023-10-06 15:51:27
+
+
+Compute brain template at 2023-10-06 15:51:27
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Brain_Surface is created
+
+Setup brain template at 2023-10-06 15:51:55
+
+
+Compute brain template at 2023-10-06 15:51:55
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Brain_Surface is created
+
+Setup brain template at 2023-10-06 15:53:15
+
+
+Compute brain template at 2023-10-06 15:53:15
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Brain_Surface is created
+
+Setup brain template at 2023-10-06 15:57:33
+
+
+Compute brain template at 2023-10-06 15:57:33
+
+Brain template supports both volume and surface data types
+For volume data type, a Mask file and a high resolution T1/T2 overlay image are required
+For surface data type, files for surface mesh shape including vertices and faces are required.
+And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.
+Inflated surface mesh shape files are optional for different visualization purposes.
+
+
+Brain_Surface is created
