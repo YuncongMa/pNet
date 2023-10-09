@@ -690,8 +690,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
         Volume_Order = Volume_Order[Volume_Order > 0]
         Volume_Mask = (Volume_Mask > 0).astype(np.int32)
         Brain_Template['Volume_Mask'] = Volume_Mask
-        if Volume_Order is not None:
-            Brain_Template['Volume_Order'] = Volume_Order
+        Brain_Template['Volume_Order'] = Volume_Order
         Brain_Template['Overlay_Image'] = Overlay_Image
         # correct dataType and dataFormat
         Brain_Template['Data_Type'] = dataType
@@ -705,7 +704,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
 
 def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
     """
-    Save the Brain_Template.mat
+    Save the Brain_Template.mat and Brain_Template.json.zip
 
     :param dir_pnet_dataInput: the directory of the Data Input folder
     :param Brain_Template: a structure created by function compute_brain_template
