@@ -942,9 +942,10 @@ def compute_gNb(Brain_Template, logFile=None):
     compute_gNb(Brain_Template, logFile=None)
     Prepare a graph neighborhood variable, using indices as its sparse representation
 
-    :param Brain_Template: a structure variable with keys 'Data_Type', 'Data_Format', 'Shape', 'Mask'.
-        If Brain_Template.Data_Type is 'Surface', Shape contains L and R, with vertices and faces as sub keys. Mask contains L and R.
-        If Brain_Template.Data_Type is 'Volume', Shape is None, Mask is a 3D 0-1 matrix, Overlay_Image is a 3D matrix
+    :param Brain_Template: a structure variable with keys 'Data_Type', 'Data_Format', 'Shape', 'Brain_Mask'.
+        If Brain_Template.Data_Type is 'Surface', Shape contains L and R, with vertices and faces as sub keys. Brain_Mask contains L and R.
+        If Brain_Template.Data_Type is 'Volume', Shape is None, Brain_Mask is a 3D 0-1 matrix, Overlay_Image is a 3D matrix
+        If Brain_Template.Data_Type is 'Surface-Volume', It includes fields from both 'Surface' and 'Volume', 'Brain_Mask' is renamed to be 'Surface_Mask' and 'Volume_Mask'
     :param logFile:
     :return: gNb: a 2D matrix [N, 2], which labels the non-zero elements in a graph. Index starts from 1
 
