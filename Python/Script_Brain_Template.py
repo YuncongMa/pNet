@@ -46,7 +46,7 @@ pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Volume'),
                           maskValue=1,
                           file_mask_vol=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/CIFTI_Volume.nii.gz'),
                           file_overlayImage=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/T1.nii.gz'),
-                          logFile=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/Brain_Template.log')
+                          logFile=os.path.join(pNet.dir_brain_template, 'HCP_Volume/Brain_Template.log')
                           )
 
 # =============== MNI Volume =============== #
@@ -70,7 +70,7 @@ file_surfL_inflated = os.path.join(dir_template, 'fsaverage5/surf/lh.inflated')
 file_surfR_inflated = os.path.join(dir_template, 'fsaverage5/surf/rh.inflated')
 #
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'FreeSurfer_fsaverage5'),
-                          dataType='Surface', dataFormat='MGH Surface (*.mgh)',
+                          dataType='Surface', dataFormat='FreeSurfer',
                           file_surfL=file_surfL, file_surfR=file_surfR,
                           file_maskL=file_maskL, file_maskR=file_maskR, maskValue=1,
                           file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
