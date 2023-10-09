@@ -1,5 +1,9 @@
-# Yuncong Ma, 10/5/2023
+# Yuncong Ma, 10/9/2023
 # Data Input module of pNet
+# It includes:
+# 1. loading and writing of fMRI files
+# 2. loading and writing of json formatted setting files
+# 3. loading and setting up of brain template files
 
 
 #########################################
@@ -13,6 +17,7 @@ import json
 import torch
 import h5py
 import time
+import gzip
 
 
 def load_matlab_array(file_matlab: str, variable_name: str):
@@ -149,40 +154,49 @@ def set_data_precision_torch(data_precision: str):
 
 def write_json_setting(setting, file_setting: str):
     """
-    Write setting parameter in json format
+    Write setting parameter in json format, also support gzip
 
     :param setting: a json based variable
     :param file_setting: Directory of a json setting file
     :return: none
 
-    By Yuncong Ma, 9/26/2023
+    By Yuncong Ma, 10/9/2023
     """
     file_extension = os.path.splitext(file_setting)[1]
 
-    if file_extension != '.json':
+    if file_extension != '.json' and not file_setting.endswith('.json.zip'):
         raise ValueError('It is not a JSON file: '+file_setting)
-    # save serialized json file
-    with open(file_setting, 'w') as file:
-        json.dump(setting, file, indent=4)
+    if file_extension == '.json':
+        # save serialized json file
+        with open(file_setting, 'w') as file:
+            json.dump(setting, file, indent=4)
+    else:
+        with gzip.open(file_setting, "wt") as file:
+            json.dump(setting, file, indent=4)
 
 
 def load_json_setting(file_setting: str):
     """
-    Load setting variable in a json file
+    Load setting variable in a json file, also support gzip
 
     :param file_setting: Directory of a json setting file
     :return: Setting
 
-    By Yuncong Ma, 9/6/2023
+    By Yuncong Ma, 10/9/2023
     """
     file_extension = os.path.splitext(file_setting)[1]
 
-    if file_extension != '.json':
+    if file_extension != '.json' and not file_setting.endswith('.json.zip'):
         raise ValueError('It is not a JSON file: '+file_setting)
 
-    with open(file_setting, 'r') as file:
-        json_string = file.read()
-    Setting = json.loads(json_string)
+    if file_extension == '.json':
+        with open(file_setting, 'r') as file:
+            json_string = file.read()
+            Setting = json.loads(json_string)
+    else:
+        with gzip.open(file_setting, "rt") as file:
+            Setting = json.loads(file)
+
     return Setting
 
 
@@ -380,6 +394,14 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
             else:
                 raise ValueError('Unsupported scan extension for data format HCP Surface-Volume')
 
+        elif dataFormat == 'HCP Volume (*.cifti)':
+            if scan_list[i].endswith('.dtseries.nii'):
+                cifti = nib.load(scan_list[i])  # [dim_time dim_space]
+                cifti_data = cifti.get_fdata(dtype=np.float32)
+                scan_data = cifti_data[:, 59412:-1]
+            else:
+                raise ValueError('Unsupported scan extension for data format HCP Volume')
+
         else:
             raise ValueError('Unsupported data format ' + dataFormat)
 
@@ -453,12 +475,15 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     :param file_surfR_inflated: file that stores the inflated surface shape information of the right hemisphere, including vertices and faces
     :param maskValue: 0 or 1, 0 means 0s in mask files are useful vertices, otherwise vice versa. maskValue=0 for medial wall in HCP data, and maskValue=1 for brain masks
     :param dataType: 'Surface', 'Surface-Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'FreeSurfer'
     :param logFile:
     :return: Brain_Surface: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R)
 
-    Yuncong Ma, 10/6/2023
+    Yuncong Ma, 10/9/2023
     """
+
+    # only save a few digits for vertex location
+    n_digit = 2
 
     if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
 
@@ -483,18 +508,65 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
         # Index starts from 1
         Brain_Surface['Shape']['L']['vertices'], Brain_Surface['Shape']['L']['faces'] = shapeL.darrays[0].data, shapeL.darrays[1].data + int(1)
         Brain_Surface['Shape']['R']['vertices'], Brain_Surface['Shape']['R']['faces'] = shapeR.darrays[0].data, shapeR.darrays[1].data + int(1)
+        # Truncating digits to save space
+        Brain_Surface['Shape']['L']['vertices'] = np.round(Brain_Surface['Shape']['L']['vertices'], n_digit)
+        Brain_Surface['Shape']['R']['vertices'] = np.round(Brain_Surface['Shape']['R']['vertices'], n_digit)
         # Surface shape inflated
         if file_surfL_inflated is not None and file_surfR_inflated is not None:
             Brain_Surface['Shape_Inflated']['L']['vertices'], Brain_Surface['Shape_Inflated']['L']['faces'] = shapeL_inflated.darrays[0].data, shapeL_inflated.darrays[1].data + int(1)
             Brain_Surface['Shape_Inflated']['R']['vertices'], Brain_Surface['Shape_Inflated']['R']['faces'] = shapeR_inflated.darrays[0].data, shapeR_inflated.darrays[1].data + int(1)
+            # Truncating digits to save space
+            Brain_Surface['Shape_Inflated']['L']['vertices'] = np.round(Brain_Surface['Shape_Inflated']['L']['vertices'], n_digit)
+            Brain_Surface['Shape_Inflated']['R']['vertices'] = np.round(Brain_Surface['Shape_Inflated']['R']['vertices'], n_digit)
         # Index for brain mask
         Brain_Surface['Brain_Mask']['L'] = maskL.darrays[0].data
         Brain_Surface['Brain_Mask']['R'] = maskR.darrays[0].data
 
         # Change 0 to 1 if the mask is to label unused vertices
-        if maskValue == 0:
-            Brain_Surface['Brain_Mask']['L'] = (Brain_Surface['Brain_Mask']['L'] == 0)
-            Brain_Surface['Brain_Mask']['R'] = (Brain_Surface['Brain_Mask']['R'] == 0)
+        Brain_Surface['Brain_Mask']['L'] = (Brain_Surface['Brain_Mask']['L'] == maskValue).astype(np.int32)
+        Brain_Surface['Brain_Mask']['R'] = (Brain_Surface['Brain_Mask']['R'] == maskValue).astype(np.int32)
+
+    elif dataType == 'Surface' and dataFormat == 'FreeSurfer':
+
+        # Initialize Brain_Surface
+        if file_surfL_inflated is not None and file_surfR_inflated is not None:
+            Brain_Surface = {'Data_Type': dataType, 'Data_Format': dataFormat,
+                             'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
+                             'Shape_Inflated': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
+                             'Brain_Mask': {'L': [], 'R': []}}
+        else:
+            Brain_Surface = {'Data_Type': 'Surface', 'Data_Format': dataFormat,
+                             'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
+                             'Brain_Mask': {'L': [], 'R': []}}
+        # Surface shape
+        # Index starts from 1
+        Brain_Surface['Shape']['L']['vertices'], Brain_Surface['Shape']['L']['faces'] = nib.freesurfer.io.read_geometry(file_surfL)
+        Brain_Surface['Shape']['R']['vertices'], Brain_Surface['Shape']['R']['faces'] = nib.freesurfer.io.read_geometry(file_surfR)
+        # Truncating digits to save space
+        Brain_Surface['Shape']['L']['vertices'] = np.round(Brain_Surface['Shape']['L']['vertices'], n_digit)
+        Brain_Surface['Shape']['R']['vertices'] = np.round(Brain_Surface['Shape']['R']['vertices'], n_digit)
+        # Surface shape inflated
+        if file_surfL_inflated is not None and file_surfR_inflated is not None:
+            Brain_Surface['Shape_Inflated']['L']['vertices'], Brain_Surface['Shape_Inflated']['L']['faces'] = nib.freesurfer.io.read_geometry(file_surfL_inflated)
+            Brain_Surface['Shape_Inflated']['R']['vertices'], Brain_Surface['Shape_Inflated']['R']['faces'] = nib.freesurfer.io.read_geometry(file_surfR_inflated)
+            # Truncating digits to save space
+            Brain_Surface['Shape_Inflated']['L']['vertices'] = np.round(Brain_Surface['Shape_Inflated']['L']['vertices'], n_digit)
+            Brain_Surface['Shape_Inflated']['R']['vertices'] = np.round(Brain_Surface['Shape_Inflated']['R']['vertices'], n_digit)
+        # Index for brain mask
+        indexL = nib.freesurfer.io.read_label(file_maskL)
+        indexR = nib.freesurfer.io.read_label(file_maskR)
+
+        # Form the index list to a conventional mask file
+        if maskValue == 1:  # Use indexes in the mask files as useful vertices
+            Brain_Surface['Brain_Mask']['L'] = np.zeros(Brain_Surface['Shape']['L']['vertices'].shape[0], dtype=np.int32)
+            Brain_Surface['Brain_Mask']['R'] = np.zeros(Brain_Surface['Shape']['R']['vertices'].shape[0], dtype=np.int32)
+            Brain_Surface['Brain_Mask']['L'][indexL] = 1
+            Brain_Surface['Brain_Mask']['R'][indexR] = 1
+        else:  # Use indexes in the mask files as unused vertices
+            Brain_Surface['Brain_Mask']['L'] = np.ones(Brain_Surface['Shape']['L']['vertices'].shape[0], dtype=np.int32)
+            Brain_Surface['Brain_Mask']['R'] = np.ones(Brain_Surface['Shape']['R']['vertices'].shape[0], dtype=np.int32)
+            Brain_Surface['Brain_Mask']['L'][indexL] = 0
+            Brain_Surface['Brain_Mask']['R'][indexR] = 0
 
     else:
         raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + dataType + ' : ' + dataFormat)
@@ -532,7 +604,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
     :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
                             a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
 
-    Yuncong Ma, 10/6/2023
+    Yuncong Ma, 10/9/2023
     """
 
     # log file
@@ -550,18 +622,33 @@ def compute_brain_template(dataType: str, dataFormat: str,
     # check data type and format
     check_data_type_format(dataType, dataFormat, logFile=logFile)
 
-    if dataType == 'Volume':
+    if dataType == 'Volume' and dataFormat == 'Volume (*.nii, *.nii.gz, *.mat)':
         if file_mask_vol is None or file_overlayImage is None:
             raise ValueError('When data type is volume, both file_mask_vol and file_overlayImage are required')
         Brain_Mask = load_fmri_scan(file_mask_vol, dataType=dataType, dataFormat=dataFormat, Reshape=False, Normalization=None)
         Overlay_Image = load_fmri_scan(file_overlayImage, dataType=dataType, dataFormat=dataFormat, Reshape=False, Normalization=None)
-        Brain_Mask = (Brain_Mask == maskValue)
+        Brain_Mask = (Brain_Mask == maskValue).astype(np.int32)
         Brain_Template = {'Data_Type': dataType,
                           'Data_Format': dataFormat,
                           'Brain_Mask': Brain_Mask,
                           'Overlay_Image': Overlay_Image}
 
-    elif dataType == 'Surface':
+    elif dataType == 'Volume' and dataFormat == 'HCP Volume (*.cifti)':
+        if file_mask_vol is None or file_overlayImage is None:
+            raise ValueError('When data type is volume, both file_mask_vol and file_overlayImage are required')
+        Brain_Mask = load_fmri_scan(file_mask_vol, dataType=dataType, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', Reshape=False, Normalization=None)
+        Overlay_Image = load_fmri_scan(file_overlayImage, dataType=dataType, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', Reshape=False, Normalization=None)
+        Volume_Order = Brain_Mask.flatten('F')
+        Volume_Order = Volume_Order[Volume_Order > 0]
+        Brain_Mask = (Brain_Mask > 0).astype(np.int32)
+        Brain_Template = {'Data_Type': dataType,
+                          'Data_Format': dataFormat,
+                          'Brain_Mask': Brain_Mask,
+                          'Overlay_Image': Overlay_Image,
+                          'Volume_Order': Volume_Order
+                          }
+
+    elif dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
         if file_surfL is None or file_surfR is None or file_maskL is None or file_maskR is None:
             raise ValueError('When data type is surface, file_surfL, file_surfR, file_maskL and file_maskR are required')
         Brain_Template = \
@@ -569,6 +656,16 @@ def compute_brain_template(dataType: str, dataFormat: str,
                                   file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
                                   maskValue=maskValue,
                                   dataType=dataType, dataFormat=dataFormat,
+                                  logFile=logFile)
+
+    elif dataType == 'Surface' and dataFormat in ('MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'):
+        if file_surfL is None or file_surfR is None or file_maskL is None or file_maskR is None:
+            raise ValueError('When data type is surface, file_surfL, file_surfR, file_maskL and file_maskR are required')
+        Brain_Template = \
+            compute_brain_surface(file_surfL, file_surfR, file_maskL, file_maskR,
+                                  file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
+                                  maskValue=maskValue,
+                                  dataType=dataType, dataFormat='FreeSurfer',
                                   logFile=logFile)
 
     elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
@@ -601,7 +698,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
         Overlay_Image = load_fmri_scan(file_overlayImage, dataType='Volume', dataFormat='Volume (*.nii, *.nii.gz, *.mat)', Reshape=False, Normalization=None)
         Volume_Order = Volume_Mask.flatten('F')
         Volume_Order = Volume_Order[Volume_Order > 0]
-        Volume_Mask = (Volume_Mask > 0)
+        Volume_Mask = (Volume_Mask > 0).astype(np.int32)
         Brain_Template['Volume_Mask'] = Volume_Mask
         if Volume_Order is not None:
             Brain_Template['Volume_Order'] = Volume_Order
@@ -624,8 +721,17 @@ def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
     :param Brain_Template: a structure created by function compute_brain_template
     :param logFile: 'Automatic', None, or a file directory
 
-    Yuncong Ma, 10/6/2023
+    Yuncong Ma, 10/9/2023
     """
+
+    # only save a few digits for vertex location
+    n_digit = 2
+
+    def partial(x):
+        return list(map(partial_2, x))
+
+    def partial_2(x):
+        return round(x, n_digit)
 
     # Use both matlab and json files for convenience
     scipy.io.savemat(os.path.join(dir_pnet_dataInput, 'Brain_Template.mat'), {'Brain_Template': Brain_Template})
@@ -634,39 +740,43 @@ def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
         Brain_Template['Overlay_Image'] = Brain_Template['Overlay_Image'].tolist()
         if 'Volume_Order' in Brain_Template.keys():
             Brain_Template['Volume_Order'] = Brain_Template['Volume_Order'].tolist()
-        write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+        write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
     elif Brain_Template['Data_Type'] == 'Surface':
         Brain_Template['Brain_Mask']['L'] = Brain_Template['Brain_Mask']['L'].tolist()
         Brain_Template['Brain_Mask']['R'] = Brain_Template['Brain_Mask']['R'].tolist()
-        Brain_Template['Shape']['L']['vertices'] = Brain_Template['Shape']['L']['vertices'].tolist()
-        Brain_Template['Shape']['R']['vertices'] = Brain_Template['Shape']['R']['vertices'].tolist()
+        # only reserve 2 digits
+        Brain_Template['Shape']['L']['vertices'] = list(map(partial, Brain_Template['Shape']['L']['vertices'].tolist()))
+        Brain_Template['Shape']['R']['vertices'] = list(map(partial, Brain_Template['Shape']['R']['vertices'].tolist()))
         Brain_Template['Shape']['L']['faces'] = Brain_Template['Shape']['L']['faces'].tolist()
         Brain_Template['Shape']['R']['faces'] = Brain_Template['Shape']['R']['faces'].tolist()
         if 'Shape_Inflated' in Brain_Template.keys():
-            Brain_Template['Shape_Inflated']['L']['vertices'] = Brain_Template['Shape_Inflated']['L']['vertices'].tolist()
-            Brain_Template['Shape_Inflated']['R']['vertices'] = Brain_Template['Shape_Inflated']['R']['vertices'].tolist()
+            # only reserve 2 digits
+            Brain_Template['Shape_Inflated']['L']['vertices'] = list(map(partial, Brain_Template['Shape_Inflated']['L']['vertices'].tolist()))
+            Brain_Template['Shape_Inflated']['R']['vertices'] = list(map(partial, Brain_Template['Shape_Inflated']['R']['vertices'].tolist()))
             Brain_Template['Shape_Inflated']['L']['faces'] = Brain_Template['Shape_Inflated']['L']['faces'].tolist()
             Brain_Template['Shape_Inflated']['R']['faces'] = Brain_Template['Shape_Inflated']['R']['faces'].tolist()
-        write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+        write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
     elif Brain_Template['Data_Type'] == 'Surface-Volume':
-        Brain_Template['Volume_Mask'] = Brain_Template['Volume_Mask'].tolist()
+        Brain_Template['Volume_Mask'] = np.round(Brain_Template['Volume_Mask']).tolist()
         if 'Volume_Order' in Brain_Template.keys():
             Brain_Template['Volume_Order'] = Brain_Template['Volume_Order'].tolist()
         Brain_Template['Overlay_Image'] = Brain_Template['Overlay_Image'].tolist()
-        Brain_Template['Surface_Mask']['L'] = Brain_Template['Surface_Mask']['L'].tolist()
-        Brain_Template['Surface_Mask']['R'] = Brain_Template['Surface_Mask']['R'].tolist()
-        Brain_Template['Shape']['L']['vertices'] = Brain_Template['Shape']['L']['vertices'].tolist()
-        Brain_Template['Shape']['R']['vertices'] = Brain_Template['Shape']['R']['vertices'].tolist()
+        Brain_Template['Surface_Mask']['L'] = np.round(Brain_Template['Surface_Mask']['L']).tolist()
+        Brain_Template['Surface_Mask']['R'] = np.round(Brain_Template['Surface_Mask']['R']).tolist()
+        # only reserve 2 digits
+        Brain_Template['Shape']['L']['vertices'] = list(map(partial, Brain_Template['Shape']['L']['vertices'].tolist()))
+        Brain_Template['Shape']['R']['vertices'] = list(map(partial, Brain_Template['Shape']['R']['vertices'].tolist()))
         Brain_Template['Shape']['L']['faces'] = Brain_Template['Shape']['L']['faces'].tolist()
         Brain_Template['Shape']['R']['faces'] = Brain_Template['Shape']['R']['faces'].tolist()
         if 'Shape_Inflated' in Brain_Template.keys():
-            Brain_Template['Shape_Inflated']['L']['vertices'] = Brain_Template['Shape_Inflated']['L']['vertices'].tolist()
-            Brain_Template['Shape_Inflated']['R']['vertices'] = Brain_Template['Shape_Inflated']['R']['vertices'].tolist()
+            # only reserve 2 digits
+            Brain_Template['Shape_Inflated']['L']['vertices'] = list(map(partial, Brain_Template['Shape_Inflated']['L']['vertices'].tolist()))
+            Brain_Template['Shape_Inflated']['R']['vertices'] = list(map(partial, Brain_Template['Shape_Inflated']['R']['vertices'].tolist()))
             Brain_Template['Shape_Inflated']['L']['faces'] = Brain_Template['Shape_Inflated']['L']['faces'].tolist()
             Brain_Template['Shape_Inflated']['R']['faces'] = Brain_Template['Shape_Inflated']['R']['faces'].tolist()
-        write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+        write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
     else:
         if logFile is not None:
@@ -675,6 +785,8 @@ def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
             print('Unsupported data type: ' + Brain_Template['Data_Type'], file=logFile, flush=True)
         else:
             raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
+
+    print_log('Brain_Template is saved into mat and json.zip files', stop=False, logFile=logFile)
 
 
 def load_brain_template(dir_Brain_Template: str, logFile=None):
@@ -1015,10 +1127,10 @@ def check_data_type_format(dataType: str,  dataFormat: str, logFile=None):
     Check setting for dataType and dataFormat
 
     :param dataType: 'Surface', 'Volume', 'Surface-Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)', 'HCP Volume (*.cifti)'
     :param logFile:
 
-    Yuncong Ma, 10/4/2023
+    Yuncong Ma, 10/9/2023
     """
 
     # Check dataType and dataFormat separately
@@ -1027,7 +1139,7 @@ def check_data_type_format(dataType: str,  dataFormat: str, logFile=None):
             print_log("Data type should be 'Surface', 'Volume', or 'Surface-Volume'",
                       logFile=logFile, stop=True)
 
-    if dataFormat not in ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)'):
+    if dataFormat not in ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)', 'HCP Volume (*.cifti)'):
         if logFile is None:
             print_log("Data format should be 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', or 'HCP Surface-Volume (*.cifti)'",
                       logFile=logFile, stop=True)
@@ -1036,8 +1148,8 @@ def check_data_type_format(dataType: str,  dataFormat: str, logFile=None):
     if dataType == 'Surface' and dataFormat not in ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'):
         print_log("When dataType is surface, dataFormat should be one of 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'",
                   logFile=logFile, stop=True)
-    if dataType == 'Volume' and dataFormat != 'Volume (*.nii, *.nii.gz, *.mat)':
-        print_log("When dataType is volume, dataFormat should be 'Volume (*.nii, *.nii.gz, *.mat)'",
+    if dataType == 'Volume' and dataFormat not in ('Volume (*.nii, *.nii.gz, *.mat)', 'HCP Volume (*.cifti)'):
+        print_log("When dataType is volume, dataFormat should be 'Volume (*.nii, *.nii.gz, *.mat)' or 'HCP Volume (*.cifti)'",
                   logFile=logFile, stop=True)
     if dataType == 'Surface-Volume' and dataFormat != 'HCP Surface-Volume (*.cifti)':
         print_log("When dataType is surface-volume, dataFormat should be HCP Surface-Volume (*.cifti)",

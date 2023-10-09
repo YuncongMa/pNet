@@ -948,7 +948,7 @@ def compute_gNb(Brain_Template, logFile=None):
     :param logFile:
     :return: gNb: a 2D matrix [N, 2], which labels the non-zero elements in a graph. Index starts from 1
 
-    Yuncong Ma, 9/25/2023
+    Yuncong Ma, 10/9/2023
     """
 
     # Check Brain_Template
@@ -958,7 +958,7 @@ def compute_gNb(Brain_Template, logFile=None):
         raise ValueError('Cannot find Data_Format in the Brain_Template')
 
     # Construct gNb
-    if Brain_Template['Data_Type'] == 'Surface' and Brain_Template['Data_Format'] == 'HCP Surface (*.cifti, *.mat)':
+    if Brain_Template['Data_Type'] == 'Surface':
         Brain_Surface = Brain_Template
         # Number of vertices
         Nv_L = Brain_Surface['Shape']['L']['vertices'].shape[0]  # left hemisphere
@@ -1064,6 +1064,18 @@ def compute_gNb(Brain_Template, logFile=None):
 
         gNb = gNb[0:Count, :]  # Remove unused space
         gNb = np.unique(gNb, axis=0)  # Remove duplicated, and sort the results
+
+    elif Brain_Template['Data_Type'] == 'Surface-Volume':
+        Brain_Template_surf = Brain_Template.copy()
+        Brain_Template_surf['Data_Type'] = 'Surface'
+        Brain_Template_surf['Brain_Mask'] = Brain_Template_surf['Surface_Mask']
+        gNb_surf = compute_gNb(Brain_Template_surf, logFile=logFile)
+        Brain_Template_vol = Brain_Template.copy()
+        Brain_Template_vol['Data_Type'] = 'Volume'
+        Brain_Template_vol['Brain_Mask'] = Brain_Template_surf['Volume_Mask']
+        gNb_vol = compute_gNb(Brain_Template_vol, logFile=logFile)
+        # Concatenate the two gNbs with index adjustment
+        gNb = np.concatenate((gNb_surf, gNb_vol + np.max(gNb_surf)), axis=0)
 
     else:
         raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + Brain_Template['Data_Type'] + ' : ' + Brain_Template['Data_Format'])
