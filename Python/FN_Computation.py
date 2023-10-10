@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/2/2023
+# Yuncong Ma, 10/10/2023
 # FN Computation module of pNet
 
 #########################################
@@ -949,7 +949,7 @@ def compute_gNb(Brain_Template, logFile=None):
     :param logFile:
     :return: gNb: a 2D matrix [N, 2], which labels the non-zero elements in a graph. Index starts from 1
 
-    Yuncong Ma, 10/9/2023
+    Yuncong Ma, 10/10/2023
     """
 
     # Check Brain_Template
@@ -1041,7 +1041,10 @@ def compute_gNb(Brain_Template, logFile=None):
         Nm = np.sum(Brain_Mask > 0)
         maskLabel = Brain_Mask.flatten('F')
         maskLabel = maskLabel.astype(np.int64)  # Brain_Mask might be a 0-1 logic matrix
-        maskLabel[maskLabel > 0] = range(1, 1 + Nm)
+        if 'Volume_Order' in Brain_Template.keys():  # customized index order
+            maskLabel[maskLabel > 0] = Brain_Template['Volume_Order']
+        else:  # default index order
+            maskLabel[maskLabel > 0] = range(1, 1 + Nm)
         maskLabel = np.reshape(maskLabel, Brain_Mask.shape, order='F')  # consistent to MATLAB matrix index order
         # Enumerate each voxel in Brain_Mask
         # The following code is optimized for NumPy array
