@@ -569,7 +569,7 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
             Brain_Surface['Brain_Mask']['R'][indexR] = 0
 
     else:
-        raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + dataType + ' : ' + dataFormat)
+        raise ValueError('Unknown combination of Data_Type and Template_Format: ' + dataType + ' : ' + templateFormat)
 
     if logFile is not None:
         if isinstance(logFile, str):
@@ -929,6 +929,7 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
     # log file
     if logFile == 'Automatic':
         logFile = os.path.join(dir_pnet_dataInput, 'Log_Brain_Template.log')
+        logFile = open(logFile, 'w')
     print_log('\nSetup brain template at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
               logFile=logFile, stop=False)
 

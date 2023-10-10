@@ -1499,6 +1499,6 @@ def check_gFN(gFN: np.ndarray, method='SR-NMF', logFile=None):
         if np.sum(gFN < 0) > 0:
             raise ValueError('When using method SR-NMF, all values in gFNs should be non-negative')
             if logFile is not None:
-                logFile = open(logFile,'a')
+                logFile = open(logFile, 'a')
                 print('When using method SR-NMF, all values in gFNs should be non-negative', file=logFile, flush=True)
 
