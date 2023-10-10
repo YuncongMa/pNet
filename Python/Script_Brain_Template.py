@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/9/2023
+# Yuncong Ma, 10/10/2023
 # A script to generate built-in brain template files
 # Some data are missing due to data license, but can be downloaded online
 
@@ -17,7 +17,7 @@ file_surfL_inflated = os.path.join(dir_template, '32k_ConteAtlas_v2', 'Conte69.L
 file_surfR_inflated = os.path.join(dir_template, '32k_ConteAtlas_v2', 'Conte69.L.very_inflated.32k_fs_LR.surf.gii')
 #
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Surface'),
-                          dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
+                          dataType='Surface', templateFormat='HCP',
                           file_surfL=file_surfL, file_surfR=file_surfR,
                           file_maskL=file_maskL, file_maskR=file_maskR, maskValue=0,
                           file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
@@ -31,7 +31,7 @@ pNet.setup_cifti_volume(os.path.join(pNet.dir_example, 'HCP_Surface-Volume/Data/
                         os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/CIFTI_Volume.nii.gz'))
 # Use shape files to generate the surface part and combine the previously generated volume parts
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume'),
-                          dataType='Surface-Volume', dataFormat='HCP Surface-Volume (*.cifti)',
+                          dataType='Surface-Volume', templateFormat='HCP',
                           file_surfL=file_surfL, file_surfR=file_surfR,
                           file_maskL=file_maskL, file_maskR=file_maskR, maskValue=0,
                           file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
@@ -42,7 +42,7 @@ pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Surface_Vol
 
 # =============== HCP Subcortex Volume =============== #
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Volume'),
-                          dataType='Volume', dataFormat='HCP Volume (*.cifti)',
+                          dataType='Volume', templateFormat='HCP',
                           maskValue=1,
                           file_mask_vol=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/CIFTI_Volume.nii.gz'),
                           file_overlayImage=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/T1.nii.gz'),
@@ -54,7 +54,7 @@ dir_template = os.path.join(pNet.dir_brain_template, 'MNI_Volume')
 file_mask_vol = os.path.join(dir_template, 'Brain_Mask.mat')
 file_overlayImage = os.path.join(dir_template, 'T1.nii.gz')
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'MNI_Volume'),
-                          dataType='Volume', dataFormat='Volume (*.nii, *.nii.gz, *.mat)',
+                          dataType='Volume', templateFormat='3D Matrix',
                           file_mask_vol=file_mask_vol,
                           file_overlayImage=file_overlayImage,
                           logFile=os.path.join(pNet.dir_brain_template, 'MNI_Volume/Brain_Template.log')
@@ -70,7 +70,7 @@ file_surfL_inflated = os.path.join(dir_template, 'fsaverage5/surf/lh.inflated')
 file_surfR_inflated = os.path.join(dir_template, 'fsaverage5/surf/rh.inflated')
 #
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'FreeSurfer_fsaverage5'),
-                          dataType='Surface', dataFormat='FreeSurfer',
+                          dataType='Surface', templateFormat='FreeSurfer',
                           file_surfL=file_surfL, file_surfR=file_surfR,
                           file_maskL=file_maskL, file_maskR=file_maskR, maskValue=1,
                           file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,

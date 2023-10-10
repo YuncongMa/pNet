@@ -463,7 +463,7 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
 
 
 def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
-                          maskValue=0, dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None):
+                          maskValue=0, dataType='Surface', templateFormat='HCP', logFile=None):
     """
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
@@ -475,17 +475,17 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     :param file_surfR_inflated: file that stores the inflated surface shape information of the right hemisphere, including vertices and faces
     :param maskValue: 0 or 1, 0 means 0s in mask files are useful vertices, otherwise vice versa. maskValue=0 for medial wall in HCP data, and maskValue=1 for brain masks
     :param dataType: 'Surface'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'FreeSurfer'
+    :param templateFormat: 'HCP', 'FreeSurfer', '3D Matrix'
     :param logFile:
     :return: Brain_Surface: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R)
 
-    Yuncong Ma, 10/9/2023
+    Yuncong Ma, 10/10/2023
     """
 
     # only save a few digits for vertex location
     n_digit = 2
 
-    if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
+    if dataType == 'Surface' and templateFormat == 'HCP':
 
         shapeL = nib.load(file_surfL)
         shapeR = nib.load(file_surfR)
@@ -496,12 +496,12 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
         if file_surfL_inflated is not None and file_surfR_inflated is not None:
             shapeL_inflated = nib.load(file_surfL_inflated)
             shapeR_inflated = nib.load(file_surfR_inflated)
-            Brain_Surface = {'Data_Type': dataType, 'Data_Format': dataFormat,
+            Brain_Surface = {'Data_Type': dataType, 'Template_Format': templateFormat,
                              'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Shape_Inflated': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Brain_Mask': {'L': [], 'R': []}}
         else:
-            Brain_Surface = {'Data_Type': 'Surface', 'Data_Format': dataFormat,
+            Brain_Surface = {'Data_Type': 'Surface', 'Template_Format': templateFormat,
                              'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Brain_Mask': {'L': [], 'R': []}}
         # Surface shape
@@ -526,16 +526,16 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
         Brain_Surface['Brain_Mask']['L'] = (Brain_Surface['Brain_Mask']['L'] == maskValue).astype(np.int32)
         Brain_Surface['Brain_Mask']['R'] = (Brain_Surface['Brain_Mask']['R'] == maskValue).astype(np.int32)
 
-    elif dataType == 'Surface' and dataFormat == 'FreeSurfer':
+    elif dataType == 'Surface' and templateFormat == 'FreeSurfer':
 
         # Initialize Brain_Surface
         if file_surfL_inflated is not None and file_surfR_inflated is not None:
-            Brain_Surface = {'Data_Type': dataType, 'Data_Format': dataFormat,
+            Brain_Surface = {'Data_Type': dataType, 'Template_Format': templateFormat,
                              'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Shape_Inflated': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Brain_Mask': {'L': [], 'R': []}}
         else:
-            Brain_Surface = {'Data_Type': 'Surface', 'Data_Format': dataFormat,
+            Brain_Surface = {'Data_Type': 'Surface', 'Template_Format': templateFormat,
                              'Shape': {'L': {'vertices': [], 'faces': []}, 'R': {'vertices': [], 'faces': []}},
                              'Brain_Mask': {'L': [], 'R': []}}
         # Surface shape
@@ -579,7 +579,7 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     return Brain_Surface
 
 
-def compute_brain_template(dataType: str, dataFormat: str,
+def compute_brain_template(dataType: str, templateFormat: str,
                            file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
                            file_mask_vol=None, file_overlayImage=None,
                            maskValue=0,
@@ -589,7 +589,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
     :param dataType: 'Surface', 'Volume', 'Surface-Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)', 'HCP Volume (*.cifti)'
+    :param templateFormat: 'HCP', 'FreeSurfer', '3D Matrix'
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
     :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
     :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
@@ -604,7 +604,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
     :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
                             a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
 
-    Yuncong Ma, 10/9/2023
+    Yuncong Ma, 10/10/2023
     """
 
     # log file
@@ -619,21 +619,21 @@ def compute_brain_template(dataType: str, dataFormat: str,
               "And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.\n"
               "Inflated surface mesh shape files are optional for different visualization purposes.\n", file=logFile, flush=True)
 
-    # check data type and format
-    check_data_type_format(dataType, dataFormat, logFile=logFile, scanFlag=False)
+    # check template type and format
+    check_template_type_format(dataType, templateFormat, logFile=logFile)
 
-    if dataType == 'Volume' and dataFormat == 'Volume (*.nii, *.nii.gz, *.mat)':
+    if dataType == 'Volume' and templateFormat == '3D Matrix':
         if file_mask_vol is None or file_overlayImage is None:
             raise ValueError('When data type is volume, both file_mask_vol and file_overlayImage are required')
-        Brain_Mask = load_fmri_scan(file_mask_vol, dataType=dataType, dataFormat=dataFormat, Reshape=False, Normalization=None)
-        Overlay_Image = load_fmri_scan(file_overlayImage, dataType=dataType, dataFormat=dataFormat, Reshape=False, Normalization=None)
+        Brain_Mask = load_fmri_scan(file_mask_vol, dataType=dataType, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', Reshape=False, Normalization=None)
+        Overlay_Image = load_fmri_scan(file_overlayImage, dataType=dataType, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', Reshape=False, Normalization=None)
         Brain_Mask = (Brain_Mask == maskValue).astype(np.int32)
         Brain_Template = {'Data_Type': dataType,
-                          'Data_Format': dataFormat,
+                          'Template_Format': templateFormat,
                           'Brain_Mask': Brain_Mask,
                           'Overlay_Image': Overlay_Image}
 
-    elif dataType == 'Volume' and dataFormat == 'HCP Volume (*.cifti)':
+    elif dataType == 'Volume' and templateFormat == 'HCP':
         if file_mask_vol is None or file_overlayImage is None:
             raise ValueError('When data type is volume, both file_mask_vol and file_overlayImage are required')
         Brain_Mask = load_fmri_scan(file_mask_vol, dataType=dataType, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', Reshape=False, Normalization=None)
@@ -642,7 +642,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
         Volume_Order = Volume_Order[Volume_Order > 0]
         Brain_Mask = (Brain_Mask > 0).astype(np.int32)
         Brain_Template = {'Data_Type': dataType,
-                          'Data_Format': dataFormat,
+                          'Template_Format': templateFormat,
                           'Brain_Mask': Brain_Mask,
                           'Overlay_Image': Overlay_Image,
                           'Volume_Order': Volume_Order
@@ -655,10 +655,10 @@ def compute_brain_template(dataType: str, dataFormat: str,
             compute_brain_surface(file_surfL, file_surfR, file_maskL, file_maskR,
                                   file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
                                   maskValue=maskValue,
-                                  dataType=dataType, dataFormat=dataFormat,
+                                  dataType=dataType, templateFormat=templateFormat,
                                   logFile=logFile)
 
-    elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
+    elif dataType == 'Surface-Volume' and templateFormat == 'HCP':
         # maskValue could be one value for both surface and volume parts, or a tuple containing two integers
         if isinstance(maskValue, int) == 1:
             maskValue = (maskValue, maskValue)
@@ -675,7 +675,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
             compute_brain_surface(file_surfL, file_surfR, file_maskL, file_maskR,
                                   file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
                                   maskValue=maskValue,
-                                  dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
+                                  dataType='Surface', templateFormat=templateFormat,
                                   logFile=logFile)
         # Change Brain_Mask to Surface_Mask
         Brain_Template['Surface_Mask'] = Brain_Template['Brain_Mask']
@@ -694,7 +694,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
         Brain_Template['Overlay_Image'] = Overlay_Image
         # correct dataType and dataFormat
         Brain_Template['Data_Type'] = dataType
-        Brain_Template['Data_Format'] = dataFormat
+        Brain_Template['Template_Format'] = templateFormat
 
     else:
         raise ValueError('Unknown data type: ' + dataType)
@@ -895,7 +895,7 @@ def load_brain_template(dir_Brain_Template: str, logFile=None):
 
 
 def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
-                         dataType=None, dataFormat=None,
+                         dataType=None, templateFormat=None,
                          file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
                          file_mask_vol=None, file_overlayImage=None,
                          maskValue=0,
@@ -907,7 +907,7 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
     :param file_Brain_Template: file directory or the content of a brain template
 
     :param dataType: 'Surface', 'Volume', 'Surface-Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'FreeSurfer' or 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param templateFormat: 'HCP', 'FreeSurfer', '3D Matrix'
 
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
     :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
@@ -923,7 +923,7 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
 
     :param logFile: 'Automatic', None, or a txt formatted file directory
 
-    Yuncong Ma, 10/6/2023
+    Yuncong Ma, 10/10/2023
     """
 
     # log file
@@ -939,7 +939,7 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
             Brain_Template = file_Brain_Template
 
     else:
-        Brain_Template = compute_brain_template(dataType=dataType, dataFormat=dataFormat,
+        Brain_Template = compute_brain_template(dataType=dataType, templateFormat=templateFormat,
                                                 file_surfL=file_surfL, file_surfR=file_surfR,
                                                 file_maskL=file_maskL, file_maskR=file_maskR,
                                                 file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
@@ -1145,6 +1145,41 @@ def check_data_type_format(dataType: str,  dataFormat: str, scanFlag=True, logFi
                   logFile=logFile, stop=True)
     if dataType == 'Surface-Volume' and dataFormat != 'HCP Surface-Volume (*.cifti)':
         print_log("When dataType is surface-volume, dataFormat should be HCP Surface-Volume (*.cifti)",
+                  logFile=logFile, stop=True)
+
+
+def check_template_type_format(dataType: str,  templateFormat: str, logFile=None):
+    """
+    Check setting for dataType and templateFormat
+
+    :param dataType: 'Surface', 'Volume', 'Surface-Volume'
+    :param templateFormat: 'HCP', 'FreeSurfer', '3D Matrix'
+    :param logFile:
+
+    Yuncong Ma, 10/10/2023
+    """
+
+    # Check dataType and dataFormat separately
+    if dataType not in ('Volume', 'Surface', 'Surface-Volume'):
+        if logFile is None:
+            print_log("Data type should be 'Surface', 'Volume', or 'Surface-Volume'",
+                      logFile=logFile, stop=True)
+
+    if templateFormat not in ('HCP', 'FreeSurfer', '3D Matrix'):
+        if logFile is None:
+            print_log("Data format should be 'HCP', 'FreeSurfer', '3D Matrix'",
+                      logFile=logFile, stop=True)
+
+    # Check whether dataType and dataFormat are matched
+    if dataType == 'Surface' and templateFormat not in ('HCP', 'FreeSurfer'):
+        print_log("When dataType is surface, templateFormat should be one of 'HCP', 'FreeSurfer'",
+                  logFile=logFile, stop=True)
+
+    if dataType == 'Volume' and templateFormat not in ('HCP', '3D Matrix'):
+        print_log("When dataType is volume, templateFormat should be one of 'HCP', '3D Matrix'",
+                  logFile=logFile, stop=True)
+    if dataType == 'Surface-Volume' and templateFormat != 'HCP':
+        print_log("When dataType is surface-volume, templateFormat should be 'HCP'",
                   logFile=logFile, stop=True)
 
 
