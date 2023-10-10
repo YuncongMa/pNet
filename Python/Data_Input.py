@@ -589,7 +589,7 @@ def compute_brain_template(dataType: str, dataFormat: str,
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
     :param dataType: 'Surface', 'Volume', 'Surface-Volume'
-    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)', 'HCP Volume (*.cifti)'
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
     :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
     :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
@@ -1326,6 +1326,8 @@ def print_log(message: str, logFile=None, style='a', stop=False):
             raise ValueError(message)
 
 
+def output_FN(FN: np.ndarray, file_output: str, file_brain_template: str, dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None):
+    return
 
 
 

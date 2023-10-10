@@ -1175,7 +1175,7 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
 
 
 def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double'):
+                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='Both'):
     """
     setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
@@ -1184,7 +1184,6 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=N
     :param dir_pnet_result: directory of the pNet result folder
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
-    :param Compute_gFN: True or False, whether to compute gFNs from the provided data or load a precomputed gFN set
     :param file_gFN: directory of a precomputed gFN in .mat format
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
     :param sampleSize: 'Automatic' or integer number, number of subjects selected for each bootstrapping run
@@ -1206,9 +1205,11 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=N
     :param Computation_Mode: 'CPU'
     :param N_Thread: positive integers, used for parallel computation
     :param dataPrecision: 'double' or 'single'
+    :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
+
     :return: setting: a structure
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 10/10/2023
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
@@ -1241,7 +1242,8 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=N
                'Combine_Scan': Combine_Scan,
                'Group_FN': Group_FN,
                'Personalized_FN': Personalized_FN,
-               'Computation': Computation}
+               'Computation': Computation,
+               'Output_Format': outputFormat}
 
     write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
     return setting
@@ -1500,4 +1502,3 @@ def check_gFN(gFN: np.ndarray, method='SR-NMF', logFile=None):
                 logFile = open(logFile,'a')
                 print('When using method SR-NMF, all values in gFNs should be non-negative', file=logFile, flush=True)
 
-    return

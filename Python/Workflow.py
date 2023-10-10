@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/5/2023
+# Yuncong Ma, 10/10/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -24,6 +24,7 @@ def workflow(dir_pnet_result: str,
              dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
              file_subject_ID=None, file_subject_folder=None, file_group_ID=None,
              file_Brain_Template=None,
+             templateFormat='HCP',
              file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
              file_mask_vol=None, file_overlayImage=None,
              maskValue=0,
@@ -34,12 +35,13 @@ def workflow(dir_pnet_result: str,
              maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
              Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
              Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
-             dataPrecision='double'):
+             dataPrecision='double',
+             outputFormat='Both'):
     """
     Run the workflow of pFN, including Data Input, FN Computation, and Quality Control
 
     :param dir_pnet_result: directory of the pNet result folder
-    :param dataType: 'Surface', 'Volume'
+    :param dataType: 'Surface', 'Volume', 'Surface-Volume'
     :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)'
 
     :param file_scan: a txt file that stores directories of all fMRI scans
@@ -48,6 +50,7 @@ def workflow(dir_pnet_result: str,
     :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
 
     :param file_Brain_Template: file directory of a brain template file in json format
+    :param templateFormat: 'HCP', 'FreeSurfer', 'NIFTI'
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
     :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
     :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
@@ -86,7 +89,9 @@ def workflow(dir_pnet_result: str,
 
     :param dataPrecision: 'double' or 'single'
 
-    Yuncong Ma, 10/2/2023
+    :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
+
+    Yuncong Ma, 10/10/2023
     """
 
     # Check setting
@@ -141,7 +146,8 @@ def workflow(dir_pnet_result: str,
         vxI=vxI, ard=ard, eta=eta,
         nRepeat=nRepeat,
         Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
-        dataPrecision=dataPrecision
+        dataPrecision=dataPrecision,
+        outputFormat=outputFormat
     )
     # perform FN computation
     if Computation_Mode == 'CPU_Numpy':
