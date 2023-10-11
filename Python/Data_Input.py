@@ -177,12 +177,12 @@ def write_json_setting(setting, file_setting: str):
 
 def load_json_setting(file_setting: str):
     """
-    Load setting variable in a json file, also support gzip
+    Load setting variable or others in a json file, also support gzip
 
     :param file_setting: Directory of a json setting file
     :return: Setting
 
-    By Yuncong Ma, 10/9/2023
+    By Yuncong Ma, 10/11/2023
     """
     file_extension = os.path.splitext(file_setting)[1]
 
@@ -195,7 +195,8 @@ def load_json_setting(file_setting: str):
             Setting = json.loads(json_string)
     else:
         with gzip.open(file_setting, "rt") as file:
-            Setting = json.loads(file)
+            json_string = file.read()
+            Setting = json.loads(json_string)
 
     return Setting
 
@@ -778,18 +779,18 @@ def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
     print_log('Brain_Template is saved into mat and json.zip files', stop=False, logFile=logFile)
 
 
-def load_brain_template(dir_Brain_Template: str, logFile=None):
+def load_brain_template(file_Brain_Template: str, logFile=None):
     """
     Load a brain template file
 
-    :param dir_Brain_Template: directory of the brain_template file, in json format. Python cannot read the MATLAB version
+    :param file_Brain_Template: directory of the brain_template file, in json format. Python cannot read the MATLAB version
     :param logFile: directory of a log file
     :return: Brain_Template: nested dictionary storing information and matrices of brain template. Matrices are converted to np.ndarray
 
-    Yuncong Ma, 10/6/2023
+    Yuncong Ma, 10/11/2023
     """
 
-    Brain_Template = load_json_setting(dir_Brain_Template)
+    Brain_Template = load_json_setting(file_Brain_Template)
 
     # Check Brain_Template
     if 'Data_Type' not in Brain_Template.keys():
@@ -898,7 +899,7 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
                          dataType=None, templateFormat=None,
                          file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
                          file_mask_vol=None, file_overlayImage=None,
-                         maskValue=0,
+                         maskValue=1,
                          file_surfL_inflated=None, file_surfR_inflated=None,
                          logFile='Automatic'):
     """
@@ -923,7 +924,7 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
 
     :param logFile: 'Automatic', None, or a txt formatted file directory
 
-    Yuncong Ma, 10/10/2023
+    Yuncong Ma, 10/11/2023
     """
 
     # log file

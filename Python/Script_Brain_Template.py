@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/10/2023
+# Yuncong Ma, 10/11/2023
 # A script to generate built-in brain template files
 # Some data are missing due to data license, but can be downloaded online
 
@@ -19,9 +19,9 @@ file_surfR_inflated = os.path.join(dir_template, '32k_ConteAtlas_v2', 'Conte69.L
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Surface'),
                           dataType='Surface', templateFormat='HCP',
                           file_surfL=file_surfL, file_surfR=file_surfR,
-                          file_maskL=file_maskL, file_maskR=file_maskR, maskValue=0,
-                          file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
-                          logFile=os.path.join(pNet.dir_brain_template, 'HCP_Surface', 'Brain_Template.log')
+                          file_maskL=file_maskL, file_maskR=file_maskR,
+                          maskValue=0,  # HCP uses 1 to label medial wall
+                          file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated
                           )
 
 
@@ -33,11 +33,11 @@ pNet.setup_cifti_volume(os.path.join(pNet.dir_example, 'HCP_Surface-Volume/Data/
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume'),
                           dataType='Surface-Volume', templateFormat='HCP',
                           file_surfL=file_surfL, file_surfR=file_surfR,
-                          file_maskL=file_maskL, file_maskR=file_maskR, maskValue=0,
+                          file_maskL=file_maskL, file_maskR=file_maskR,
+                          maskValue=0,  # HCP uses 1 to label medial wall
                           file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
                           file_mask_vol=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/CIFTI_Volume.nii.gz'),
-                          file_overlayImage=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/T1.nii.gz'),
-                          logFile=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/Brain_Template.log')
+                          file_overlayImage=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/T1.nii.gz')
                           )
 
 # =============== HCP Subcortex Volume =============== #
@@ -45,8 +45,7 @@ pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'HCP_Volume'),
                           dataType='Volume', templateFormat='HCP',
                           maskValue=1,
                           file_mask_vol=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/CIFTI_Volume.nii.gz'),
-                          file_overlayImage=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/T1.nii.gz'),
-                          logFile=os.path.join(pNet.dir_brain_template, 'HCP_Volume/Brain_Template.log')
+                          file_overlayImage=os.path.join(pNet.dir_brain_template, 'HCP_Surface_Volume/T1.nii.gz')
                           )
 
 # =============== MNI Volume =============== #
@@ -56,8 +55,8 @@ file_overlayImage = os.path.join(dir_template, 'T1.nii.gz')
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'MNI_Volume'),
                           dataType='Volume', templateFormat='3D Matrix',
                           file_mask_vol=file_mask_vol,
-                          file_overlayImage=file_overlayImage,
-                          logFile=os.path.join(pNet.dir_brain_template, 'MNI_Volume/Brain_Template.log')
+                          maskValue=1,
+                          file_overlayImage=file_overlayImage
                           )
 
 # =============== FreeSurfer Surface =============== #
@@ -72,9 +71,9 @@ file_surfR_inflated = os.path.join(dir_template, 'fsaverage5/surf/rh.inflated')
 pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'FreeSurfer_fsaverage5'),
                           dataType='Surface', templateFormat='FreeSurfer',
                           file_surfL=file_surfL, file_surfR=file_surfR,
-                          file_maskL=file_maskL, file_maskR=file_maskR, maskValue=1,
-                          file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated,
-                          logFile=os.path.join(pNet.dir_brain_template, 'FreeSurfer_fsaverage5', 'Brain_Template.log')
+                          file_maskL=file_maskL, file_maskR=file_maskR,
+                          maskValue=1,
+                          file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated
                           )
 
 
