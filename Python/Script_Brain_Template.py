@@ -72,7 +72,7 @@ pNet.setup_brain_template(os.path.join(pNet.dir_brain_template, 'FreeSurfer_fsav
                           dataType='Surface', templateFormat='FreeSurfer',
                           file_surfL=file_surfL, file_surfR=file_surfR,
                           file_maskL=file_maskL, file_maskR=file_maskR,
-                          maskValue=1,
+                          maskValue=0,  # mask file uses 1 to label unused voxels
                           file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated
                           )
 
