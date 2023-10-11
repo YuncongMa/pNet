@@ -1,4 +1,0 @@
-pNet is compiled for different operation systems, and stored in corresponding folders.
-
-MATLAB runtime is required to run compiled pNet. It can be downloaded at https://www.mathworks.com/products/compiler/matlab-runtime.html
-It is required to use MATLAB runtime R2021A (9.1.0) for pNet of Windows version.
