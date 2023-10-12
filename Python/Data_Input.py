@@ -10,7 +10,7 @@
 # Packages
 import nibabel as nib
 import numpy as np
-import scipy.io
+import scipy
 import scipy.io as sio
 import os
 import json
@@ -1371,8 +1371,25 @@ def print_log(message: str, logFile=None, style='a', stop=False):
             raise ValueError(message)
 
 
-def output_FN(FN: np.ndarray, file_output: str, file_brain_template: str, dataFormat='HCP Surface (*.cifti, *.mat)', logFile=None):
-    return
+def output_FN(FN: np.ndarray, file_output: str, file_brain_template: str, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', logFile=None):
+
+
+    def save_FN(FN: np.ndarray, file_output:str, brain_template, dataFormat: str, logFile=None):
+        if dataFormat == 'Volume (*.nii, *.nii.gz, *.mat)':
+            nib.save(nib.Nifti1Image(FN, np.eye(4)), file_output)
+
+    # load brain tempalte
+    Brain_Template = load_brain_template(file_brain_template, logFile=logFile)
+
+    if isinstance(FN, np.ndarray):
+        save_FN(FN, file_output, Brain_Template, dataFormat, logFile)
+    elif isinstance(FN, str):
+        FN = load_matlab_array(FN)
+        save_FN(FN, file_output, Brain_Template, dataFormat, logFile)
+
+
+
+
 
 
 
