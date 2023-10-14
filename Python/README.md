@@ -7,7 +7,7 @@
 
 ## Deployment
 
-It is recommended to use Anaconda (https://www.anaconda.com) to create an environment. <br />
+This Python version is tested in Anaconda (https://www.anaconda.com) to create an environment. <br />
 **Create a new conda environment for pNet**
 ```
 conda env create --name pnet -f environment.yml
@@ -97,10 +97,8 @@ Visualization and statistics modules will come soon
 pNet.Example.HCP_Surf.dir_pnet
 ```
 ### Brain Template: It includes prepared brain template files for HCP, MNI space
-```
-# load the prepared brain template file for HCP formatted surface data
-pNet.Brain_Template.HCP_surf
-```
+Brain templates are stored at https://github.com/YuncongMa/pNet/tree/main/Brain_Template
+Users can access brain template files in .mat and .json.zip formats, or from the python version of pNet
 ```
 # Get the file directory of the prepared brain template for HCP formatted surface data
 pNet.Brain_Template.file_HCP_surf
