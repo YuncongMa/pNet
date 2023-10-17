@@ -1381,7 +1381,7 @@ def output_FN(FN: np.ndarray or str or tuple, file_output: str or None, file_bra
     :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'
     :param logFile: a str
 
-    Yuncong Ma, 10/16/2023
+    Yuncong Ma, 10/17/2023
     """
 
     # Check input
@@ -1391,9 +1391,9 @@ def output_FN(FN: np.ndarray or str or tuple, file_output: str or None, file_bra
         print_log("file_output needs to be None, when input FN is a string or a tuple of string", stop=True, logFile=logFile)
 
     # save a loaded FN into a file
-    def save_FN(FN_2: np.ndarray, file_output_2:str):
+    def save_FN(FN_2: np.ndarray, file_output_2: str):
         if dataFormat == 'Volume (*.nii, *.nii.gz, *.mat)':
-            if 'Voxel_Size' in Brain_Template.key():
+            if 'Voxel_Size' in Brain_Template.keys():
                 dimension = Brain_Template['Voxel_Size']
                 dimension[3] = 1
                 nib.save(nib.Nifti1Image(FN_2, np.diag(dimension)), file_output_2)
@@ -1404,7 +1404,7 @@ def output_FN(FN: np.ndarray or str or tuple, file_output: str or None, file_bra
     def prepare_extension(file_mat: str):
         file_output_2 = file_mat
         if dataFormat == 'Volume (*.nii, *.nii.gz, *.mat)':
-            file_output_2.replace('.mat', '.nii.gz')
+            file_output_2 = file_output_2.replace('.mat', '.nii.gz')
         else:
             print_log(f"The data format: {dataFormat} is not supported yet", stop=True, logFile=logFile)
 
@@ -1417,15 +1417,15 @@ def output_FN(FN: np.ndarray or str or tuple, file_output: str or None, file_bra
         save_FN(FN, file_output, logFile)
 
     elif isinstance(FN, str):
-        file_output = prepare_extension(FN.copy())
-        FN = load_matlab_array(FN)
+        file_output = prepare_extension(FN)
+        FN = load_matlab_single_array(FN)
         save_FN(FN, file_output)
 
     else:  # FN is tuple
         N_FN = len(FN)
         for i in range(N_FN):
-            file_output = prepare_extension(FN[i].copy())
-            FN_1 = load_matlab_array(FN[i])
+            file_output = prepare_extension(FN[i])
+            FN_1 = load_matlab_single_array(FN[i])
             save_FN(FN_1, file_output)
 
 
