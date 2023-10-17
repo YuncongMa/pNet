@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/9/2023
+# Yuncong Ma, 10/16/2023
 # Data Input module of pNet
 # It includes:
 # 1. loading and writing of fMRI files
@@ -1371,21 +1371,63 @@ def print_log(message: str, logFile=None, style='a', stop=False):
             raise ValueError(message)
 
 
-def output_FN(FN: np.ndarray, file_output: str, file_brain_template: str, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', logFile=None):
+def output_FN(FN: np.ndarray or str or tuple, file_output: str or None, file_brain_template: str, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', logFile=None):
+    """
+    Output FN results in a format matching the input fMRI files
 
+    :param FN: FN matrix in 2D for surface or surface-volume, 4D for volume, or file directory of a saved FN in .mat, or a tuple of file directories
+    :param file_output: str when FN is ndarray, None when FN is str or tuple of str
+    :param file_brain_template: directory of a brain template file matching pNet requirement
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', or 'Volume (*.nii, *.nii.gz, *.mat)'
+    :param logFile: a str
 
-    def save_FN(FN: np.ndarray, file_output:str, brain_template, dataFormat: str, logFile=None):
+    Yuncong Ma, 10/16/2023
+    """
+
+    # Check input
+    if isinstance(FN, np.ndarray) and isinstance(file_output, str):
+        print_log("file_output needs to be a non-empty directory, when input FN is an np.ndarray", stop=True, logFile=logFile)
+    elif (isinstance(FN, str) or isinstance(FN, tuple)) and file_output is not None:
+        print_log("file_output needs to be None, when input FN is a string or a tuple of string", stop=True, logFile=logFile)
+
+    # save a loaded FN into a file
+    def save_FN(FN_2: np.ndarray, file_output_2:str):
         if dataFormat == 'Volume (*.nii, *.nii.gz, *.mat)':
-            nib.save(nib.Nifti1Image(FN, np.eye(4)), file_output)
+            if 'Voxel_Size' in Brain_Template.key():
+                dimension = Brain_Template['Voxel_Size']
+                dimension[3] = 1
+                nib.save(nib.Nifti1Image(FN_2, np.diag(dimension)), file_output_2)
+            else:
+                nib.save(nib.Nifti1Image(FN_2, np.eye(4)), file_output_2)
 
-    # load brain tempalte
+    # prepare desired file extension
+    def prepare_extension(file_mat: str):
+        file_output_2 = file_mat
+        if dataFormat == 'Volume (*.nii, *.nii.gz, *.mat)':
+            file_output_2.replace('.mat', '.nii.gz')
+        else:
+            print_log(f"The data format: {dataFormat} is not supported yet", stop=True, logFile=logFile)
+
+        return file_output_2
+
+    # load brain template
     Brain_Template = load_brain_template(file_brain_template, logFile=logFile)
 
     if isinstance(FN, np.ndarray):
-        save_FN(FN, file_output, Brain_Template, dataFormat, logFile)
+        save_FN(FN, file_output, logFile)
+
     elif isinstance(FN, str):
+        file_output = prepare_extension(FN.copy())
         FN = load_matlab_array(FN)
-        save_FN(FN, file_output, Brain_Template, dataFormat, logFile)
+        save_FN(FN, file_output)
+
+    else:  # FN is tuple
+        N_FN = len(FN)
+        for i in range(N_FN):
+            file_output = prepare_extension(FN[i].copy())
+            FN_1 = load_matlab_array(FN[i])
+            save_FN(FN_1, file_output)
+
 
 
 
