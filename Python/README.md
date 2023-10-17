@@ -91,11 +91,17 @@ Ensures that pFNs have the highest spatial similarity to their group-level count
 Visualization and statistics modules will come soon
 
 ## Additionals
+
+### Data format
+The Python version also supports fMRI data in HCP, MGH, MGZ, NIFTI, MAT. <br />
+It supports surface, volume, surface-volume data types. Surface-volume data type is based on the grayordinate of HCP data format which stores cortical surface and subcortical volume data in one file (https://www.jch.com/jch/notes/RestingState2014/grayordinates.html).
+
 ### Example: It includes example results of pNet on HCP, UKBB and PNC datasets
 ```
 # HCP formatted data, surface only
 pNet.Example.HCP_Surf.dir_pnet
 ```
+
 ### Brain Template: It includes prepared brain template files for HCP, MNI space
 Brain templates are stored at https://github.com/YuncongMa/pNet/tree/main/Brain_Template
 Users can access brain template files in .mat and .json.zip formats, or from the python version of pNet
