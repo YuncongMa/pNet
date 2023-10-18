@@ -458,12 +458,15 @@ def workflow_guide():
     print('# ============== Data Input ============== # ')
     # setup dataInput
     print('setup dataInput')
-    dataType = guide_choice("Choose a data type:", ('Surface', 'Volume'))
+    dataType = guide_choice("Choose a data type:", ('Surface', 'Volume', 'Surface-Volume'))
     if dataType == 'Surface':
         dataFormat = guide_choice("Choose a data format:", ('HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'))
-    else:
+    elif dataType == 'Volume':
         dataFormat = 'Volume (*.nii, *.nii.gz, *.mat)'
         print("data format is automatically set to 'Volume (*.nii, *.nii.gz, *.mat)'")
+    else:  # Surface-Volume
+        dataFormat = 'HCP Surface-Volume (*.cifti)'
+        print("data format is automatically set to 'HCP Surface-Volume (*.cifti)'")
     file_scan = guide_file("Provide a txt formatted file containing all fMRI scans:", existed=True, extension='.txt')
     Choice = guide_YN("Do you have a txt formatted file containing subject ID information for each corresponding scan?", skip=True, default_value='N')
     if Choice == 'Y':
@@ -534,6 +537,22 @@ def workflow_guide():
                     file_surfR_inflated = None
                 file_maskL = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.L.32k_fs_LR.func.gii):", existed=True, extension='.surf.gii')
                 file_maskR = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.R.32k_fs_LR.func.gii):", existed=True, extension='.surf.gii')
+                maskValue = guide_number("Set up the value used for labeling useful voxels in the brain mask file?", 'Int')
+            elif dataType == 'Surface-Volume':
+                templateFormat = guide_choice("Choose a template format:", ('HCP', 'FreeSurfer'))
+                file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
+                file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
+                Choice = guide_YN("Would you like to load an inflated brain surface shape?", skip=True, default_value='N')
+                if Choice == 'Y':
+                    file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.very_inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
+                    file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.very_inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
+                else:
+                    file_surfL_inflated = None
+                    file_surfR_inflated = None
+                file_maskL = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.L.32k_fs_LR.func.gii):", existed=True, extension='.surf.gii')
+                file_maskR = guide_file("Set up the directory of the left hemisphere brain mask file (ex. medial_wall.R.32k_fs_LR.func.gii):", existed=True, extension='.surf.gii')
+                file_mask_vol = guide_file("Set up the directory of a brain mask:", existed=True, extension=('.mat', '.nii', '.nii.gz'))
+                file_overlayImage = guide_file("Set up the directory of a high resolution T1/T2 image as the overlay background:", existed=True, extension=('.mat', '.nii', '.nii.gz'))
                 maskValue = guide_number("Set up the value used for labeling useful voxels in the brain mask file?", 'Int')
     # ============================================= #
 
@@ -614,6 +633,17 @@ def workflow_guide():
                     print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
             elif dataType == 'Volume':
                 print(f"    templateFormat='{templateFormat}',", file=file_script)
+                print(f"    file_mask_vol='{file_mask_vol}',", file=file_script)
+                print(f"    file_overlayImage='{file_overlayImage}',", file=file_script)
+            elif dataType == 'Surface-Volume':
+                print(f"    templateFormat='{templateFormat}',", file=file_script)
+                print(f"    file_surfL='{file_surfL}',", file=file_script)
+                print(f"    file_surfR='{file_surfR}',", file=file_script)
+                print(f"    file_maskL='{file_maskL}',", file=file_script)
+                print(f"    file_maskR='{file_maskR}',", file=file_script)
+                if file_surfL_inflated is not None:
+                    print(f"    file_surfL_inflated='{file_surfL_inflated}',", file=file_script)
+                    print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
                 print(f"    file_mask_vol='{file_mask_vol}',", file=file_script)
                 print(f"    file_overlayImage='{file_overlayImage}',", file=file_script)
             print(f"    maskValue={maskValue},", file=file_script)
