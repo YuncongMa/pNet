@@ -50,7 +50,7 @@ def workflow(dir_pnet_result: str,
     :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
 
     :param file_Brain_Template: file directory of a brain template file in json format
-    :param templateFormat: 'HCP', 'FreeSurfer', 'NIFTI'
+    :param templateFormat: 'HCP', 'FreeSurfer', '3D Matrix'
     :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
     :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
     :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
@@ -91,7 +91,7 @@ def workflow(dir_pnet_result: str,
 
     :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
 
-    Yuncong Ma, 10/10/2023
+    Yuncong Ma, 10/18/2023
     """
 
     # Check setting
@@ -116,6 +116,7 @@ def workflow(dir_pnet_result: str,
             setup_brain_template(
                 dir_pnet_dataInput,
                 dataType=dataType, dataFormat=dataFormat,
+                templateFormat=templateFormat,
                 file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
                 maskValue=maskValue
             )
@@ -123,8 +124,20 @@ def workflow(dir_pnet_result: str,
             setup_brain_template(
                 dir_pnet_dataInput,
                 dataType=dataType, dataFormat=dataFormat,
+                templateFormat=templateFormat,
                 file_surfL=file_surfL, file_surfR=file_surfR,
                 file_maskL=file_maskL, file_maskR=file_maskR,
+                maskValue=maskValue,
+                file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated
+            )
+        elif dataType == 'Surface-Volume':
+            setup_brain_template(
+                dir_pnet_dataInput,
+                dataType=dataType, dataFormat=dataFormat,
+                templateFormat=templateFormat,
+                file_surfL=file_surfL, file_surfR=file_surfR,
+                file_maskL=file_maskL, file_maskR=file_maskR,
+                file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
                 maskValue=maskValue,
                 file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated
             )
@@ -185,7 +198,7 @@ def workflow_simple(dir_pnet_result: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param file_gFN: directory of a precomputed gFN in .mat format
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 10/18/2023
     """
 
     # setup all sub-folders in the pNet result folder
@@ -433,7 +446,7 @@ def workflow_guide():
     """
     This is a step-by-step guidance for configuring a workflow of pNet in command line
     It will generate a Python script to run the desired workflow with comments
-    Yuncong Ma, 10/5/2023
+    Yuncong Ma, 10/18/2023
     """
 
     print('This is a step-by-step guidance for setting up a workflow of pNet')
@@ -485,11 +498,17 @@ def workflow_guide():
     file_surfR_inflated = None
     Choice = guide_YN("Would you like to select a built-in brain template file?", skip=True, default_value='Y')
     if Choice == 'Y':
-        file_Brain_Template = guide_choice("Select a built-in brain template:", ('HCP Surface', 'MNI Volume'))
+        file_Brain_Template = guide_choice("Select a built-in brain template:", ('HCP Surface', 'MNI Volume', 'FreeSurfer_fsaverage5', 'HCP Surface-Volume', 'HCP Subcortical Volume'))
         if file_Brain_Template == 'HCP Surface':
             file_Brain_Template = pNet.Brain_Template.file_HCP_surf
         elif file_Brain_Template == 'MNI Volume':
             file_Brain_Template = pNet.Brain_Template.file_MNI_vol
+        elif file_Brain_Template == 'FreeSurfer_fsaverage5':
+            file_Brain_Template = pNet.Brain_Template.file_FS_surf
+        elif file_Brain_Template == 'HCP Surface-Volume':
+            file_Brain_Template = pNet.Brain_Template.file_HCP_surf_vol
+        elif file_Brain_Template == 'HCP Subcortical Volume':
+            file_Brain_Template = pNet.Brain_Template.file_HCP_vol
     else:
         Choice = guide_YN("Would you like to select a customized brain template file?")
         if Choice == 'Y':
@@ -498,10 +517,12 @@ def workflow_guide():
             file_Brain_Template = None
             # Volume and surface data types require different inputs to compute the brain template
             if dataType == 'Volume':
+                templateFormat = guide_choice("Choose a template format:", ('3D Matrix', 'HCP'))
                 file_mask_vol = guide_file("Set up the directory of a brain mask:", existed=True, extension=('.mat', '.nii', '.nii.gz'))
                 file_overlayImage = guide_file("Set up the directory of a high resolution T1/T2 image as the overlay background:", existed=True, extension=('.mat', '.nii', '.nii.gz'))
                 maskValue = guide_number("What is the value used for labeling useful voxels in the brain mask file?", 'Int')
             elif dataType == 'Surface':
+                templateFormat = guide_choice("Choose a template format:", ('HCP', 'FreeSurfer'))
                 file_surfL = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.L.inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
                 file_surfR = guide_file("Set up the directory of the left hemisphere brain shape file (ex. Conte69.R.inflated.32k_fs_LR.surf.gii):", existed=True, extension='.surf.gii')
                 Choice = guide_YN("Would you like to load an inflated brain surface shape?", skip=True, default_value='N')
@@ -544,6 +565,7 @@ def workflow_guide():
         nRepeat = guide_number("Set up the number of repeat (default 5)?", 'int', (1, 1000), skip=True, default_value=5)
         Computation_Mode = guide_choice("Choose an option for the computation mode (default CPU_Torch):", ('CPU_Numpy', 'CPU_Torch'), skip=True, default_value='CPU_Torch')
         dataPrecision = guide_choice("Choose an option for data precision (default double):", ('single', 'double'), skip=True, default_value='double')
+    outputFormat = guide_YN("Output pFN results matching to the fMRI data format?", skip=True)
     # ============================================= #
 
     # Generate a python script for the workflow
@@ -579,19 +601,22 @@ def workflow_guide():
         print(f"    file_subject_ID='{file_subject_ID}',", file=file_script)
         print(f"    file_subject_folder='{file_subject_folder}',", file=file_script)
         print(f"    file_group_ID='{file_group_ID}',", file=file_script)
-        print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
-        if dataType == 'Surface':
-            print(f"    file_surfL='{file_surfL}',", file=file_script)
-            print(f"    file_surfR='{file_surfR}',", file=file_script)
-            print(f"    file_maskL='{file_maskL}',", file=file_script)
-            print(f"    file_maskR='{file_maskR}',", file=file_script)
-            if file_surfL_inflated is not None:
-                print(f"    file_surfL_inflated='{file_surfL_inflated}',", file=file_script)
-                print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
-        else:
-            print(f"    file_mask_vol='{file_mask_vol}',", file=file_script)
-            print(f"    file_overlayImage='{file_overlayImage}',", file=file_script)
-        print(f"    maskValue={maskValue},", file=file_script)
+        if file_Brain_Template is not None:
+            print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
+            if dataType == 'Surface':
+                print(f"    templateFormat='{templateFormat}',", file=file_script)
+                print(f"    file_surfL='{file_surfL}',", file=file_script)
+                print(f"    file_surfR='{file_surfR}',", file=file_script)
+                print(f"    file_maskL='{file_maskL}',", file=file_script)
+                print(f"    file_maskR='{file_maskR}',", file=file_script)
+                if file_surfL_inflated is not None:
+                    print(f"    file_surfL_inflated='{file_surfL_inflated}',", file=file_script)
+                    print(f"    file_surfR_inflated='{file_surfR_inflated}',", file=file_script)
+            elif dataType == 'Volume':
+                print(f"    templateFormat='{templateFormat}',", file=file_script)
+                print(f"    file_mask_vol='{file_mask_vol}',", file=file_script)
+                print(f"    file_overlayImage='{file_overlayImage}',", file=file_script)
+            print(f"    maskValue={maskValue},", file=file_script)
         print(f"    K={K},", file=file_script)
         print(f"    Combine_Scan={Combine_Scan},", file=file_script)  # True or False
         if file_gFN is not None:
@@ -609,6 +634,7 @@ def workflow_guide():
             print(f"    nRepeat={nRepeat},", file=file_script)
             print(f"    Computation_Mode='{Computation_Mode}',", file=file_script)
             print(f"    dataPrecision='{dataPrecision}'", file=file_script)
+        print(f"    outputFormat='{outputFormat}'", file=file_script)
         print(")\n", file=file_script)
 
     file_script.close()
