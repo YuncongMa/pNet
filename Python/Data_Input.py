@@ -20,7 +20,8 @@ import time
 import gzip
 
 
-def load_matlab_array(file_matlab: str, variable_name: str):
+def load_matlab_array(file_matlab: str,
+                      variable_name: str):
     """
     Load a single matlab variable with variable name into np array
     This support both matrix and cell vector
@@ -152,7 +153,8 @@ def set_data_precision_torch(data_precision: str):
     return torch_float, torch_eps
 
 
-def write_json_setting(setting, file_setting: str):
+def write_json_setting(setting,
+                       file_setting: str):
     """
     Write setting parameter in json format, also support gzip
 
@@ -201,7 +203,9 @@ def load_json_setting(file_setting: str):
     return Setting
 
 
-def normalize_data(data, algorithm='vp', normalization='vmax'):
+def normalize_data(data,
+                   algorithm='vp',
+                   normalization='vmax'):
     """
     Normalize data by algorithm and normalization settings
 
@@ -278,8 +282,14 @@ def normalize_data(data, algorithm='vp', normalization='vmax'):
     return pX
 
 
-def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=False,
-                   Brain_Mask=None, Normalization=None, Concatenation=True, logFile=None):
+def load_fmri_scan(file_scan_list: str,
+                   dataType: str,
+                   dataFormat: str,
+                   Reshape=False,
+                   Brain_Mask=None,
+                   Normalization=None,
+                   Concatenation=True,
+                   logFile=None):
     """
     Load one or multiple fMRI scans, and concatenate them into a single 2D matrix along the time dimension
     Optional normalization can be added for each scan before concatenation
@@ -463,8 +473,16 @@ def load_fmri_scan(file_scan_list: str, dataType: str, dataFormat: str, Reshape=
     return Data
 
 
-def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, file_maskR: str, file_surfL_inflated=None, file_surfR_inflated=None,
-                          maskValue=0, dataType='Surface', templateFormat='HCP', logFile=None):
+def compute_brain_surface(file_surfL: str,
+                          file_surfR: str,
+                          file_maskL: str,
+                          file_maskR: str,
+                          file_surfL_inflated=None,
+                          file_surfR_inflated=None,
+                          maskValue=0,
+                          dataType='Surface',
+                          templateFormat='HCP',
+                          logFile=None):
     """
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
 
@@ -580,11 +598,17 @@ def compute_brain_surface(file_surfL: str, file_surfR: str, file_maskL: str, fil
     return Brain_Surface
 
 
-def compute_brain_template(dataType: str, templateFormat: str,
-                           file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
-                           file_mask_vol=None, file_overlayImage=None,
+def compute_brain_template(dataType: str,
+                           templateFormat: str,
+                           file_surfL=None,
+                           file_surfR=None,
+                           file_maskL=None,
+                           file_maskR=None,
+                           file_mask_vol=None,
+                           file_overlayImage=None,
                            maskValue=0,
-                           file_surfL_inflated=None, file_surfR_inflated=None,
+                           file_surfL_inflated=None,
+                           file_surfR_inflated=None,
                            logFile=None):
     """
     Prepare a brain surface variable to store surface shape (vertices and faces), and brain masks for useful vertices
@@ -711,7 +735,9 @@ def compute_brain_template(dataType: str, templateFormat: str,
     return Brain_Template
 
 
-def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
+def save_brain_template(dir_pnet_dataInput: str,
+                        Brain_Template,
+                        logFile=None):
     """
     Save the Brain_Template.mat and Brain_Template.json.zip
 
@@ -787,7 +813,8 @@ def save_brain_template(dir_pnet_dataInput: str, Brain_Template, logFile=None):
     print_log('\nBrain_Template is saved into mat and json.zip files', stop=False, logFile=logFile)
 
 
-def load_brain_template(file_Brain_Template: str, logFile=None):
+def load_brain_template(file_Brain_Template: str,
+                        logFile=None):
     """
     Load a brain template file
 
@@ -903,10 +930,14 @@ def load_brain_template(file_Brain_Template: str, logFile=None):
     return Brain_Template
 
 
-def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
-                         dataType=None, templateFormat=None,
-                         file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
-                         file_mask_vol=None, file_overlayImage=None,
+def setup_brain_template(dir_pnet_dataInput: str,
+                         file_Brain_Template=None,
+                         dataType=None,
+                         templateFormat=None,
+                         file_surfL=None, file_surfR=None,
+                         file_maskL=None, file_maskR=None,
+                         file_mask_vol=None,
+                         file_overlayImage=None,
                          maskValue=1,
                          file_surfL_inflated=None, file_surfR_inflated=None,
                          logFile='Automatic'):
@@ -962,7 +993,9 @@ def setup_brain_template(dir_pnet_dataInput: str, file_Brain_Template=None,
     save_brain_template(dir_pnet_dataInput, Brain_Template, logFile=logFile)
 
 
-def setup_cifti_volume(file_cifti: str, file_output: str, logFile=None):
+def setup_cifti_volume(file_cifti: str,
+                       file_output: str,
+                       logFile=None):
     """
     setup a nifti file for the volume parts in CIFTI
 
@@ -1003,7 +1036,10 @@ def setup_cifti_volume(file_cifti: str, file_output: str, logFile=None):
     print_log('Created a NIFTI file for CIFTI volume part, the mask value represents the index order', stop=False, logFile=logFile)
 
 
-def reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None):
+def reshape_fmri_data(scan_data: np.ndarray,
+                      dataType: str,
+                      Brain_Mask: np.ndarray,
+                      logFile=None):
     """
     reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None)
     Reshape 4D volume fMRI data [X Y Z dim_time] into 2D matrix [dim_time dim_space]
@@ -1042,7 +1078,10 @@ def reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarr
     return reshaped_data
 
 
-def reshape_FN(FN: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None):
+def reshape_FN(FN: np.ndarray,
+               dataType: str,
+               Brain_Mask: np.ndarray,
+               logFile=None):
     """
     reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None)
     If dataType is 'Volume'
@@ -1120,7 +1159,9 @@ def setup_result_folder(dir_pnet_result: str):
     return dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT
 
 
-def check_data_type_format(dataType: str,  dataFormat: str, logFile=None):
+def check_data_type_format(dataType: str,
+                           dataFormat: str,
+                           logFile=None):
     """
     Check setting for dataType and dataFormat
 
@@ -1155,7 +1196,9 @@ def check_data_type_format(dataType: str,  dataFormat: str, logFile=None):
                   logFile=logFile, stop=True)
 
 
-def check_template_type_format(dataType: str,  templateFormat: str, logFile=None):
+def check_template_type_format(dataType: str,
+                               templateFormat: str,
+                               logFile=None):
     """
     Check setting for dataType and templateFormat
 
@@ -1211,7 +1254,15 @@ def print_description_scan_info(logFile: str):
           , file=logFile, flush=True)
 
 
-def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group_ID=None, Combine_Scan=False, logFile='Automatic'):
+def setup_scan_info(dir_pnet_dataInput: str,
+                    dataType: str,
+                    dataFormat: str,
+                    file_scan: str,
+                    file_subject_ID=None,
+                    file_subject_folder=None,
+                    file_group_ID=None,
+                    Combine_Scan=False,
+                    logFile='Automatic'):
     """
     setup_scan_info(dir_pnet_dataInput: str, file_scan: str, file_subject_ID=None, file_subject_folder=None, file_group=None, Combine_Scan=False)
     Set up a few txt files for labeling scans
@@ -1343,7 +1394,10 @@ def setup_scan_info(dir_pnet_dataInput: str, dataType: str, dataFormat: str, fil
             print('Multiple scans are treated separately for each subject', file=logFile, flush=True)
 
 
-def print_log(message: str, logFile=None, style='a', stop=False):
+def print_log(message: str,
+              logFile=None,
+              style='a',
+              stop=False):
     """
     print out message in terminal or logfiles
 
@@ -1368,7 +1422,11 @@ def print_log(message: str, logFile=None, style='a', stop=False):
             raise ValueError(message)
 
 
-def output_FN(FN: np.ndarray or str or tuple, file_output: str or None, file_brain_template: str, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', logFile=None):
+def output_FN(FN: np.ndarray or str or tuple,
+              file_output: str or None,
+              file_brain_template: str,
+              dataFormat='Volume (*.nii, *.nii.gz, *.mat)',
+              logFile=None):
     """
     Output FN results in a format matching the input fMRI files
 
