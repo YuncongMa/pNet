@@ -12,9 +12,17 @@ This Python version is tested in Anaconda (https://www.anaconda.com) to create a
 ```
 conda env create --name pnet -f environment.yml
 ```
-**Or install required tools in conda for an existing environment**
+**Or install required tools in conda using requirements.txt**
 ```
 pip install -r requirements.txt
+```
+**Or install required tools directly**
+```
+pip install numpy scipy scikit-learn pandas h5py
+conda install -c conda-forge nibabel
+conda install pytorch::pytorch torchvision torchaudio -c pytorch
+conda install -c conda-forge vtk
+pip install matplotlib surfplot
 ```
 
 **Download pNet**
@@ -47,7 +55,8 @@ The workflow code is in Workflow.py
 This streamlines the setup and computation of pNet, including modules below
 1. Data Input (Data_Input.py)
 2. FN Computation (FN_Computation.py)
-3. Quality Control (Quality_Control.py)
+3. Visualization (Visualization.py) (still in progress)
+4. Quality Control (Quality_Control.py)
 
 ```
 # This is a comprehensive setting for pNet workflow 
