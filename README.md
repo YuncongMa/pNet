@@ -12,7 +12,7 @@
 
 
 # GUI
-A MATLAB-based user interface to configure the workflow, carry out the computation and check the results.
+The MATLAB version features an intuitive user interface to configure the workflow, carry out the computation and check the results.
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/f5168794-63d2-4076-92c9-8ca3d78e478f" width="800">
 
 (A) The data input module for loading fMRI scans and brain template files. <br />
@@ -25,7 +25,7 @@ A MATLAB-based user interface to configure the workflow, carry out the computati
 
 
 # Step-by-step guidance
-Configure a customized workflow using command line
+The Python version features a customized workflow using command line
 This will generate a Python script to run a workflow
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/38efac5d-631a-47d8-a34f-fd686f84602d" width="800">
 
@@ -58,10 +58,12 @@ It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 1
 
 
 # Brain Template
-Note: three widely used brain templates are available in the toolbox subfolder "Brain_Template"
-1. HCP surface space: subfolder "HCP_Surface". It contains a single MATLAB file "Brain_Surface.mat" which includes the brain shapes, medial wall index.
-2. FreeSurfer fsaverage5: "FreeSurfer_ fsaverage5". It contains a single MATLAB file "Brain_Surface.mat" which includes the brain shapes, medial wall index.
+Five built-in brain templates are available in the subfolder "Brain_Template"
+1. HCP surface: subfolder "HCP_Surface". It contains 3D mesh shapes (vertices and faces) and brain masks for two hemishperes.
+2. FreeSurfer fsaverage5: "FreeSurfer_fsaverage5". It is similar to HCP surface .
 3. MNI volume space: subfolder "MNI_Volume". It contains two MATLAB files "Brain_Mask.mat" and "Overlay_Image.mat".
+4. HCP surface-volume: It contains both cortical surface information, and subcortical volume.
+5. HCP volume: It is similar to MNI volume space.
 
 # Example
 We provided three examples for users to learn how to run the pFN computation, and navigate through the precomputed results. For each example, we provides examples of simulated fMRI data, and precomputed results of real fMRI data. Examples can be accessed on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link.   <br />
