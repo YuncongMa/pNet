@@ -71,12 +71,10 @@ Folder are noted in boxes with black borders above the black horizontal line, an
 2. Help videos are provided on a Google drive folder: https://drive.google.com/drive/folders/1aVU99aJlFJZ5kKw2KW3wkwZKv6TBkgu_?usp=share_link
 
 # Installation
-1. Download the whole package and run the pNet.mlapp in MATLAB with version not older than 2021A. Or install the pNet.mlappinstall into MATLAB APPS. Also we provide several versions of compiled pNet (in folder Compiled_Runtime) for different operation systems. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html.  Details can be found in the README.txt in each subfolder containing the compiled pNet.
-2. The Python version (https://github.com/YuncongMa/pNet/tree/main/Python) requires version=3.8, with additional tools installed via the script 'Install_Toolbox.py'. pNet offers computation code built with either NumPy or PyTorch. The PyTorch version has significantly faster speed and capability on GPU accleration.
+1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall into MATLAB APPS. Compiled pNet is located in folder Compiled_Runtime. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
+2. The Python version is available at https://github.com/YuncongMa/pNet/tree/main/Python.
 3. Additional installation information can be found in the help document (Help_Document.pdf).
-4. HCP data (.cifti) requires additional pre-compiled packages to read, please follow the section below "Additional Package"
-5. Brain template files are stored in subfolder "Brain_Template". It includeds templates for three different brain formats. Please check the section below "Brain Template".
-6. Several examples can be downloaded from Google Drive, please follow the section below "Example".
+4. Built-in brain template files are stored in subfolder "Brain_Template".
 
 # Hardware requirement
 It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 16GB, and free disk storage at least 10GB. Large dataset and parallel computation will require more CPU cores, memory space, and disk space. CPU and memory inf, as well as estimated memory usage can be found in the parallel section.The pNet UI requires screen displaying resolution at least 1280x960. It is recommended to use an external montior with reosolution at least 1920x1080. 2k and 4k displays are desirable.
