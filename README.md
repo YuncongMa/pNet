@@ -16,7 +16,8 @@
 
 
 # GUI
-The MATLAB version features an intuitive user interface to configure the workflow, carry out the computation and check the results.
+The MATLAB version features an intuitive user interface to configure the workflow, carry out the computation and check the results. <br />
+Video tutorial is availabel at 
 
 <p align="center">
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/f5168794-63d2-4076-92c9-8ca3d78e478f" width="800">
