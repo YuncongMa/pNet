@@ -42,13 +42,15 @@ python Workflow_guide.py
 
 **Video tutorial**
 
+<p align="center">
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/38efac5d-631a-47d8-a34f-fd686f84602d" width="800">
-
+</p>
 
 **Generated script**
 
+<p align="center">
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/96df4f6d-a24c-4d7c-afb8-482cba5ad682" width="800">
-
+</p>
 
 ## Workflow
 The workflow code is in Workflow.py
