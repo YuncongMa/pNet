@@ -6,7 +6,7 @@
 
 * This toolbox is designed to extract personalized functional networks from fMRI data using spatial-regularized non-negative matrix factorization (**NMF**) method (https://doi.org/10.1016/j.neuroimage.2017.05.004) <br />
 * It works with both MATLAB and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.<br />
-* It supports both surface and volume based fMRI data as well as combined. <br />
+* It supports both surface and volume based fMRI data, as well as the grayordinate which combines the two types. <br />
 * It supports multiple fMRI formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
 * It supports multi-cohort datasets and precomputed group-level FNs.<br />
 
@@ -37,6 +37,7 @@ pNet consists of five main modules: data input, FN computation, visualization, q
 
 # Data Structure
 pNet organizes data structure with respect to the six panels of its GUI version: Data Input, FN Computation, Group FN, Personalized FN, Statistics, Quality Control.
+
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/a72263c5-0a0d-4507-89f9-f22ba80c9853" width="800">
 
 Folder are noted in boxes with black borders above the black horizontal line, and files are in boxes without black border, separated into three categories (setting, data, and figure files) by the dashed lines. Boxes are color coded for different modules. In the first three modules, the setting files are present. In personalized FN folder, subfolders are named by subject information. In statistics folder, subfolders are named by their method information. 
