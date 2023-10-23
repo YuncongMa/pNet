@@ -47,7 +47,9 @@ https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf
 pNet consists of five main modules and a customizable workflow.
 
 <p align="center">
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/3849cb55-eb10-4443-a8bc-26dffe2aee16"  width="600">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/f83fa661-3a2f-4aae-9e70-bdbea3b2fdbb"  width="600">
+</p>
+
 
 * Data input module loads preprocessed fMRI data, with corresponding brain template files to extract coordination information and facilitate visualization. 
 * FN computation module is to carry out computation for group-level and personalized FNs. 
