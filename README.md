@@ -40,10 +40,11 @@ This will generate a Python script to run a workflow
 </p>
 
 # Manual
+A PDF manual can be accessed below and from the MATLAB GUI
 https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf
 
 
-# Module and workflow
+# Modules and workflow
 pNet consists of five main modules and a customizable workflow.
 
 <p align="center">
@@ -68,9 +69,6 @@ pNet organizes data structure with respect to the six panels of its GUI version:
 
 Folder are noted in boxes with black borders above the black horizontal line, and files are in boxes without black border, separated into three categories (setting, data, and figure files) by the dashed lines. Boxes are color coded for different modules. In the first three modules, the setting files are present. In personalized FN folder, subfolders are named by subject information. In statistics folder, subfolders are named by their method information. 
 
-# Guideline
-1. A help document ([Help_Document.pdf](https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf)) is provided in the root directory and can be accessed in the app UI. 
-2. Help videos are provided on a Google drive folder: https://drive.google.com/drive/folders/1aVU99aJlFJZ5kKw2KW3wkwZKv6TBkgu_?usp=share_link
 
 # Installation
 1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall into MATLAB APPS. Compiled pNet is located in folder Compiled_Runtime. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
