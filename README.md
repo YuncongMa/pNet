@@ -40,7 +40,7 @@ This will generate a Python script to run a workflow
 </p>
 
 # Manual
-A PDF manual can be accessed below and from the MATLAB GUI
+A PDF manual can be accessed below and from the MATLAB GUI <br />
 https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf
 
 
