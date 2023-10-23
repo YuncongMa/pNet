@@ -49,7 +49,7 @@ https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf
 pNet consists of five main modules and a customizable workflow.
 
 <p align="center">
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/f83fa661-3a2f-4aae-9e70-bdbea3b2fdbb"  width="600">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/1734f2e7-8770-49e5-9586-e42ab1a94cd6"  width="600">
 </p>
 
 
@@ -65,7 +65,7 @@ pNet consists of five main modules and a customizable workflow.
 pNet organizes data structure with respect to the six panels of its GUI version: Data Input, FN Computation, Group FN, Personalized FN, Statistics, Quality Control.
 
 <p align="center">
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/a72263c5-0a0d-4507-89f9-f22ba80c9853" width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/e040959e-2484-40ee-a2a4-8eafd72cfaeb" width="800">
 </p>
 
 Folder are noted in boxes with black borders above the black horizontal line, and files are in boxes without black border, separated into three categories (setting, data, and figure files) by the dashed lines. Boxes are color coded for different modules. In the first three modules, the setting files are present. In personalized FN folder, subfolders are named by subject information. In statistics folder, subfolders are named by their method information. 
