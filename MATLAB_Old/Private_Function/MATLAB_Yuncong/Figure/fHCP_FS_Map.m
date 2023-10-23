@@ -1,5 +1,5 @@
 function varargout=fHCP_FS_Map(Shape,Map,Color_Function,varargin)
-% By Yuncong Ma, Jan. 20, 2020
+% By Yuncong Ma, Oct. 20, 2023
 % fHCP_FS_Whole_Brain(Shape,Map,Color_Function)
 % Shape is a struct consists of faces and vertices
 % Map is column vector with the same vertices in Shape
@@ -62,6 +62,7 @@ set(gca,'CameraViewAngle',Options.CameraViewAngle,'View',Options.View);
 ax.Parent.Color=Options.Background_Color;
 
 material(Options.Material);
+shading('interp');
 
 if nargout
     varargout{1} = hp;
