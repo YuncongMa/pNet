@@ -39,6 +39,9 @@ This will generate a Python script to run a workflow
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/38efac5d-631a-47d8-a34f-fd686f84602d" width="800">
 </p>
 
+# Manual
+https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf
+
 
 # Module and workflow
 pNet consists of five main modules and a customizable workflow.
