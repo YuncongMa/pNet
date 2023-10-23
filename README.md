@@ -17,7 +17,7 @@
 
 # GUI
 The MATLAB version features an intuitive user interface to configure the workflow, carry out the computation and check the results. <br />
-Video tutorial is availabel at 
+Video tutorial is availabel at https://github.com/YuncongMa/pNet/blob/main/MATLAB_Old/Video_Tutorial/Demo_Video.gif
 
 <p align="center">
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/f5168794-63d2-4076-92c9-8ca3d78e478f" width="800">
