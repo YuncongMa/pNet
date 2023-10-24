@@ -65,8 +65,9 @@ pNet consists of five main modules and a customizable workflow.
 pNet organizes data structure with respect to the six panels of its GUI version: Data Input, FN Computation, Group FN, Personalized FN, Statistics, Quality Control.
 
 <p align="center">
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/11d7f26b-82e7-476c-b0bc-f2f58c412a51" width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/acfb3332-fb96-4458-98be-fde971c2836d" width="800">
 </p>
+
 
 
 
