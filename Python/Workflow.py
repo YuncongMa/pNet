@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/10/2023
+# Yuncong Ma, 10/23/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -244,7 +244,7 @@ def guide_YN(prompt: str, skip=False, default_value='Y'):
     :param default_value: a default value when skip is enabled
     :return: input_YN, 'Y' or 'N'
 
-    Yuncong Ma, 10/5/2023
+    Yuncong Ma, 10/23/2023
     """
 
     input_YN = None
@@ -252,12 +252,12 @@ def guide_YN(prompt: str, skip=False, default_value='Y'):
         print(prompt + "\n[Y/N]")
         time.sleep(0.1)
         if skip is True:
-            print(f"Enter to use default value {default_value}")
+            print(f"Enter to use default choice: {default_value}")
             time.sleep(0.1)
 
         input_YN = input("User Input > ")
 
-        if input_YN is None:
+        if input_YN is None or len(input_YN) == 0:
             if skip is True:
                 input_YN = default_value
             else:
@@ -270,6 +270,7 @@ def guide_YN(prompt: str, skip=False, default_value='Y'):
         else:
             print('Unknown choice, try again\nUser Input > ')
             input_YN = None
+
     return input_YN
 
 
@@ -350,7 +351,7 @@ def guide_number(prompt: str, data_type='Int', data_range=None, skip=False, defa
     :param default_value: a default value when skip is enabled
     :return: input_value
 
-    Yuncong Ma, 10/5/2023
+    Yuncong Ma, 10/23/2023
     """
 
     input_value = None
@@ -364,14 +365,20 @@ def guide_number(prompt: str, data_type='Int', data_range=None, skip=False, defa
 
         input_value = input("User Input > ")
 
-        if input_value is None:
+        if input_value is None or len(input_value) == 0:
             if skip is True:
                 input_value = default_value
                 print(f'Set to the default value {default_value}')
                 return input_value
             print('Wrong setup, try again\nUser Input >')
         else:
-            input_value = float(input_value)
+            try:
+                input_value = float(input_value)
+            except ValueError:
+                input_value = None
+                print("The input string cannot be converted to a number, please try again.")
+                continue
+
             if data_type == 'Int':
                 input_value = int(input_value)
             elif data_type == 'Float':
@@ -399,7 +406,7 @@ def guide_choice(prompt: str, list_choice: tuple, skip=False, default_value=None
     :param default_value: None or value
     :return: choice
 
-    Yuncong Ma, 10/5/2023
+    Yuncong Ma, 10/23/2023
     """
 
     choice = None
@@ -423,7 +430,13 @@ def guide_choice(prompt: str, list_choice: tuple, skip=False, default_value=None
 
         else:
             if choice is not None:
-                choice = int(float(choice))
+                try:
+                    choice = int(float(choice))
+                except ValueError:
+                    choice = None
+                    print("The input is not a number, please try again.")
+                    continue
+
                 if 1 <= choice <= len(list_choice):
                     choice = list_choice[choice-1]
                 else:
@@ -446,7 +459,7 @@ def workflow_guide():
     """
     This is a step-by-step guidance for configuring a workflow of pNet in command line
     It will generate a Python script to run the desired workflow with comments
-    Yuncong Ma, 10/18/2023
+    Yuncong Ma, 10/23/2023
     """
 
     print('This is a step-by-step guidance for setting up a workflow of pNet')
@@ -567,7 +580,7 @@ def workflow_guide():
     else:
         Compute_gFN = False
         file_gFN = None
-    Choice_simple = guide_YN("Would you like to customize the model parameters for computing personalized functional networks?")
+    Choice_simple = guide_YN("Would you like to customize the model parameters for computing personalized functional networks?", skip=True, default_value='N')
     if Choice_simple == 'Y':
         if Compute_gFN is True and file_group_ID is not None:
             samplingMethod = guide_choice("Choose an option for the bootstrap sampling method:", ('Subject', 'Group_Subject'), skip=True)
@@ -584,7 +597,12 @@ def workflow_guide():
         nRepeat = guide_number("Set up the number of repeat (default 5)?", 'int', (1, 1000), skip=True, default_value=5)
         Computation_Mode = guide_choice("Choose an option for the computation mode (default CPU_Torch):", ('CPU_Numpy', 'CPU_Torch'), skip=True, default_value='CPU_Torch')
         dataPrecision = guide_choice("Choose an option for data precision (default double):", ('single', 'double'), skip=True, default_value='double')
+    # output of pFNs
     outputFormat = guide_YN("Output pFN results matching to the fMRI data format?", skip=True)
+    if outputFormat == 'Y':
+        outputFormat = 'Both'
+    else:
+        outputFormat = 'MAT'
     # ============================================= #
 
     # Generate a python script for the workflow
@@ -600,7 +618,7 @@ def workflow_guide():
     print('import pNet', file=file_script)
 
     print('# setup and run a customized workflow', file=file_script)
-    if Choice_simple == 'N' and file_Brain_Template is not None:
+    if Choice_simple == 'N' and file_Brain_Template is not None and outputFormat == 'Both':
         print(f"pNet.workflow_simple(", file=file_script)
         print(f"    dir_pnet_result='{dir_pnet_result}',", file=file_script)
         print(f"    dataType='{dataType}',", file=file_script)
