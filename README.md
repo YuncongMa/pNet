@@ -9,7 +9,7 @@
 </p>
 
 * This toolbox is designed to extract personalized functional networks from fMRI data using spatial-regularized non-negative matrix factorization (**NMF**) method (https://doi.org/10.1016/j.neuroimage.2017.05.004) <br />
-* It works with both MATLAB and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.<br />
+* It works with both MATLAB (https://github.com/YuncongMa/pNet/tree/main/Matlab_old) and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.<br />
 * It supports both surface and volume based fMRI data, as well as the grayordinate which combines the two types. <br />
 * It supports multiple fMRI formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
 * It supports multi-cohort datasets and precomputed group-level FNs.<br />
@@ -69,9 +69,9 @@ pNet organizes data structure with respect to the six panels of its GUI version:
 </p>
 
 
-
-
-Folder are noted in boxes with black borders above the black horizontal line, and files are in boxes without black border, separated into three categories (setting, data, and figure files) by the dashed lines. Boxes are color coded for different modules. In the first three modules, the setting files are present. In personalized FN folder, subfolders are named by subject information. In statistics folder, subfolders are named by their method information. 
+* Each folder contains setting files, data, or figure files.
+* Group FNs and corresponding preconfigured visualization files are in Group_FN.
+* Perosnalized FNs of each subject or fMRI scan are stored in sub-folders in Personalized_FN.
 
 
 # Installation
@@ -85,7 +85,7 @@ It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 1
 
 
 # Brain Template
-Five built-in brain templates are available in the subfolder "Brain_Template"
+Five built-in brain templates are available in the subfolder "Brain_Template".
 1. HCP surface: subfolder "HCP_Surface". It contains 3D mesh shapes (vertices and faces) and brain masks for two hemishperes.
 2. FreeSurfer fsaverage5: "FreeSurfer_fsaverage5". It is similar to HCP surface .
 3. MNI volume space: subfolder "MNI_Volume". It contains two MATLAB files "Brain_Mask.mat" and "Overlay_Image.mat".
@@ -93,12 +93,11 @@ Five built-in brain templates are available in the subfolder "Brain_Template"
 5. HCP volume: It is similar to MNI volume space.
 
 # Example
-We provided three examples for users to learn how to run the pFN computation, and navigate through the precomputed results. For each example, we provides examples of simulated fMRI data, and precomputed results of real fMRI data. Examples can be accessed on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link.   <br />
+We provided results of three examples for users to learn how to run the pFN computation, and navigate through the precomputed results. For each example, we provides examples of simulated fMRI data, and precomputed results of real fMRI data. Examples can be accessed on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link.   <br />
 
 1.	HCP surface data. (2 subject, 2 scans per subject, 400 volumes per scan) in .mat format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
 2.	PNC surface data (2 subject, 1 scan per subject, 300 volumes per scan) in .mgh format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
 3.	UKBB volume data (2 subject, 1 scan per subject, 200 volumes per scan) in .nii.gz format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
-
 
 
 The data organization is as below.
