@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 # Yuncong Ma, 10/26/2023
-=======
-# Yuncong Ma, 10/25/2023
->>>>>>> c0d605e399d5b0b5a06976a6f0035dc2c3db7d24
 # Visualization module of pNet
 
 #########################################
@@ -22,14 +18,10 @@ from matplotlib.colors import Normalize
 import surfplot
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.colors import LightSource
-<<<<<<< HEAD
 import vtk
 from brainspace.vtk_interface.wrappers import BSPolyData
 from brainspace.vtk_interface.wrappers import BSPolyDataMapper
 import nilearn as nl
-=======
-from brainspace import datasets
->>>>>>> c0d605e399d5b0b5a06976a6f0035dc2c3db7d24
 
 from brainspace.mesh.mesh_creation import build_polydata
 
