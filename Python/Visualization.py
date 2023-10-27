@@ -91,7 +91,7 @@ def color_theme(theme: str,
                      (Threshold,1,(Threshold-min_CC)/(max_CC-min_CC),0),
                      (max_CC,1,1,0)), dtype=np.float32)
 
-    elif theme ==  'Seed_Map_2':
+    elif theme == 'Seed_Map_2':
         min_CC = parameter[0]
         max_CC = parameter[1]
         color_function = np.arra((
@@ -114,7 +114,7 @@ def color_theme(theme: str,
             (0,0,0,0),
             (min_CC,0,0,0),
             (min_CC,0.5,0,0),
-            (min_CC*0.7 + max_CC*0.3,1,0,0)
+            (min_CC*0.7 + max_CC*0.3,1,0,0),
             (max_CC,1,1,0)), dtype=np.float32)
 
     elif theme == 'Seed_Map_Positive':
@@ -180,7 +180,7 @@ def color_theme(theme: str,
                       (0.4*(Max_Value-Min_Value)+Min_Value,0,1,0),
                       (0.6*(Max_Value-Min_Value)+Min_Value,1,1,0),
                       (0.8*(Max_Value-Min_Value)+Min_Value,1,127.0/255.0,0),
-                    (Max_Value,1,0,0)), dtype=np.float32)
+                      (Max_Value,1,0,0)), dtype=np.float32)
 
     else:
         raise ValueError('Unknown color theme: ' + theme)
@@ -191,7 +191,7 @@ def color_theme(theme: str,
     return color_function
 
 
-def prepare_color_map(map_name: str,
+def prepare_color_map(map_name=None or str,
                       color_function=None or np.ndarray,
                       N=256,
                       alpha=1):
@@ -204,7 +204,7 @@ def prepare_color_map(map_name: str,
     :param alpha: transparency
     :return: cmap: a structure created by matplotlib.colors.ListedColormap
 
-    Yuncong Ma, 10/26/2023
+    Yuncong Ma, 10/27/2023
     """
 
     # use built-in color maps in matplotlib
@@ -221,12 +221,12 @@ def prepare_color_map(map_name: str,
     # resample color_map to a color function with fixed step size and length
     color_map = np.zeros((N, 4), dtype=np.float32)
     for i in range(N):
-        value = float(i) / float(N-1) * (color_function[-1, 0] - color_function[0, 0]) + color_map[0, 0]
-        if value < color_function[0, 0]:
-            color_map[i, 0:3] = color_function[0, 0]
+        value = float(i) / float(N-1) * (color_function[-1, 0] - color_function[0, 0]) + color_function[0, 0]
+        if value <= color_function[0, 0]:
+            color_map[i, 0:3] = color_function[0, 1:4]
             continue
-        elif value > color_function[-1, 0]:
-            color_map[i, 0:3] = color_function[-1, 0]
+        elif value >= color_function[-1, 0]:
+            color_map[i, 0:3] = color_function[-1, 1:4]
             continue
 
         for j in range(N_cf-1):
@@ -253,51 +253,58 @@ def prepare_color_map(map_name: str,
 def plot_brain_surface(brain_map: np.ndarray,
                        brain_template,
                        file_output: str,
+                       orientation='medial',
+                       view_angle=1.5,
                        threshold=98,
-                       color_fun='Automatic',
+                       color_function='Seed_Map_3_Positive',
+                       color_function_parameter=(0, 1),
+                       mask_color=(0.2, 0.2, 0.2),
+                       brain_color=(0.5, 0.5, 0.5),
                        figure_title=None,
-                       background_color='black'):
+                       background_color=(0,0,0)):
 
     # use if individual color scale for each brain
     threshold_value = np.percentile(np.abs(brain_map), threshold)
 
     # Prepare BSPolyData for using its plot
     polyData = prepare_BSPolyData(brain_template['Shape']['L']['vertices'], brain_template['Shape']['L']['faces'] - 1)
+    p = surfplot.Plot(surf_lh=polyData, zoom=view_angle, views=orientation, background=background_color, brightness=1)
 
-    # brain surface
-    p = surfplot.Plot(surf_lh=polyData, zoom=1, views='lateral')
+    # brain surface and mask layer
+    map_mask = (brain_template['Brain_Mask']['L'] == 0).astype(np.float32)
+    color_function = np.array(((0, brain_color[0], brain_color[1], brain_color[2]), (1, mask_color[0], mask_color[1], mask_color[2])), dtype=np.float32)
+    p.add_layer(map_mask, cmap=prepare_color_map(color_function=color_function),
+                color_range=(0, 1), cbar=None, zero_transparent=False)
 
+    # map layer
     # convert map to the mesh surface space based on the brain mask
     Nv_L = sum(brain_template['Brain_Mask']['L'] > 0)
     map_2 = np.zeros(brain_template['Brain_Mask']['L'].shape, dtype=np.float32)
-    ps_L = np.where(brain_template['Brain_Mask']['L']>0)[0].astype(int)
+    ps_L = np.where(brain_template['Brain_Mask']['L'] > 0)[0].astype(int)
     for i in range(int(Nv_L)):
         map_2[ps_L[i]] = brain_map[i]
-
-    # mask layer
-
-    # brain layer
-
-    # map layer
     max_value = np.percentile(brain_map, 99)
+    map_2[np.abs(map_2) < max_value/2] = 0
     color_range = (max_value/2, max_value)
     color_function = color_theme('Seed_Map_3_Positive', color_range)
-    print(color_function)
-    p.add_layer(map_2, cmap=prepare_color_map(color_function), color_range=color_range)
+    p.add_layer(map_2, cmap=prepare_color_map(color_function=color_function), color_range=color_range, cbar=None, zero_transparent=True)
 
     # build the figure
     fig = p.build()
 
     # save
-    fig.savefig(file_output, dpi=500, bbox_inches="tight", facecolor=background_color)
+    if file_output is not None:
+        fig.savefig(file_output, dpi=500, bbox_inches="tight", facecolor=background_color)
+    else:
+        return fig
 
 
 def plot_brain_surface_5view(FN: np.ndarray,
-                       brain_template,
-                       file_output: str,
-                       threshold=98,
-                       color_fun='Automatic',
-                       figure_title=None):
+                             brain_template,
+                             file_output: str,
+                             threshold=98,
+                             color_fun='Automatic',
+                             figure_title=None):
 
     # settings for subplot
     fig, axs = matplotlib.pyplot.subplots(nrows=5+1, ncols=1, figsize=(5, 30))
