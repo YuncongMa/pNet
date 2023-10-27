@@ -98,10 +98,12 @@ pNet.workflow_simple(dir_pnet_result: str,
 Organize fMRI scans based on subject information, prepare brain template for subsequent FN computation and visualization
 2. **FN Computation** <br />
 Setup and carry out the FN computation, generating group-level and personalized FNs
-3. **Quality Control** <br />
+3. **Visualization** <br />
+Provide preconfigured visualization for surface and volume data types
+4. **Quality Control** <br />
 Ensures that pFNs have the highest spatial similarity to their group-level counterparts <br />
 
-Visualization and statistics modules will come soon
+Statistics module will come soon
 
 ## Additionals
 
