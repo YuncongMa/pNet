@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/27/2023
+# Yuncong Ma, 10/28/2023
 # Visualization module of pNet
 
 #########################################
@@ -24,6 +24,7 @@ from brainspace.vtk_interface.wrappers import BSPolyDataMapper
 import nilearn as nl
 
 from brainspace.mesh.mesh_creation import build_polydata
+from matplotlib.font_manager import FontProperties
 
 # other functions of pNet
 import pNet
@@ -251,52 +252,66 @@ def prepare_color_map(map_name=None or str,
 
 
 def plot_brain_surface(brain_map: np.ndarray,
-                       brain_template,
-                       file_output: str,
+                       mesh: dict,
+                       mask: np.ndarray,
+                       file_output=None or str,
                        orientation='medial',
                        view_angle=1.5,
                        threshold=98,
                        color_function='Seed_Map_3_Positive',
                        color_function_parameter=(0, 1),
+                       map_threshold=99,
                        mask_color=(0.2, 0.2, 0.2),
                        brain_color=(0.5, 0.5, 0.5),
                        figure_title=None,
-                       background_color=(0,0,0)):
+                       background_color=(0,0,0),
+                       figure_size=(500,400),
+                       dpi=25):
 
     # use if individual color scale for each brain
     threshold_value = np.percentile(np.abs(brain_map), threshold)
 
     # Prepare BSPolyData for using its plot
-    polyData = prepare_BSPolyData(brain_template['Shape']['L']['vertices'], brain_template['Shape']['L']['faces'] - 1)
-    p = surfplot.Plot(surf_lh=polyData, zoom=view_angle, views=orientation, background=background_color, brightness=1)
+    polyData = prepare_BSPolyData(mesh['vertices'], mesh['faces'] - 1)
+    p = surfplot.Plot(surf_lh=polyData, zoom=view_angle, views=orientation, background=background_color, brightness=1, size=figure_size)
 
     # brain surface and mask layer
-    map_mask = (brain_template['Brain_Mask']['L'] == 0).astype(np.float32)
+    map_mask = (mask == 0).astype(np.float32)
     color_function = np.array(((0, brain_color[0], brain_color[1], brain_color[2]), (1, mask_color[0], mask_color[1], mask_color[2])), dtype=np.float32)
     p.add_layer(map_mask, cmap=prepare_color_map(color_function=color_function),
                 color_range=(0, 1), cbar=None, zero_transparent=False)
 
     # map layer
     # convert map to the mesh surface space based on the brain mask
-    Nv_L = sum(brain_template['Brain_Mask']['L'] > 0)
-    map_2 = np.zeros(brain_template['Brain_Mask']['L'].shape, dtype=np.float32)
-    ps_L = np.where(brain_template['Brain_Mask']['L'] > 0)[0].astype(int)
-    for i in range(int(Nv_L)):
-        map_2[ps_L[i]] = brain_map[i]
-    max_value = np.percentile(brain_map, 99)
+    Nv = sum(mask > 0)
+    map_2 = np.zeros(mask.shape, dtype=np.float32)
+    ps = np.where(mask > 0)[0].astype(int)
+    for i in range(int(Nv)):
+        map_2[ps[i]] = brain_map[i]
+    max_value = np.percentile(brain_map, map_threshold)
     map_2[np.abs(map_2) < max_value/2] = 0
     color_range = (max_value/2, max_value)
     color_function = color_theme('Seed_Map_3_Positive', color_range)
     p.add_layer(map_2, cmap=prepare_color_map(color_function=color_function), color_range=color_range, cbar=None, zero_transparent=True)
 
-    # build the figure
-    fig = p.build()
-
-    # save
+    # save or return
     if file_output is not None:
-        fig.savefig(file_output, dpi=500, bbox_inches="tight", facecolor=background_color)
+        # build the figure
+        fig = p.build()
+        fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background_color)
     else:
-        return fig
+        return p
+
+
+def merge_mesh_LR(mesh_LR: dict, offset=np.array((90, 0, 0))):
+    mesh = {'vertices': np.concatenate((mesh_LR['L']['vertices'], mesh_LR['R']['vertices'] + offset), axis=0),
+            'faces': np.concatenate((mesh_LR['L']['faces'], mesh_LR['R']['faces']+mesh_LR['L']['vertices'].shape[0]), axis=0)}
+    return mesh
+
+
+def merge_mask_LR(mask_LR: dict):
+    mask = np.concatenate((mask_LR['L'], mask_LR['R']), axis=0)
+    return mask
 
 
 def plot_brain_surface_5view(FN: np.ndarray,
@@ -304,40 +319,108 @@ def plot_brain_surface_5view(FN: np.ndarray,
                              file_output: str,
                              threshold=98,
                              color_fun='Automatic',
-                             figure_title=None):
+                             background_color=(0,0,0),
+                             figure_organization=(0.6, 1.2, 1, 0.5),
+                             view_angle=(1.35, 1.4),
+                             figure_title=None,
+                             title_font=dict(fontsize=20, fontweight='bold'),
+                             figure_size=(10, 50),
+                             dpi=50):
 
     # settings for subplot
-    fig, axs = matplotlib.pyplot.subplots(nrows=5+1, ncols=1, figsize=(5, 30))
-    #fig = plt.figure()
-    axs[1] = fig.add_subplot(projection='3d')
+    fig, axs = matplotlib.pyplot.subplots(nrows=7, ncols=1, figsize=figure_size)
 
-    # use if individual color scale for each brain
-    threshold_value = np.percentile(np.abs(FN), threshold)
+    # sub figure organization
+    H = 4*figure_organization[2]+figure_organization[1]+figure_organization[0] + figure_organization[3]
+    H_T = figure_organization[0]/H  # height of title
+    H_D = figure_organization[1]/H  # height of dorsal view
+    H_S = figure_organization[2]/H  # height of saggital view
+    H_C = figure_organization[3]/H  # height of color bar
 
-    # plot each sub view
-    # Create Poly3DCollection and add to the plot
-    vertices = brain_template['Shape']['L']['vertices']
-    faces = brain_template['Shape']['L']['faces'] - 1  # change to Python index
-    poly3d = [[vertices[vert_id] for vert_id in face] for face in faces]
-    ls = LightSource(azdeg=315, altdeg=45)
-    poly3d_collection = Poly3DCollection(poly3d, facecolors='cyan', linewidths=1, edgecolors=None, alpha=1, lightsource=ls)
-    axs[1].add_collection3d(poly3d_collection)
-    axs[1].view_init(elev=0, azim=180, roll=0)
+    # number of used vertices in left hemisphere
+    Nv_L = int(sum(brain_template['Brain_Mask']['L'] > 0))
 
-    # Define axis properties
-    axs_lim = np.max(np.abs(vertices), axis=0) * 1.1
-    axs[1].set_xlim([-axs_lim[0], axs_lim[0]])
-    axs[1].set_ylim([-axs_lim[1], axs_lim[1]])
-    axs[1].set_zlim([-axs_lim[2], axs_lim[2]])
+    # title
+    axs[0].set_position((0, 4*H_S+H_D+H_C, 1, H_T))
+    axs[0].figure_size = (int(dpi*figure_size[0]), int(dpi*H_T*figure_size[1]))
+    axs[0].facecolor = background_color
+    axs[0].axis('off')
+    if figure_title is not None:
+        font = FontProperties()
+        font.set_family('serif')
+        font.set_name('Times New Roman')
 
+
+    # dorsal view
+    p = plot_brain_surface(FN, mesh=merge_mesh_LR(brain_template['Shape'], offset=np.array((90, 0, 0))), mask=merge_mask_LR(brain_template['Brain_Mask']),
+                           orientation='dorsal', view_angle=view_angle[0], file_output=None, background_color=(1,1,1),
+                           figure_size=(int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1])), dpi=dpi)
+    #p = plot_brain_surface(FN, mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+    #                       orientation='dorsal', view_angle=view_angle[0], file_output=None, background_color=(1,1,1))
+    p = p.render()
+    p._check_offscreen()
+    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    axs[1].figure_size = (int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1]))
+    axs[1].set_position((0, 4*H_S+H_C, 1, H_D))
+    axs[1].imshow(x)
     axs[1].axis('off')
-    axs[1].grid(False)
-    axs[1].set_xticks([])
-    axs[1].set_yticks([])
-    axs[1].set_zticks([])  # For 3D plots
+    axs[1].set_title(label=figure_title, loc='center', pad=140, fontsize=150, fontweight='bold', color=(1,1,1))
 
-    # save
-    fig.savefig(file_output, dpi=250, bbox_inches="tight")
+    # saggital views
+    # 1st
+    p = plot_brain_surface(FN[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+                           orientation='lateral', view_angle=view_angle[1], file_output=None,
+                           figure_size=(int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1])), dpi=dpi)
+    p = p.render()
+    p._check_offscreen()
+    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    axs[2].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
+    axs[2].set_position((0, 3*H_S+H_C, 1, H_S))
+    axs[2].imshow(x)
+    axs[2].axis('off')
+
+    # 2nd
+    p = plot_brain_surface(FN[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+                           orientation='medial', view_angle=view_angle[1], file_output=None, dpi=dpi)
+    p = p.render()
+    p._check_offscreen()
+    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    axs[3].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
+    axs[3].set_position((0, 2*H_S+H_C, 1, H_S))
+    axs[3].imshow(x)
+    axs[3].axis('off')
+    # 3rd
+    p = plot_brain_surface(FN[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
+                           orientation='medial', view_angle=view_angle[1], file_output=None, dpi=dpi)
+    p = p.render()
+    p._check_offscreen()
+    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    axs[4].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
+    axs[4].set_position((0, 1*H_S+H_C, 1, H_S))
+    axs[4].imshow(x)
+    axs[4].axis('off')
+    # 4th
+    p = plot_brain_surface(FN[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
+                           orientation='lateral', view_angle=view_angle[1], file_output=None, dpi=dpi)
+    p = p.render()
+    p._check_offscreen()
+    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    axs[5].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
+    axs[5].set_position((0, H_C, 1, H_S))
+    axs[5].imshow(x)
+    axs[5].axis('off')
+
+    # color bar
+    axs[6].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
+    axs[6].set_position((0, 0, 1, H_C))
+    axs[6].imshow(x)
+    axs[6].axis('off')
+    axs[6].colorbar(sm, ticks=ticks, location=location,
+                              fraction=fraction, pad=cbar_pads[i],
+                              shrink=shrink, aspect=aspect, ax=plt.gca())
+
+    # save fig
+    fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background_color)
 
 
 def plot_pFN():
