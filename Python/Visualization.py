@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/28/2023
+# Yuncong Ma, 10/30/2023
 # Visualization module of pNet
 
 #########################################
@@ -195,7 +195,8 @@ def color_theme(theme: str,
 def prepare_color_map(map_name=None or str,
                       color_function=None or np.ndarray,
                       N=256,
-                      alpha=1):
+                      alpha=1,
+                      black_transparent=True):
     """
     Prepare a color map using color function
 
@@ -203,9 +204,10 @@ def prepare_color_map(map_name=None or str,
     :param color_function: np.ndarray [N, 4], N is the number of predefined color changing points
     :param N: digitized colors
     :param alpha: transparency
+    :param black_transparent: True or False, True is to set black color to transparent
     :return: cmap: a structure created by matplotlib.colors.ListedColormap
 
-    Yuncong Ma, 10/27/2023
+    Yuncong Ma, 10/30/2023
     """
 
     # use built-in color maps in matplotlib
@@ -245,6 +247,10 @@ def prepare_color_map(map_name=None or str,
     # add alpha
     color_map[:, 3] = alpha
 
+    # Set black color to transparent
+    if black_transparent is True:
+        color_map[:, 3] = color_map[:, 3] * (np.sum(color_map[:, 0:3], axis=1) > 0)
+
     # convert to matplotlib
     cmap = matplotlib.colors.ListedColormap(color_map)
 
@@ -254,22 +260,15 @@ def prepare_color_map(map_name=None or str,
 def plot_brain_surface(brain_map: np.ndarray,
                        mesh: dict,
                        mask: np.ndarray,
+                       color_function: np.ndarray,
                        file_output=None or str,
                        orientation='medial',
                        view_angle=1.5,
-                       threshold=98,
-                       color_function='Seed_Map_3_Positive',
-                       color_function_parameter=(0, 1),
-                       map_threshold=99,
                        mask_color=(0.2, 0.2, 0.2),
                        brain_color=(0.5, 0.5, 0.5),
-                       figure_title=None,
                        background_color=(0,0,0),
                        figure_size=(500,400),
                        dpi=25):
-
-    # use if individual color scale for each brain
-    threshold_value = np.percentile(np.abs(brain_map), threshold)
 
     # Prepare BSPolyData for using its plot
     polyData = prepare_BSPolyData(mesh['vertices'], mesh['faces'] - 1)
@@ -277,8 +276,8 @@ def plot_brain_surface(brain_map: np.ndarray,
 
     # brain surface and mask layer
     map_mask = (mask == 0).astype(np.float32)
-    color_function = np.array(((0, brain_color[0], brain_color[1], brain_color[2]), (1, mask_color[0], mask_color[1], mask_color[2])), dtype=np.float32)
-    p.add_layer(map_mask, cmap=prepare_color_map(color_function=color_function),
+    color_function_brain = np.array(((0, brain_color[0], brain_color[1], brain_color[2]), (1, mask_color[0], mask_color[1], mask_color[2])), dtype=np.float32)
+    p.add_layer(map_mask, cmap=prepare_color_map(color_function=color_function_brain),
                 color_range=(0, 1), cbar=None, zero_transparent=False)
 
     # map layer
@@ -288,10 +287,9 @@ def plot_brain_surface(brain_map: np.ndarray,
     ps = np.where(mask > 0)[0].astype(int)
     for i in range(int(Nv)):
         map_2[ps[i]] = brain_map[i]
-    max_value = np.percentile(brain_map, map_threshold)
-    map_2[np.abs(map_2) < max_value/2] = 0
-    color_range = (max_value/2, max_value)
-    color_function = color_theme('Seed_Map_3_Positive', color_range)
+    #max_value = np.percentile(brain_map, map_threshold)
+    #map_2[np.abs(map_2) < max_value/2] = 0
+    color_range = (color_function[0, 0], color_function[-1, 0])
     p.add_layer(map_2, cmap=prepare_color_map(color_function=color_function), color_range=color_range, cbar=None, zero_transparent=True)
 
     # save or return
@@ -314,21 +312,35 @@ def merge_mask_LR(mask_LR: dict):
     return mask
 
 
-def plot_brain_surface_5view(FN: np.ndarray,
+def colorize(value_map: np.ndarray, color_function: np.ndarray):
+    color_map = ()
+    return color_map
+
+
+def plot_FN_brain_surface_5view(brain_map: np.ndarray,
                              brain_template,
                              file_output: str,
-                             threshold=98,
-                             color_fun='Automatic',
+                             threshold=99,
+                             color_function=None,
                              background_color=(0,0,0),
-                             figure_organization=(0.6, 1.2, 1, 0.5),
+                             figure_organization=(0.6, 1.2, 1, 0.6),
                              view_angle=(1.35, 1.4),
+                             hemisphere_offset=90,
                              figure_title=None,
-                             title_font=dict(fontsize=20, fontweight='bold'),
+                             title_font_dic=dict(fontsize=20, fontweight='bold'),
                              figure_size=(10, 50),
                              dpi=50):
 
     # settings for subplot
-    fig, axs = matplotlib.pyplot.subplots(nrows=7, ncols=1, figsize=figure_size)
+    fig, axs = matplotlib.pyplot.subplots(nrows=7+1, ncols=1, figsize=figure_size)
+
+    # set color function
+    if color_function is None:
+        threshold_value = np.percentile(np.abs(brain_map), threshold)
+        color_range = np.array((threshold_value/2, threshold_value))
+        color_function = color_theme('Seed_Map_3_Positive', color_range)
+    else:
+        color_range = (color_function[0,0], color_function[-1,0])
 
     # sub figure organization
     H = 4*figure_organization[2]+figure_organization[1]+figure_organization[0] + figure_organization[3]
@@ -345,18 +357,12 @@ def plot_brain_surface_5view(FN: np.ndarray,
     axs[0].figure_size = (int(dpi*figure_size[0]), int(dpi*H_T*figure_size[1]))
     axs[0].facecolor = background_color
     axs[0].axis('off')
-    if figure_title is not None:
-        font = FontProperties()
-        font.set_family('serif')
-        font.set_name('Times New Roman')
-
 
     # dorsal view
-    p = plot_brain_surface(FN, mesh=merge_mesh_LR(brain_template['Shape'], offset=np.array((90, 0, 0))), mask=merge_mask_LR(brain_template['Brain_Mask']),
+    p = plot_brain_surface(brain_map, mesh=merge_mesh_LR(brain_template['Shape'], offset=np.array((hemisphere_offset, 0, 0))), mask=merge_mask_LR(brain_template['Brain_Mask']),
+                           color_function=color_function,
                            orientation='dorsal', view_angle=view_angle[0], file_output=None, background_color=(1,1,1),
                            figure_size=(int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1])), dpi=dpi)
-    #p = plot_brain_surface(FN, mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
-    #                       orientation='dorsal', view_angle=view_angle[0], file_output=None, background_color=(1,1,1))
     p = p.render()
     p._check_offscreen()
     x = p.to_numpy(transparent_bg=True, scale=(2, 2))
@@ -364,11 +370,12 @@ def plot_brain_surface_5view(FN: np.ndarray,
     axs[1].set_position((0, 4*H_S+H_C, 1, H_D))
     axs[1].imshow(x)
     axs[1].axis('off')
-    axs[1].set_title(label=figure_title, loc='center', pad=140, fontsize=150, fontweight='bold', color=(1,1,1))
+    axs[1].set_title(label=figure_title, loc='center', pad=140, fontsize=150, fontweight='bold', color=(1, 1, 1))
 
     # saggital views
     # 1st
-    p = plot_brain_surface(FN[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+    p = plot_brain_surface(brain_map[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+                           color_function=color_function,
                            orientation='lateral', view_angle=view_angle[1], file_output=None,
                            figure_size=(int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1])), dpi=dpi)
     p = p.render()
@@ -380,7 +387,8 @@ def plot_brain_surface_5view(FN: np.ndarray,
     axs[2].axis('off')
 
     # 2nd
-    p = plot_brain_surface(FN[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+    p = plot_brain_surface(brain_map[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+                           color_function=color_function,
                            orientation='medial', view_angle=view_angle[1], file_output=None, dpi=dpi)
     p = p.render()
     p._check_offscreen()
@@ -390,7 +398,8 @@ def plot_brain_surface_5view(FN: np.ndarray,
     axs[3].imshow(x)
     axs[3].axis('off')
     # 3rd
-    p = plot_brain_surface(FN[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
+    p = plot_brain_surface(brain_map[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
+                           color_function=color_function,
                            orientation='medial', view_angle=view_angle[1], file_output=None, dpi=dpi)
     p = p.render()
     p._check_offscreen()
@@ -400,7 +409,8 @@ def plot_brain_surface_5view(FN: np.ndarray,
     axs[4].imshow(x)
     axs[4].axis('off')
     # 4th
-    p = plot_brain_surface(FN[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
+    p = plot_brain_surface(brain_map[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
+                           color_function=color_function,
                            orientation='lateral', view_angle=view_angle[1], file_output=None, dpi=dpi)
     p = p.render()
     p._check_offscreen()
@@ -412,26 +422,82 @@ def plot_brain_surface_5view(FN: np.ndarray,
 
     # color bar
     axs[6].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
-    axs[6].set_position((0, 0, 1, H_C))
-    axs[6].imshow(x)
+    colorbar_width = 0.8
+    colorbar_height = 0.2
+    colorbar_pad = 0.6
+    colorbar_step = 100
+    colorbar_ratio = 10
+    colorbar_scale = 100
+    axs[6].set_position(((1-colorbar_width)/2, H_C*colorbar_pad, colorbar_width, H_C*colorbar_height))
+    X = np.tile(np.arange(color_range[0], color_range[1], (color_range[1] - color_range[0])/colorbar_step), (colorbar_ratio, 1))
+    axs[6].imshow(X, cmap=prepare_color_map(color_function=color_function))
     axs[6].axis('off')
-    axs[6].colorbar(sm, ticks=ticks, location=location,
-                              fraction=fraction, pad=cbar_pads[i],
-                              shrink=shrink, aspect=aspect, ax=plt.gca())
+    cb_font_pad = 30
+    cb_value_round = True
+    if cb_value_round is True:
+        color_range = np.round(color_range * colorbar_scale)
+        cb_tick = (str(int(color_range[0])), str(int(color_range[1])))
+    else:
+        color_range = color_range * colorbar_scale
+        cb_tick = (str(color_range[0]), str(color_range[1]))
+
+    axs[6].text(0, cb_font_pad, cb_tick[0],
+                ha='left', va='bottom',
+                fontdict=dict(fontsize=100, fontweight='bold', color=(1, 1, 1)))
+    axs[6].text(colorbar_step, cb_font_pad, cb_tick[1],
+                ha='right', va='bottom',
+                fontdict=dict(fontsize=100, fontweight='bold', color=(1, 1, 1)))
+
+    # add a block to maintain the preconfigured figure size
+    axs[7].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
+    axs[7].set_position(((1-colorbar_width)/2, 0, colorbar_width, H_C))
+    axs[7].axis('off')
 
     # save fig
     fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background_color)
+
+
+def assemble_image(file_output: tuple, file_output_assembled: str, organization=(0, 10), interval=(50, 5), background_color=(0, 0, 0)):
+
+    return
 
 
 def plot_pFN():
     return
 
 
-def setup_Visualization():
+def setup_Visualization(file_figure, ):
     return
 
 
-def run_gFN_Visualization():
+def run_gFN_Visualization(dir_pnet_result: str):
+
+    # get directories of sub-folders
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
+
+    # load settings for data input and FN computation
+    if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
+        raise ValueError('Cannot find the setting json file in folder Data_Input')
+    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
+
+    setting = {'Data_Input': settingDataInput}
+
+    # load basic settings
+    dataType = setting['Data_Input']['Data_Type']
+    dataFormat = setting['Data_Input']['Data_Format']
+
+    if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
+        gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
+        brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+        K = gFN.shape[1]
+        file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
+        for i in range(K):
+            figure_title = 'FN '+str(int(i+1))
+            plot_FN_brain_surface_5view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+        file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
+        assemble_image(file_output, file_output_assembled, interval=(50, 5), background_color=(0, 0, 0))
+
     return
 
 
