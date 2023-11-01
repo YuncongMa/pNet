@@ -10,21 +10,9 @@ import time
 
 import pandas as pd
 import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from matplotlib.cm import get_cmap
-from matplotlib.lines import Line2D
-from matplotlib.colors import Normalize
 import surfplot
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from matplotlib.colors import LightSource
-import vtk
-from brainspace.vtk_interface.wrappers import BSPolyData
-from brainspace.vtk_interface.wrappers import BSPolyDataMapper
-import nilearn as nl
-
 from brainspace.mesh.mesh_creation import build_polydata
-from matplotlib.font_manager import FontProperties
+from PIL import Image
 
 # other functions of pNet
 import pNet
@@ -42,13 +30,10 @@ def prepare_BSPolyData(vertices: np.ndarray, faces: np.ndarray):
     :param faces: 2D matrix, [N, 3], N is the number of triangle faces, vertex index starts from 0
     :return: bspolydata, a data class for using brain space surface plot
 
-    Yuncong Ma, 10/26/2023
+    Yuncong Ma, 11/1/2023
     """
 
     bspolydata = build_polydata(points=vertices, cells=faces)
-
-    if not isinstance(bspolydata, BSPolyData):
-        raise ValueError('Cannot generate BSPolyData for a 3D surface mesh')
 
     return bspolydata
 
@@ -287,9 +272,8 @@ def plot_brain_surface(brain_map: np.ndarray,
     ps = np.where(mask > 0)[0].astype(int)
     for i in range(int(Nv)):
         map_2[ps[i]] = brain_map[i]
-    #max_value = np.percentile(brain_map, map_threshold)
-    #map_2[np.abs(map_2) < max_value/2] = 0
     color_range = (color_function[0, 0], color_function[-1, 0])
+
     p.add_layer(map_2, cmap=prepare_color_map(color_function=color_function), color_range=color_range, cbar=None, zero_transparent=True)
 
     # save or return
@@ -319,7 +303,7 @@ def colorize(value_map: np.ndarray, color_function: np.ndarray):
 
 def plot_FN_brain_surface_5view(brain_map: np.ndarray,
                              brain_template,
-                             file_output: str,
+                             file_output=None or str,
                              threshold=99,
                              color_function=None,
                              background_color=(0,0,0),
@@ -361,7 +345,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     # dorsal view
     p = plot_brain_surface(brain_map, mesh=merge_mesh_LR(brain_template['Shape'], offset=np.array((hemisphere_offset, 0, 0))), mask=merge_mask_LR(brain_template['Brain_Mask']),
                            color_function=color_function,
-                           orientation='dorsal', view_angle=view_angle[0], file_output=None, background_color=(1,1,1),
+                           orientation='dorsal', view_angle=view_angle[0], file_output=None, background_color=(1, 1, 1),
                            figure_size=(int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1])), dpi=dpi)
     p = p.render()
     p._check_offscreen()
@@ -370,7 +354,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     axs[1].set_position((0, 4*H_S+H_C, 1, H_D))
     axs[1].imshow(x)
     axs[1].axis('off')
-    axs[1].set_title(label=figure_title, loc='center', pad=140, fontsize=150, fontweight='bold', color=(1, 1, 1))
+    axs[1].set_title(label=figure_title, loc='center', pad=140, fontsize=150, fontweight='bold', fontname='Arial', color=(1, 1, 1))
 
     # saggital views
     # 1st
@@ -424,7 +408,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     axs[6].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
     colorbar_width = 0.8
     colorbar_height = 0.2
-    colorbar_pad = 0.6
+    colorbar_pad = 0.7
     colorbar_step = 100
     colorbar_ratio = 10
     colorbar_scale = 100
@@ -432,8 +416,10 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     X = np.tile(np.arange(color_range[0], color_range[1], (color_range[1] - color_range[0])/colorbar_step), (colorbar_ratio, 1))
     axs[6].imshow(X, cmap=prepare_color_map(color_function=color_function))
     axs[6].axis('off')
-    cb_font_pad = 30
+    cb_tick_pad = 25
     cb_value_round = True
+    cb_name = 'Loading (%)'
+    cb_name_pad = 45
     if cb_value_round is True:
         color_range = np.round(color_range * colorbar_scale)
         cb_tick = (str(int(color_range[0])), str(int(color_range[1])))
@@ -441,12 +427,15 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
         color_range = color_range * colorbar_scale
         cb_tick = (str(color_range[0]), str(color_range[1]))
 
-    axs[6].text(0, cb_font_pad, cb_tick[0],
+    axs[6].text(0, cb_tick_pad, cb_tick[0],
                 ha='left', va='bottom',
-                fontdict=dict(fontsize=100, fontweight='bold', color=(1, 1, 1)))
-    axs[6].text(colorbar_step, cb_font_pad, cb_tick[1],
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
+    axs[6].text(colorbar_step, cb_tick_pad, cb_tick[1],
                 ha='right', va='bottom',
-                fontdict=dict(fontsize=100, fontweight='bold', color=(1, 1, 1)))
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
+    axs[6].text(colorbar_step/2, cb_name_pad, cb_name,
+                ha='center', va='bottom',
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
 
     # add a block to maintain the preconfigured figure size
     axs[7].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
@@ -454,12 +443,70 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     axs[7].axis('off')
 
     # save fig
-    fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background_color)
+    if file_output is None:
+        return fig, axs
+    else:
+        fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background_color)
 
 
-def assemble_image(file_output: tuple, file_output_assembled: str, organization=(0, 10), interval=(50, 5), background_color=(0, 0, 0)):
+def assemble_image(file_list_image: tuple, file_output_assembled=None or str, organization=(0, 10), interval=(50, 5), background=(0, 0, 0)):
+    """
+    Assemble image, similar to fAssemble_Image in MATLAB
 
-    return
+    :param file_list_image: a tuple of image directories
+    :param file_output_assembled: output file directory, can be None to get image matrix as output
+    :param organization: number of rows and columns, default is (0, 10) means to set 10 columns with automatic row number
+    :param interval: (50, 5) in default, meaning the interval is 50 by 5 pixels
+    :param background: (0, 0, 0) in default, meaning the background color is black
+    :return: image_assembled (M, N, 3) matrix, if file_output_assembled is None
+
+    Yuncong Ma, 11/1/2023
+    """
+
+    N_image = len(file_list_image)
+    if isinstance(organization, tuple):
+        organization = np.array(organization)
+    if organization[0] == 0 and organization[1] > 0:
+        organization[0] = np.ceil(float(N_image)/float(organization[1]))
+    elif organization[1] == 0 and organization[0] > 0:
+        organization[1] = np.ceil(float(N_image)/float(organization[0]))
+    elif organization[0] == 0 and organization[1] == 0:
+        organization[0] = np.ceil(np.sqrt(float(N_image)))
+        organization[1] = np.ceil(float(N_image)/float(organization[0]))
+
+    count = 0
+    ps = np.array((0, 0))
+    for x in range(organization[0]):
+        for y in range(organization[1]):
+            if x == 0 and y == 0:
+                image_sub = np.array(Image.open(file_list_image[count]))
+                image_assembled = np.zeros((image_sub.shape[0] * organization[0] + (organization[0]-1)*interval[0], image_sub.shape[1] * organization[1] + (organization[1]-1)*interval[1], 3), dtype=np.uint8)
+                image_assembled[0:image_sub.shape[0], 0:image_sub.shape[1], :] = image_sub
+            else:
+                if count < N_image:
+                    image_sub = np.array(Image.open(file_list_image[count]))
+                    image_assembled[ps[0]:ps[0]+image_sub.shape[0], ps[1]:ps[1]+image_sub.shape[1], :] = image_sub
+
+            if x < organization[0] - 1:
+                image_assembled[ps[0]+image_sub.shape[0]:ps[0]+image_sub.shape[0]+interval[0], ps[1]:ps[1]+image_sub.shape[1], :] = \
+                    np.reshape(background, (1, 1, 3))
+            if y < organization[1] - 1:
+                image_assembled[ps[0]:ps[0]+image_sub.shape[0], ps[1]+image_sub.shape[1]:ps[1]+image_sub.shape[1]+interval[1], :] = \
+                    np.reshape(background, (1, 1, 3))
+            if x < organization[0] - 1 and y < organization[1] - 1:
+                image_assembled[ps[0]:ps[0]+image_sub.shape[0]+interval[0], ps[1]+image_sub.shape[1]:ps[1]+image_sub.shape[1]+interval[1], :] = \
+                    np.reshape(background, (1, 1, 3))
+
+            ps[1] = ps[1]+interval[1] + image_sub.shape[1]
+            count += 1
+        ps[0] = ps[0] + interval[0] + image_sub.shape[0]
+        ps[1] = 0
+
+    if file_output_assembled is None:
+        return image_assembled
+    else:
+        image = Image.fromarray(image_assembled, 'RGB')
+        image.save(file_output_assembled)
 
 
 def plot_pFN():
@@ -471,6 +518,14 @@ def setup_Visualization(file_figure, ):
 
 
 def run_gFN_Visualization(dir_pnet_result: str):
+    """
+    Run preconfigured visualizations for gFNs
+
+    :param dir_pnet_result: directory of the pnet result folder
+    :return:
+
+    Yuncong Ma, 11/1/2023
+    """
 
     # get directories of sub-folders
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
@@ -493,10 +548,10 @@ def run_gFN_Visualization(dir_pnet_result: str):
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
-            plot_FN_brain_surface_5view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+            # plot_FN_brain_surface_5view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
 
         file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
-        assemble_image(file_output, file_output_assembled, interval=(50, 5), background_color=(0, 0, 0))
+        assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
 
     return
 
