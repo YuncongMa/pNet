@@ -9,7 +9,7 @@
 </p>
 
 * This toolbox is designed to extract personalized functional networks from fMRI data using spatial-regularized non-negative matrix factorization (**NMF**) method (https://doi.org/10.1016/j.neuroimage.2017.05.004) <br />
-* It works with both MATLAB (https://github.com/YuncongMa/pNet/tree/main/MATLAB_Old) and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow in Python.<br />
+* It works with both MATLAB (https://github.com/YuncongMa/pNet/tree/main/MATLAB_Old) and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow script in Python.<br />
 * It supports both surface and volume based fMRI data, as well as the grayordinate which combines the two types. <br />
 * It supports multiple fMRI formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
 * It supports multi-cohort datasets and precomputed group-level FNs.<br />
@@ -24,7 +24,7 @@ Video tutorial is availabel at https://github.com/YuncongMa/pNet/blob/main/MATLA
 </p>
 
 (A) The data input module for loading fMRI scans and brain template files. <br />
-(B) A module to setup computation parameters for both the group-level and individualized FNs. <br />
+(B) A module to setup computation parameters of our spatial-reguarlized NMF method. <br />
 (C) Surface-based visualization of both group and personalized FNs (k=17) using HCP S1200 dataset, with left panel showing a binarized atlas generated from the group FNs and the right panel showing five views of three personalized FNs. All the color bars of intensity maps were set from the maximum value of the map to its half value. <br />
 (D) Volume-based visualization of both group and personalized FNs (k=17) from Zhen’s multi-cohort iSTAGING study, with left panel showing a binarized functional atlas generated from the group FNs and the right panel showing a three-slice view of three personalized FNs. <br />
 (E) Surface-based visualization of a personalized FN. <br />
