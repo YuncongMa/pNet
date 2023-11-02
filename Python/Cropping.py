@@ -1,7 +1,8 @@
 # Yuncong Ma, 11/2/2023
-# Python version of cropping functions in MATLAB
+# Python version of cropping functions written in MATLAB
 
 import numpy as np
+from scipy.ndimage import label
 
 
 def fTruncate_Image_3D_4D(Image_3D_4D, Voxel_Size, Extend):
@@ -137,3 +138,35 @@ def fInverse_Crop_EPI_Image_3D_4D(EPI_Image_3D_4D, Crop_Parameter):
 
     EPI_Image_3D_4D = Data
     return EPI_Image_3D_4D
+
+
+def fMass_Center(Image_2D_3D):
+    """
+    To find the center of the largest connected region in a 2D or 3D image.
+
+    Parameters:
+    Image_2D_3D : ndarray
+        The input 2D or 3D image.
+
+    Returns:
+    Center : ndarray or None
+        The center of the largest connected region.
+        If an error occurs, None is returned.
+    """
+    # Binarize the image
+    Image_2D_3D = Image_2D_3D > 0
+
+    if Image_2D_3D.ndim < 2:
+        print('Error in fMass_Center: wrong size of Image_2D_3D')
+        return None
+
+    # Find the largest connected component
+    labeled_array, num_features = label(Image_2D_3D)
+    component_sizes = np.bincount(labeled_array.ravel())
+    largest_component = component_sizes.argmax()
+    Image_2D_3D = labeled_array == largest_component
+
+    # Calculate the center of mass
+    Center = np.array([np.sum(coords * Image_2D_3D) / np.sum(Image_2D_3D) for coords in np.indices(Image_2D_3D.shape)])
+
+    return Center
