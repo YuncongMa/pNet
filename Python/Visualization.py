@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/30/2023
+# Yuncong Ma, 11/1/2023
 # Visualization module of pNet
 
 #########################################
@@ -197,7 +197,7 @@ def prepare_color_map(map_name=None or str,
 
     # use built-in color maps in matplotlib
     if isinstance(map_name, str) and len(map_name) > 0:
-        cmap = plt.get_cmap(map_name)
+        cmap = matplotlib.pyplot.get_cmap(map_name)
         cmapV = cmap(np.arange(cmap.N))
         cmapV[:, -1] = alpha
         cmap = matplotlib.colors.ListedColormap(cmapV)
@@ -251,13 +251,13 @@ def plot_brain_surface(brain_map: np.ndarray,
                        view_angle=1.5,
                        mask_color=(0.2, 0.2, 0.2),
                        brain_color=(0.5, 0.5, 0.5),
-                       background_color=(0,0,0),
-                       figure_size=(500,400),
+                       background=(0, 0, 0),
+                       figure_size=(500, 400),
                        dpi=25):
 
     # Prepare BSPolyData for using its plot
     polyData = prepare_BSPolyData(mesh['vertices'], mesh['faces'] - 1)
-    p = surfplot.Plot(surf_lh=polyData, zoom=view_angle, views=orientation, background=background_color, brightness=1, size=figure_size)
+    p = surfplot.Plot(surf_lh=polyData, zoom=view_angle, views=orientation, background=background, brightness=1, size=figure_size)
 
     # brain surface and mask layer
     map_mask = (mask == 0).astype(np.float32)
@@ -280,7 +280,7 @@ def plot_brain_surface(brain_map: np.ndarray,
     if file_output is not None:
         # build the figure
         fig = p.build()
-        fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background_color)
+        fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
     else:
         return p
 
@@ -302,21 +302,21 @@ def colorize(value_map: np.ndarray, color_function: np.ndarray):
 
 
 def plot_FN_brain_surface_5view(brain_map: np.ndarray,
-                             brain_template,
-                             file_output=None or str,
-                             threshold=99,
-                             color_function=None,
-                             background_color=(0,0,0),
-                             figure_organization=(0.6, 1.2, 1, 0.6),
-                             view_angle=(1.35, 1.4),
-                             hemisphere_offset=90,
-                             figure_title=None,
-                             title_font_dic=dict(fontsize=20, fontweight='bold'),
-                             figure_size=(10, 50),
-                             dpi=50):
+                                brain_template,
+                                file_output=None or str,
+                                threshold=99,
+                                color_function=None,
+                                background=(0, 0, 0),
+                                figure_organization=(0.6, 1.2, 1, 0.6),
+                                view_angle=(1.35, 1.4),
+                                hemisphere_offset=90,
+                                figure_title=None,
+                                title_font_dic=dict(fontsize=20, fontweight='bold'),
+                                figure_size=(10, 50),
+                                dpi=50):
 
     # settings for subplot
-    fig, axs = matplotlib.pyplot.subplots(nrows=7+1, ncols=1, figsize=figure_size)
+    fig, axs = matplotlib.pyplot.subplots(nrows=8, ncols=1, figsize=figure_size)
 
     # set color function
     if color_function is None:
@@ -324,7 +324,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
         color_range = np.array((threshold_value/2, threshold_value))
         color_function = color_theme('Seed_Map_3_Positive', color_range)
     else:
-        color_range = (color_function[0,0], color_function[-1,0])
+        color_range = (color_function[0, 0], color_function[-1, 0])
 
     # sub figure organization
     H = 4*figure_organization[2]+figure_organization[1]+figure_organization[0] + figure_organization[3]
@@ -339,13 +339,13 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     # title
     axs[0].set_position((0, 4*H_S+H_D+H_C, 1, H_T))
     axs[0].figure_size = (int(dpi*figure_size[0]), int(dpi*H_T*figure_size[1]))
-    axs[0].facecolor = background_color
+    axs[0].facecolor = background
     axs[0].axis('off')
 
     # dorsal view
     p = plot_brain_surface(brain_map, mesh=merge_mesh_LR(brain_template['Shape'], offset=np.array((hemisphere_offset, 0, 0))), mask=merge_mask_LR(brain_template['Brain_Mask']),
                            color_function=color_function,
-                           orientation='dorsal', view_angle=view_angle[0], file_output=None, background_color=(1, 1, 1),
+                           orientation='dorsal', view_angle=view_angle[0], file_output=None, background=(1, 1, 1),
                            figure_size=(int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1])), dpi=dpi)
     p = p.render()
     p._check_offscreen()
@@ -446,21 +446,49 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     if file_output is None:
         return fig, axs
     else:
-        fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background_color)
+        fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
+
+
+def plot_FN_brain_volume_3view(brain_map: np.ndarray,
+                               brain_template,
+                               file_output=None or str,
+                               threshold=99,
+                               color_function=None,
+                               view_center='mass_center',
+                               background=(0, 0, 0),
+                               figure_title=None,
+                               title_font_dic=dict(fontsize=20, fontweight='bold'),
+                               interpolation='nearest',
+                               upsampling=1,
+                               figure_size=(500, 500)
+                               ):
+
+    # settings for subplot
+    fig, axs = matplotlib.pyplot.subplots(nrows=6, ncols=1, figsize=figure_size)
+
+    # set color function
+    if color_function is None:
+        threshold_value = np.percentile(np.abs(brain_map), threshold)
+        color_range = np.array((threshold_value/2, threshold_value))
+        color_function = color_theme('Seed_Map_3_Positive', color_range)
+    else:
+        color_range = (color_function[0, 0], color_function[-1, 0])
+
+
+    return
 
 
 def assemble_image(file_list_image: tuple, file_output_assembled=None or str, organization=(0, 10), interval=(50, 5), background=(0, 0, 0)):
     """
-    Assemble image, similar to fAssemble_Image in MATLAB
 
-    :param file_list_image: a tuple of image directories
+    :param file_list_image: a tuple of image directories or image matrices, images must have the same size
     :param file_output_assembled: output file directory, can be None to get image matrix as output
     :param organization: number of rows and columns, default is (0, 10) means to set 10 columns with automatic row number
     :param interval: (50, 5) in default, meaning the interval is 50 by 5 pixels
     :param background: (0, 0, 0) in default, meaning the background color is black
     :return: image_assembled (M, N, 3) matrix, if file_output_assembled is None
 
-    Yuncong Ma, 11/1/2023
+    Yuncong Ma, 11/2/2023
     """
 
     N_image = len(file_list_image)
@@ -478,13 +506,21 @@ def assemble_image(file_list_image: tuple, file_output_assembled=None or str, or
     ps = np.array((0, 0))
     for x in range(organization[0]):
         for y in range(organization[1]):
+            if count < N_image:
+                if isinstance(file_list_image[count], list):
+                    image_sub = np.array(Image.open(file_list_image[count]))
+                elif isinstance(file_list_image[count], tuple):
+                    image_sub = np.array(file_list_image[count])
+                elif isinstance(file_list_image[count], np.ndarray):
+                    image_sub = file_list_image[count]
+                else:
+                    raise ValueError('file_list_image must be either a tuple of image directories or image matrices')
+
             if x == 0 and y == 0:
-                image_sub = np.array(Image.open(file_list_image[count]))
                 image_assembled = np.zeros((image_sub.shape[0] * organization[0] + (organization[0]-1)*interval[0], image_sub.shape[1] * organization[1] + (organization[1]-1)*interval[1], 3), dtype=np.uint8)
                 image_assembled[0:image_sub.shape[0], 0:image_sub.shape[1], :] = image_sub
             else:
                 if count < N_image:
-                    image_sub = np.array(Image.open(file_list_image[count]))
                     image_assembled[ps[0]:ps[0]+image_sub.shape[0], ps[1]:ps[1]+image_sub.shape[1], :] = image_sub
 
             if x < organization[0] - 1:
@@ -507,10 +543,6 @@ def assemble_image(file_list_image: tuple, file_output_assembled=None or str, or
     else:
         image = Image.fromarray(image_assembled, 'RGB')
         image.save(file_output_assembled)
-
-
-def plot_pFN():
-    return
 
 
 def setup_Visualization(file_figure, ):
@@ -541,17 +573,26 @@ def run_gFN_Visualization(dir_pnet_result: str):
     dataType = setting['Data_Input']['Data_Type']
     dataFormat = setting['Data_Input']['Data_Format']
 
+    gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
+    brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+
     if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
-        gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
-        brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
         K = gFN.shape[1]
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
-            # plot_FN_brain_surface_5view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+            plot_FN_brain_surface_5view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
 
-        file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
-        assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
+    elif dataType == 'Volume':
+        K = gFN.shape[3]
+        file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
+        for i in range(K):
+            figure_title = 'FN '+str(int(i+1))
+            plot_FN_brain_volume_3view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+    # output an assembled image
+    file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
+    assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
 
     return
 
