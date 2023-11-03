@@ -690,8 +690,7 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
     if isinstance(view_center, np.ndarray):
         Center = view_center
     elif view_center == 'cluster_center':
-        threshold_value = np.percentile(Map_2[Brain_Mask_2 > 0], threshold)
-        Center = large_3view_center(Map_2 > threshold_value/2)
+        Center = large_3view_center(Map_2)
 
     # Get three images
     rotation = np.array((1, 1, 1))
