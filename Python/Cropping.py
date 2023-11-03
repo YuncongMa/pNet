@@ -1,20 +1,21 @@
-# Yuncong Ma, 11/2/2023
+# Yuncong Ma, 11/3/2023
 # Python version of cropping functions written in MATLAB
 
 import numpy as np
-from scipy.ndimage import label
+import scipy
+import skimage
 
 
-def fTruncate_Image_3D_4D(Image_3D_4D, Voxel_Size, Extend):
+def fTruncate_Image_3D_4D(Image_3D_4D: np.ndarray, Voxel_Size: np.ndarray, Extend: np.ndarray):
     """
     Truncate 3D or 4D image based on mask and extend parameters.
 
     Parameters:
     Image_3D_4D : ndarray
         The input 3D or 4D image.
-    Voxel_Size : list or tuple of length 3
+    Voxel_Size : ndarray
         The size of each voxel in the image.
-    Extend : list or tuple of length 3
+    Extend : ndarray
         The extend parameters in each dimension, could be positive, negative, or inf.
 
     Returns:
@@ -35,7 +36,7 @@ def fTruncate_Image_3D_4D(Image_3D_4D, Voxel_Size, Extend):
 
     FOV = np.zeros((3, 2), dtype=int)
     for dim in range(3):
-        temp = np.any(np.any(Mask, axis=(dim+1)%3), axis=(dim+2)%3)
+        temp = np.any(np.any(Mask, axis=(dim+1) % 3, keepdims=True), axis=(dim+2) % 3)
         FOV[dim, :] = [np.argmax(temp) + 1, Size[dim] - np.argmax(temp[::-1])]
 
     for dim in range(3):
@@ -45,9 +46,9 @@ def fTruncate_Image_3D_4D(Image_3D_4D, Voxel_Size, Extend):
             FOV[dim, :] = [max(1, FOV[dim, 0] - Extend[dim]), min(Size[dim], FOV[dim, 1] + Extend[dim])]
 
     if Extend[2] < 0:
-        Mask[:,:,set(range(1, Size[2]+1)) - set(range(FOV[2, 0], FOV[2, 1]+1))] = False
+        Mask[:, :, set(range(1, Size[2]+1)) - set(range(FOV[2, 0], FOV[2, 1]+1))] = False
         for dim in range(3):
-            temp = np.any(np.any(Mask, axis=(dim+1)%3), axis=(dim+2)%3)
+            temp = np.any(np.any(Mask, axis=(dim+1) % 3), axis=(dim+2) % 3)
             FOV[dim, :] = [np.argmax(temp) + 1, Size[dim] - np.argmax(temp[::-1])]
             if not np.isfinite(Extend[dim]):
                 FOV[dim, :] = [1, Size[dim]]
@@ -66,7 +67,7 @@ def fTruncate_Image_3D_4D(Image_3D_4D, Voxel_Size, Extend):
     return Image_3D_4D_Truncated, Center, Crop_Parameter
 
 
-def fApply_Cropped_FOV(Image_3D_4D, Crop_Parameter):
+def fApply_Cropped_FOV(Image_3D_4D: np.ndarray, Crop_Parameter: dict):
     """
     Apply predefined Crop_Parameter to crop a 3D or 4D image.
 
@@ -87,8 +88,7 @@ def fApply_Cropped_FOV(Image_3D_4D, Crop_Parameter):
     if not (FOV_Old[0][1] - FOV_Old[0][0] == Size[0] - 1 and
             FOV_Old[1][1] - FOV_Old[1][0] == Size[1] - 1 and
             FOV_Old[2][1] - FOV_Old[2][0] == Size[2] - 1):
-        print('Error in fApply_Cropped_FOV: the old FOV does not match to the data')
-        return
+        raise ValueError('Error in fApply_Cropped_FOV: the old FOV does not match to the data')
 
     # Adjusting indices to be 0-based instead of 1-based
     FOV = np.array(FOV) - 1
@@ -105,7 +105,7 @@ def fApply_Cropped_FOV(Image_3D_4D, Crop_Parameter):
     return Image_3D_4D
 
 
-def fInverse_Crop_EPI_Image_3D_4D(EPI_Image_3D_4D, Crop_Parameter):
+def fInverse_Crop_EPI_Image_3D_4D(EPI_Image_3D_4D: np.ndarray, Crop_Parameter: dict):
     """
     An inverse function for cropping a 3D or 4D EPI image.
 
@@ -120,8 +120,7 @@ def fInverse_Crop_EPI_Image_3D_4D(EPI_Image_3D_4D, Crop_Parameter):
         The inverse cropped image.
     """
     if 'FOV_Old' not in Crop_Parameter or 'FOV' not in Crop_Parameter:
-        print('Error in Crop_Parameter: invalid settings of Crop_Parameter')
-        return
+        raise ValueError('Error in Crop_Parameter: invalid settings of Crop_Parameter')
 
     FOV_Old = np.array(Crop_Parameter['FOV_Old']) - 1  # Adjust indices for 0-based Python indexing
     FOV = np.array(Crop_Parameter['FOV']) - 1
@@ -140,7 +139,7 @@ def fInverse_Crop_EPI_Image_3D_4D(EPI_Image_3D_4D, Crop_Parameter):
     return EPI_Image_3D_4D
 
 
-def fMass_Center(Image_2D_3D):
+def fMass_Center(Image_2D_3D: np.ndarray):
     """
     To find the center of the largest connected region in a 2D or 3D image.
 
@@ -151,22 +150,21 @@ def fMass_Center(Image_2D_3D):
     Returns:
     Center : ndarray or None
         The center of the largest connected region.
-        If an error occurs, None is returned.
     """
     # Binarize the image
     Image_2D_3D = Image_2D_3D > 0
 
     if Image_2D_3D.ndim < 2:
-        print('Error in fMass_Center: wrong size of Image_2D_3D')
-        return None
+        raise ValueError('Error in fMass_Center: wrong size of Image_2D_3D')
 
-    # Find the largest connected component
-    labeled_array, num_features = label(Image_2D_3D)
-    component_sizes = np.bincount(labeled_array.ravel())
-    largest_component = component_sizes.argmax()
-    Image_2D_3D = labeled_array == largest_component
+    Map_Label = scipy.ndimage.label(Image_2D_3D)[0]
+    # Size of each connected component
+    Size = [region.num_pixels for region in skimage.measure.regionprops(Map_Label)]
+    # Center of the largest cluster
+    ps = np.argmax(Size)
+    Center = np.round(scipy.ndimage.center_of_mass(Map_Label == ps)).astype(np.int32)
 
-    # Calculate the center of mass
-    Center = np.array([np.sum(coords * Image_2D_3D) / np.sum(Image_2D_3D) for coords in np.indices(Image_2D_3D.shape)])
+    print(Center)
+    print((np.sum(Map_Label[:, :, Center[2]]), np.sum(Map_Label[Center[0], :, :]), np.sum(Map_Label[:, Center[1], :])))
 
     return Center

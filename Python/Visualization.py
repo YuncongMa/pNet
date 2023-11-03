@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/1/2023
+# Yuncong Ma, 11/2/2023
 # Visualization module of pNet
 
 #########################################
@@ -17,9 +17,12 @@ from PIL import Image
 # other functions of pNet
 import pNet
 from Data_Input import *
+from Cropping import fApply_Cropped_FOV, fInverse_Crop_EPI_Image_3D_4D, fTruncate_Image_3D_4D, fMass_Center
+import scipy
+import skimage
 
 
-# =============== Surface data type =============== #
+# =============== basic functions =============== #
 
 
 def prepare_BSPolyData(vertices: np.ndarray, faces: np.ndarray):
@@ -80,7 +83,7 @@ def color_theme(theme: str,
     elif theme == 'Seed_Map_2':
         min_CC = parameter[0]
         max_CC = parameter[1]
-        color_function = np.arra((
+        color_function = np.array((
             (-max_CC,0,1,1),
             (-min_CC,0,0,1),
             (-min_CC,0,0,0),
@@ -92,7 +95,7 @@ def color_theme(theme: str,
     elif theme == 'Seed_Map_3':
         min_CC = parameter[0]
         max_CC = parameter[1]
-        color_function = np.arra((
+        color_function = np.array((
             (-max_CC,0,1,1),
             (-min_CC*0.7 - max_CC*0.3,0,0,1),
             (-min_CC,0,0,0.5),
@@ -107,7 +110,7 @@ def color_theme(theme: str,
         min_CC = parameter[0]
         Threshold = parameter[1]
         max_CC = parameter[2]
-        color_function = np.arra((
+        color_function = np.array((
             (0,0,0,0),
             (Threshold,0,0,0),
             (Threshold,1,(Threshold-min_CC)/(max_CC-min_CC),0),
@@ -117,7 +120,7 @@ def color_theme(theme: str,
         min_CC = parameter[0]
         Threshold = parameter[1]
         max_CC = parameter[2]
-        color_function = np.arra((
+        color_function = np.array((
             (Threshold,0,0,0),
             (Threshold,1,(Threshold-min_CC)/(max_CC-min_CC),0),
             (max_CC,1,1,0)), dtype=np.float32)
@@ -242,6 +245,119 @@ def prepare_color_map(map_name=None or str,
     return cmap
 
 
+def colorize(value_map: np.ndarray, color_function: np.ndarray):
+    """
+    colorize a 2D value map into a 2D image [X, Y, 3]
+
+    :param value_map:
+    :param color_function:
+    :return: image_rgb: np.ndarray, np.float32, 0-1
+
+    Yuncong Ma, 11/3/2023
+    """
+
+    # Ensure Color_Function is valid
+    if color_function.shape[1] != 4 or color_function.shape[0] < 2 or not np.all(color_function[:, 0] == np.sort(color_function[:, 0])):
+        raise ValueError('check color_function')
+
+    # Flatten the matrix and initialize the RGB image
+    flat_matrix = value_map.flatten()
+    image_rgb = np.zeros((flat_matrix.size, 3), dtype=np.float32)
+
+    # Handle values below the first threshold
+    mask = flat_matrix < color_function[0, 0]
+    image_rgb[mask] = color_function[0, 1:4]
+
+    # Handle values above the last threshold
+    mask = flat_matrix >= color_function[-1, 0]
+    image_rgb[mask] = color_function[-1, 1:4]
+
+    # Handle values within the color thresholds
+    for p in range(color_function.shape[0]-1):
+        mask = (color_function[p, 0] <= flat_matrix) & (flat_matrix < color_function[p+1, 0])
+        if color_function[p, 0] == color_function[p+1, 0]:
+            weight = np.ones(flat_matrix.shape)
+        else:
+            weight = (flat_matrix - color_function[p, 0]) / (color_function[p+1, 0] - color_function[p, 0])
+        for c in range(3):  # Iterate over RGB channels
+            image_rgb[mask, c] = (weight[mask] * color_function[p+1, c + 1] +
+                                  (1 - weight[mask]) * color_function[p, c + 1])
+
+    # Reshape to original dimensions with RGB channels, unit8
+    image_rgb = image_rgb.reshape((*value_map.shape, 3)).astype(np.float32)
+    return image_rgb
+
+
+def assemble_image(file_list_image: tuple, file_output_assembled=None or str, organization=(0, 10), interval=(50, 5), background=(0, 0, 0)):
+    """
+
+    :param file_list_image: a tuple of image directories or image matrices, images must have the same size
+    :param file_output_assembled: output file directory, can be None to get image matrix as output
+    :param organization: number of rows and columns, default is (0, 10) means to set 10 columns with automatic row number
+    :param interval: (50, 5) in default, meaning the interval is 50 by 5 pixels
+    :param background: (0, 0, 0) in default, meaning the background color is black
+    :return: image_assembled (M, N, 3) matrix, if file_output_assembled is None
+
+    Yuncong Ma, 11/3/2023
+    """
+
+    N_image = len(file_list_image)
+    if isinstance(organization, tuple):
+        organization = np.array(organization)
+    if organization[0] == 0 and organization[1] > 0:
+        organization[0] = np.ceil(float(N_image)/float(organization[1]))
+    elif organization[1] == 0 and organization[0] > 0:
+        organization[1] = np.ceil(float(N_image)/float(organization[0]))
+    elif organization[0] == 0 and organization[1] == 0:
+        organization[0] = np.ceil(np.sqrt(float(N_image)))
+        organization[1] = np.ceil(float(N_image)/float(organization[0]))
+
+    count = 0
+    ps = np.array((0, 0))
+    for x in range(organization[0]):
+        for y in range(organization[1]):
+            if count < N_image:
+                if isinstance(file_list_image[count], str):
+                    image_sub = np.array(Image.open(file_list_image[count]))
+                elif isinstance(file_list_image[count], tuple):
+                    image_sub = np.array(file_list_image[count])
+                elif isinstance(file_list_image[count], np.ndarray):
+                    image_sub = file_list_image[count]
+                else:
+                    raise ValueError('file_list_image must be either a tuple of image directories or image matrices')
+
+            if x == 0 and y == 0:
+                image_assembled = np.zeros((image_sub.shape[0] * organization[0] + (organization[0]-1)*interval[0], image_sub.shape[1] * organization[1] + (organization[1]-1)*interval[1], 3), dtype=np.uint8)
+                image_assembled[0:image_sub.shape[0], 0:image_sub.shape[1], :] = image_sub
+            else:
+                if count < N_image:
+                    image_assembled[ps[0]:ps[0]+image_sub.shape[0], ps[1]:ps[1]+image_sub.shape[1], :] = image_sub
+
+            if x < organization[0] - 1:
+                image_assembled[ps[0]+image_sub.shape[0]:ps[0]+image_sub.shape[0]+interval[0], ps[1]:ps[1]+image_sub.shape[1], :] = \
+                    np.reshape(background, (1, 1, 3))
+            if y < organization[1] - 1:
+                image_assembled[ps[0]:ps[0]+image_sub.shape[0], ps[1]+image_sub.shape[1]:ps[1]+image_sub.shape[1]+interval[1], :] = \
+                    np.reshape(background, (1, 1, 3))
+            if x < organization[0] - 1 and y < organization[1] - 1:
+                image_assembled[ps[0]:ps[0]+image_sub.shape[0]+interval[0], ps[1]+image_sub.shape[1]:ps[1]+image_sub.shape[1]+interval[1], :] = \
+                    np.reshape(background, (1, 1, 3))
+
+            ps[1] = ps[1]+interval[1] + image_sub.shape[1]
+            count += 1
+        ps[0] = ps[0] + interval[0] + image_sub.shape[0]
+        ps[1] = 0
+
+    if file_output_assembled is None:
+        return image_assembled
+    else:
+        image = Image.fromarray(image_assembled, 'RGB')
+        image.save(file_output_assembled)
+
+
+# =============== Surface data type =============== #
+
+
 def plot_brain_surface(brain_map: np.ndarray,
                        mesh: dict,
                        mask: np.ndarray,
@@ -294,11 +410,6 @@ def merge_mesh_LR(mesh_LR: dict, offset=np.array((90, 0, 0))):
 def merge_mask_LR(mask_LR: dict):
     mask = np.concatenate((mask_LR['L'], mask_LR['R']), axis=0)
     return mask
-
-
-def colorize(value_map: np.ndarray, color_function: np.ndarray):
-    color_map = ()
-    return color_map
 
 
 def plot_FN_brain_surface_5view(brain_map: np.ndarray,
@@ -449,100 +560,217 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
         fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
 
 
+# =============== Volume data type =============== #
+
+
+def plot_voxel_map_3view(Anatomy: np.ndarray, Voxel_Map: np.ndarray, center: np.ndarray, color_function: np.ndarray,
+                         rotation=np.array((0, 0, 0)), organization=np.array((0, 0, 0)),
+                         background=np.array((0, 0, 0))):
+
+    # Check if Anatomy and Voxel_Map have the same size
+    if Anatomy.shape != Voxel_Map.shape:
+        raise ValueError('Anatomy and Voxel_Map should have the same size')
+
+    Dimension = Anatomy.shape
+
+    # Create the 2D anatomical views by rotation and slicing
+    Anatomy2D = [
+        np.rot90(Anatomy[:, :, center[2]], rotation[0]),
+        np.rot90(np.squeeze(Anatomy[:, center[1], :]), rotation[1]),
+        np.rot90(np.squeeze(Anatomy[center[0], :, :]), rotation[2])
+    ]
+
+    # Normalize and replicate the anatomical views for RGB channels
+    for i in range(3):
+        range_values = np.percentile(Anatomy2D[i][Anatomy2D[i] > 0], [1, 99])
+        Anatomy2D[i] = (Anatomy2D[i] - range_values[0]) / np.diff(range_values) * 0.8
+        Anatomy2D[i] = np.repeat(Anatomy2D[i][:, :, np.newaxis], 3, axis=2)
+
+    # Create the 2D voxel map views
+    Voxel_Map2D = [
+        np.rot90(Voxel_Map[:, :, center[2]], rotation[0]),
+        np.rot90(np.squeeze(Voxel_Map[:, center[1], :]), rotation[1]),
+        np.rot90(np.squeeze(Voxel_Map[center[0], :, :]), rotation[2])
+    ]
+
+    # Create masks and colorize
+    Mask = [None] * 3
+    for i in range(3):
+        Voxel_Map2D[i] = colorize(Voxel_Map2D[i], color_function)
+        Mask[i] = np.repeat(np.sum(Voxel_Map2D[i], axis=2) == 0, 3).reshape(Voxel_Map2D[i].shape)
+
+    # Assemble the figure based on the organization
+    if organization in ([[1, 3], [2, 0]], [[2, 3], [1, 0]]):
+        image_rgb = np.zeros((*Dimension[:2], 3)) + background
+        for i, val in np.ndenumerate(np.array(organization)):
+            if val:
+                image_rgb[i[0]*Dimension[0]:(i[0]+1)*Dimension[0], i[1]*Dimension[1]:(i[1]+1)*Dimension[1], :] = Anatomy2D[val-1] * Mask[val-1] + Voxel_Map2D[val-1] * (1 - Mask[val-1])
+    elif np.array(organization).shape == (3,):
+        image_rgb = np.zeros((Dimension[0]*3, Dimension[1], 3), dtype=np.float32) + background
+        for i, val in enumerate(organization.flatten()):
+            image_rgb[i*Dimension[0]:(i+1)*Dimension[0], :, :] = Anatomy2D[val-1] * Mask[val-1] + Voxel_Map2D[val-1] * (1 - Mask[val-1])
+    else:
+        raise ValueError('unsupported Organization settings')
+
+    image_rgb[image_rgb < 0] = 0
+    image_rgb[image_rgb > 1] = 1
+
+    return image_rgb
+
+
+def large_3view_center(weight_map: np.ndarray):
+    """
+    Get the view center for a 3D map, maximizing the content in each view
+
+    :param weight_map: a 3D matrix, either 0-1 or weighted
+    :return: Center ndarray: [3, 1]
+    """
+
+    Center = np.zeros(3, dtype=np.int32)
+
+    X_size = np.sum(np.sum(weight_map, axis=2), axis=1)
+    Center[0] = X_size.argmax()
+    Y_size = np.sum(np.sum(weight_map, axis=2), axis=0)
+    Center[1] = Y_size.argmax()
+    Z_size = np.sum(np.sum(weight_map, axis=1), axis=0)
+    Center[2] = Z_size.argmax()
+
+    return Center
+
+
 def plot_FN_brain_volume_3view(brain_map: np.ndarray,
                                brain_template,
                                file_output=None or str,
                                threshold=99,
                                color_function=None,
-                               view_center='mass_center',
+                               view_center='cluster_center',
+                               figure_organization=(0.5, 3, 0.6),
                                background=(0, 0, 0),
                                figure_title=None,
                                title_font_dic=dict(fontsize=20, fontweight='bold'),
                                interpolation='nearest',
-                               upsampling=1,
-                               figure_size=(500, 500)
+                               figure_size=(10, 40),
+                               dpi=250
                                ):
-
-    # settings for subplot
-    fig, axs = matplotlib.pyplot.subplots(nrows=6, ncols=1, figsize=figure_size)
 
     # set color function
     if color_function is None:
-        threshold_value = np.percentile(np.abs(brain_map), threshold)
+        threshold_value = np.percentile(np.abs(reshape_FN(brain_map, dataType='Volume', Brain_Mask=brain_template['Brain_Mask'])), threshold)
         color_range = np.array((threshold_value/2, threshold_value))
         color_function = color_theme('Seed_Map_3_Positive', color_range)
     else:
         color_range = (color_function[0, 0], color_function[-1, 0])
 
+    if not brain_map.shape == brain_template['Brain_Mask'].shape:
+        raise ValueError('the brain_map must have the same image size as the Brain_Mask in brain_template')
+
+    # upsampling
+    upsampling = np.round(brain_template['Overlay_Image'].shape[0] / brain_map.shape[0])
+    if np.sum(np.abs(np.array(brain_map.shape) * upsampling - np.array(brain_template['Overlay_Image'].shape))) > 0:
+        raise ValueError('the Overlay_Image does NOT have an integer upsampling scale to the brain map')
+
+    Map = scipy.ndimage.zoom(brain_map, upsampling, order=0)  # 'nearest' interpolation is order=0
+
+    Brain_Mask = scipy.ndimage.zoom(brain_template['Brain_Mask'], upsampling, order=0)
+    Brain_Mask_2, _, Crop_Parameter = fTruncate_Image_3D_4D(Brain_Mask, Voxel_Size=np.array((1,1,1)), Extend=np.array((2,2,2)))
+
+    Overlay_Image = brain_template['Overlay_Image']
+    Overlay_Image_2 = fApply_Cropped_FOV(Overlay_Image, Crop_Parameter)
+    Map_2 = fApply_Cropped_FOV(Map, Crop_Parameter)
+
+    Max_Dim = np.max(Map_2.shape)
+    Crop_Parameter['FOV_Old'] = [[1, Max_Dim]] * 3
+    Crop_Parameter['FOV'] = np.array([[1, s] for s in Map_2.shape]) + np.tile(np.round((np.array([Max_Dim] * 3) - np.array(Map_2.shape)) / 2), (2, 1)).T
+    Crop_Parameter['FOV'] = np.array(Crop_Parameter['FOV'], dtype=np.int32)
+
+    Map_2 = fInverse_Crop_EPI_Image_3D_4D(Map_2, Crop_Parameter)
+    Brain_Mask_2 = fInverse_Crop_EPI_Image_3D_4D(Brain_Mask_2, Crop_Parameter)
+    Overlay_Image_2 = fInverse_Crop_EPI_Image_3D_4D(Overlay_Image_2, Crop_Parameter)
+
+    if isinstance(view_center, np.ndarray):
+        Center = view_center
+    elif view_center == 'cluster_center':
+        threshold_value = np.percentile(Map_2[Brain_Mask_2 > 0], threshold)
+        Center = large_3view_center(Map_2 > threshold_value/2)
+
+    # Get three images
+    rotation = np.array((1, 1, 1))
+    organization = np.array((2, 1, 0))
+    image_rgb = plot_voxel_map_3view(Overlay_Image_2, Map_2, center=Center, rotation=rotation, organization=organization, color_function=color_function)
+
+    # settings for subplot
+    fig, axs = matplotlib.pyplot.subplots(nrows=4, ncols=1, figsize=figure_size)
+
+    # sub figure organization
+    H = np.sum(np.array(figure_organization))
+    H_T = figure_organization[0]/H  # height of title
+    H_V = figure_organization[1]/H  # height of 3 views
+    H_C = figure_organization[2]/H  # height of color bar
+
+    # title
+    axs[0].set_position((0, H_V+H_C, 1, H_T))
+    axs[0].figure_size = (int(dpi*figure_size[0]), int(dpi*H_T*figure_size[1]))
+    axs[0].facecolor = background
+    axs[0].axis('off')
+
+    # 3 views
+    axs[1].figure_size = (int(dpi*figure_size[0]), int(dpi*H_V*figure_size[1]))
+    axs[1].set_position((0, H_C, 1, H_V))
+    axs[1].imshow(image_rgb)
+    axs[1].axis('off')
+    axs[1].set_title(label=figure_title, loc='center', pad=100, fontsize=150, fontweight='bold', fontname='Arial', color=(1, 1, 1))
+
+    # color bar
+    axs[2].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
+    colorbar_width = 0.8
+    colorbar_height = 0.2
+    colorbar_pad = 0.7
+    colorbar_step = 100
+    colorbar_ratio = 10
+    colorbar_scale = 100
+    axs[2].set_position(((1-colorbar_width)/2, H_C*colorbar_pad, colorbar_width, H_C*colorbar_height))
+    X = np.tile(np.arange(color_range[0], color_range[1], (color_range[1] - color_range[0])/colorbar_step), (colorbar_ratio, 1))
+    axs[2].imshow(X, cmap=prepare_color_map(color_function=color_function))
+    axs[2].axis('off')
+    cb_tick_pad = 25
+    cb_value_round = True
+    cb_name = 'Loading (%)'
+    cb_name_pad = 45
+    if cb_value_round is True:
+        color_range = np.round(color_range * colorbar_scale)
+        cb_tick = (str(int(color_range[0])), str(int(color_range[1])))
+    else:
+        color_range = color_range * colorbar_scale
+        cb_tick = (str(color_range[0]), str(color_range[1]))
+
+    axs[2].text(0, cb_tick_pad, cb_tick[0],
+                ha='left', va='bottom',
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
+    axs[2].text(colorbar_step, cb_tick_pad, cb_tick[1],
+                ha='right', va='bottom',
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
+    axs[2].text(colorbar_step/2, cb_name_pad, cb_name,
+                ha='center', va='bottom',
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
+
+    # add a block to maintain the preconfigured figure size
+    axs[3].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
+    axs[3].set_position(((1-colorbar_width)/2, 0, colorbar_width, H_C))
+    axs[3].axis('off')
+
+    # save fig
+    if file_output is None:
+        return fig, axs
+    else:
+        fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
 
     return
 
 
-def assemble_image(file_list_image: tuple, file_output_assembled=None or str, organization=(0, 10), interval=(50, 5), background=(0, 0, 0)):
-    """
+# =========== Surface-volume data type =========== #
 
-    :param file_list_image: a tuple of image directories or image matrices, images must have the same size
-    :param file_output_assembled: output file directory, can be None to get image matrix as output
-    :param organization: number of rows and columns, default is (0, 10) means to set 10 columns with automatic row number
-    :param interval: (50, 5) in default, meaning the interval is 50 by 5 pixels
-    :param background: (0, 0, 0) in default, meaning the background color is black
-    :return: image_assembled (M, N, 3) matrix, if file_output_assembled is None
 
-    Yuncong Ma, 11/2/2023
-    """
-
-    N_image = len(file_list_image)
-    if isinstance(organization, tuple):
-        organization = np.array(organization)
-    if organization[0] == 0 and organization[1] > 0:
-        organization[0] = np.ceil(float(N_image)/float(organization[1]))
-    elif organization[1] == 0 and organization[0] > 0:
-        organization[1] = np.ceil(float(N_image)/float(organization[0]))
-    elif organization[0] == 0 and organization[1] == 0:
-        organization[0] = np.ceil(np.sqrt(float(N_image)))
-        organization[1] = np.ceil(float(N_image)/float(organization[0]))
-
-    count = 0
-    ps = np.array((0, 0))
-    for x in range(organization[0]):
-        for y in range(organization[1]):
-            if count < N_image:
-                if isinstance(file_list_image[count], list):
-                    image_sub = np.array(Image.open(file_list_image[count]))
-                elif isinstance(file_list_image[count], tuple):
-                    image_sub = np.array(file_list_image[count])
-                elif isinstance(file_list_image[count], np.ndarray):
-                    image_sub = file_list_image[count]
-                else:
-                    raise ValueError('file_list_image must be either a tuple of image directories or image matrices')
-
-            if x == 0 and y == 0:
-                image_assembled = np.zeros((image_sub.shape[0] * organization[0] + (organization[0]-1)*interval[0], image_sub.shape[1] * organization[1] + (organization[1]-1)*interval[1], 3), dtype=np.uint8)
-                image_assembled[0:image_sub.shape[0], 0:image_sub.shape[1], :] = image_sub
-            else:
-                if count < N_image:
-                    image_assembled[ps[0]:ps[0]+image_sub.shape[0], ps[1]:ps[1]+image_sub.shape[1], :] = image_sub
-
-            if x < organization[0] - 1:
-                image_assembled[ps[0]+image_sub.shape[0]:ps[0]+image_sub.shape[0]+interval[0], ps[1]:ps[1]+image_sub.shape[1], :] = \
-                    np.reshape(background, (1, 1, 3))
-            if y < organization[1] - 1:
-                image_assembled[ps[0]:ps[0]+image_sub.shape[0], ps[1]+image_sub.shape[1]:ps[1]+image_sub.shape[1]+interval[1], :] = \
-                    np.reshape(background, (1, 1, 3))
-            if x < organization[0] - 1 and y < organization[1] - 1:
-                image_assembled[ps[0]:ps[0]+image_sub.shape[0]+interval[0], ps[1]+image_sub.shape[1]:ps[1]+image_sub.shape[1]+interval[1], :] = \
-                    np.reshape(background, (1, 1, 3))
-
-            ps[1] = ps[1]+interval[1] + image_sub.shape[1]
-            count += 1
-        ps[0] = ps[0] + interval[0] + image_sub.shape[0]
-        ps[1] = 0
-
-    if file_output_assembled is None:
-        return image_assembled
-    else:
-        image = Image.fromarray(image_assembled, 'RGB')
-        image.save(file_output_assembled)
+# =========== Module =========== #
 
 
 def setup_Visualization(file_figure, ):
@@ -588,7 +816,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
-            plot_FN_brain_volume_3view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+            plot_FN_brain_volume_3view(gFN[:, :, :, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
 
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
@@ -603,10 +831,3 @@ def run_pFN_Visualization():
 
 def run_Visualization():
     return
-
-# =============== Volume data type =============== #
-
-
-
-
-# =========== Surface-volume data type =========== #
