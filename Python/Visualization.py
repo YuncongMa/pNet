@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/2/2023
+# Yuncong Ma, 11/6/2023
 # Visualization module of pNet
 
 #########################################
@@ -644,7 +644,7 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
                                threshold=99,
                                color_function=None,
                                view_center='cluster_center',
-                               figure_organization=(0.5, 3, 0.6),
+                               figure_organization=(0.4, 3, 0.6),
                                background=(0, 0, 0),
                                figure_title=None,
                                title_font_dic=dict(fontsize=20, fontweight='bold'),
@@ -717,7 +717,7 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
     axs[1].set_position((0, H_C, 1, H_V))
     axs[1].imshow(image_rgb)
     axs[1].axis('off')
-    axs[1].set_title(label=figure_title, loc='center', pad=100, fontsize=150, fontweight='bold', fontname='Arial', color=(1, 1, 1))
+    axs[1].set_title(label=figure_title, loc='center', pad=30, fontsize=150, fontweight='bold', fontname='Arial', color=(1, 1, 1))
 
     # color bar
     axs[2].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
