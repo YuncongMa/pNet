@@ -7,6 +7,7 @@ import numpy as np
 import os
 import re
 import time
+import gc
 
 import pandas as pd
 import matplotlib
@@ -17,10 +18,13 @@ from PIL import Image
 # other functions of pNet
 import pNet
 from Data_Input import *
+from FN_Computation import setup_pFN_folder
 from Cropping import fApply_Cropped_FOV, fInverse_Crop_EPI_Image_3D_4D, fTruncate_Image_3D_4D, fMass_Center
 import scipy
-import skimage
+from collections import defaultdict
 
+# reduce the memory leakage issue in macOS
+matplotlib.use('TkAgg')  # Use the Tkinter backend
 
 # =============== basic functions =============== #
 
@@ -353,6 +357,7 @@ def assemble_image(file_list_image: tuple, file_output_assembled=None or str, or
     else:
         image = Image.fromarray(image_assembled, 'RGB')
         image.save(file_output_assembled)
+        image.close()
 
 
 # =============== Surface data type =============== #
@@ -402,12 +407,30 @@ def plot_brain_surface(brain_map: np.ndarray,
 
 
 def merge_mesh_LR(mesh_LR: dict, offset=np.array((90, 0, 0))):
+    """
+    Merge two meshes into one
+
+    :param mesh_LR: a dict containing 'L' and 'R', in which vertices and faces are stored
+    :param offset: np.ndarray, 3D vector for the distance between the centers of left and right hemispheres
+    :return: mesh, a dict of vertices and faces
+
+    Yuncong Ma, 11/6/2023
+    """
+
     mesh = {'vertices': np.concatenate((mesh_LR['L']['vertices'], mesh_LR['R']['vertices'] + offset), axis=0),
             'faces': np.concatenate((mesh_LR['L']['faces'], mesh_LR['R']['faces']+mesh_LR['L']['vertices'].shape[0]), axis=0)}
     return mesh
 
 
 def merge_mask_LR(mask_LR: dict):
+    """
+    Merge masks of two hemispheres for surface type
+
+    :param mask_LR: a dict containing 'L' and 'R', each contains a 1D vector, np.ndarray
+    :return: a 1D vector, np.ndarray
+
+    Yuncong Ma, 11/6/2023
+    """
     mask = np.concatenate((mask_LR['L'], mask_LR['R']), axis=0)
     return mask
 
@@ -425,6 +448,9 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
                                 title_font_dic=dict(fontsize=20, fontweight='bold'),
                                 figure_size=(10, 50),
                                 dpi=50):
+
+    # check NaN in brain_map
+    brain_map[np.isnan(brain_map)] = 0
 
     # settings for subplot
     fig, axs = matplotlib.pyplot.subplots(nrows=8, ncols=1, figsize=figure_size)
@@ -461,6 +487,8 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     p = p.render()
     p._check_offscreen()
     x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    del p
+    gc.collect()
     axs[1].figure_size = (int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1]))
     axs[1].set_position((0, 4*H_S+H_C, 1, H_D))
     axs[1].imshow(x)
@@ -476,6 +504,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     p = p.render()
     p._check_offscreen()
     x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    p.close()
     axs[2].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
     axs[2].set_position((0, 3*H_S+H_C, 1, H_S))
     axs[2].imshow(x)
@@ -488,6 +517,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     p = p.render()
     p._check_offscreen()
     x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    p.close()
     axs[3].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
     axs[3].set_position((0, 2*H_S+H_C, 1, H_S))
     axs[3].imshow(x)
@@ -499,6 +529,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     p = p.render()
     p._check_offscreen()
     x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    p.close()
     axs[4].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
     axs[4].set_position((0, 1*H_S+H_C, 1, H_S))
     axs[4].imshow(x)
@@ -510,6 +541,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     p = p.render()
     p._check_offscreen()
     x = p.to_numpy(transparent_bg=True, scale=(2, 2))
+    p.close()
     axs[5].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
     axs[5].set_position((0, H_C, 1, H_S))
     axs[5].imshow(x)
@@ -538,6 +570,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
         color_range = color_range * colorbar_scale
         cb_tick = (str(color_range[0]), str(color_range[1]))
 
+    # add label
     axs[6].text(0, cb_tick_pad, cb_tick[0],
                 ha='left', va='bottom',
                 fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
@@ -558,6 +591,14 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
         return fig, axs
     else:
         fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
+        # Clear the axes
+        for i in range(8):
+            axs[i].cla()
+        matplotlib.pyplot.close(fig)
+        matplotlib.pyplot.cla()
+        matplotlib.pyplot.clf()
+        del fig, axs
+        gc.collect()
 
 
 # =============== Volume data type =============== #
@@ -624,6 +665,8 @@ def large_3view_center(weight_map: np.ndarray):
 
     :param weight_map: a 3D matrix, either 0-1 or weighted
     :return: Center ndarray: [3, 1]
+
+    Yuncong Ma, 11/6/2023
     """
 
     Center = np.zeros(3, dtype=np.int32)
@@ -653,6 +696,9 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
                                dpi=250
                                ):
 
+    # check NaN in brain_map
+    brain_map[np.isnan(brain_map)] = 0
+
     # set color function
     if color_function is None:
         threshold_value = np.percentile(np.abs(reshape_FN(brain_map, dataType='Volume', Brain_Mask=brain_template['Brain_Mask'])), threshold)
@@ -669,10 +715,15 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
     if np.sum(np.abs(np.array(brain_map.shape) * upsampling - np.array(brain_template['Overlay_Image'].shape))) > 0:
         raise ValueError('the Overlay_Image does NOT have an integer upsampling scale to the brain map')
 
-    Map = scipy.ndimage.zoom(brain_map, upsampling, order=0)  # 'nearest' interpolation is order=0
+    if interpolation == 'nearest':
+        Map = scipy.ndimage.zoom(brain_map, upsampling, order=0)  # 'nearest' interpolation is order=0
+    elif interpolation == 'spline-3':
+        Map = scipy.ndimage.zoom(brain_map, upsampling, order=3)
+    else:
+        raise ValueError('Unknown ')
 
     Brain_Mask = scipy.ndimage.zoom(brain_template['Brain_Mask'], upsampling, order=0)
-    Brain_Mask_2, _, Crop_Parameter = fTruncate_Image_3D_4D(Brain_Mask, Voxel_Size=np.array((1,1,1)), Extend=np.array((2,2,2)))
+    Brain_Mask_2, _, Crop_Parameter = fTruncate_Image_3D_4D(Brain_Mask, Voxel_Size=np.array((1, 1, 1)), Extend=np.array((2, 2, 2)))
 
     Overlay_Image = brain_template['Overlay_Image']
     Overlay_Image_2 = fApply_Cropped_FOV(Overlay_Image, Crop_Parameter)
@@ -762,6 +813,11 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
         return fig, axs
     else:
         fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
+        # Clear the axes
+        for i in range(4):
+            axs[i].cla()
+        fig.clf()
+        matplotlib.pyplot.close(fig)
 
     return
 
@@ -824,9 +880,74 @@ def run_gFN_Visualization(dir_pnet_result: str):
     return
 
 
-def run_pFN_Visualization():
+def run_pFN_Visualization(dir_pnet_result: str):
+    """
+    Run preconfigured visualizations for pFNs
+
+    :param dir_pnet_result: directory of the pnet result folder
+    :return:
+
+    Yuncong Ma, 11/6/2023
+    """
+
+    # get directories of sub-folders
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
+
+    # load settings for data input and FN computation
+    if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
+        raise ValueError('Cannot find the setting json file in folder Data_Input')
+    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
+
+    setting = {'Data_Input': settingDataInput}
+
+    # load basic settings
+    dataType = setting['Data_Input']['Data_Type']
+    dataFormat = setting['Data_Input']['Data_Format']
+
+    brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+
+    # setup folders in Personalized_FN
+    list_subject_folder = setup_pFN_folder(dir_pnet_result)
+    N_Scan = len(list_subject_folder)
+    for scan in range(1, N_Scan+1):
+        # print(f'Start to visualize pFNs for {i}-th folder: {list_subject_folder[i-1]}', file=logFile_FNC, flush=True)
+        dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder[scan-1])
+        pFN = load_matlab_single_array(os.path.join(dir_pnet_pFN_indv, 'FN.mat'))
+
+        if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
+            K = pFN.shape[1]
+            file_output = [os.path.join(dir_pnet_pFN_indv, str(int(i+1))+'.jpg') for i in range(K)]
+            for i in range(K):
+                figure_title = 'FN '+str(int(i+1))
+                brain_map = pFN[:, i]
+                plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+        elif dataType == 'Volume':
+            K = pFN.shape[3]
+            file_output = [os.path.join(dir_pnet_pFN_indv, str(int(i+1))+'.jpg') for i in range(K)]
+            for i in range(K):
+                figure_title = 'FN '+str(int(i+1))
+                brain_map = pFN[:, :, :, i]
+                plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+        # output an assembled image
+        file_output_assembled = os.path.join(dir_pnet_pFN_indv, 'All.jpg')
+        assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
+
     return
 
 
-def run_Visualization():
+def run_Visualization(dir_pnet_result: str):
+    """
+    Run preconfigured visualizations for gFNs and pFNs
+
+    :param dir_pnet_result: directory of the pnet result folder
+    :return:
+
+    Yuncong Ma, 11/6/2023
+    """
+
+    run_gFN_Visualization(dir_pnet_result)
+    run_pFN_Visualization(dir_pnet_result)
+
     return
