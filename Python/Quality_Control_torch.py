@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/27/2023
+# Yuncong Ma, 11/7/2023
 # Quality control module of pNet using PyTorch
 
 #########################################
@@ -33,7 +33,7 @@ def run_quality_control_torch(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 9/28/2023
+    Yuncong Ma, 11/7/2023
     """
 
     # Setup sub-folders in pNet result
@@ -99,6 +99,14 @@ def run_quality_control_torch(dir_pnet_result: str):
         elif Data_Type == 'Volume':
             scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True,
                                        Brain_Mask=Brain_Mask, Normalization=None)
+
+        elif Data_Type == 'Surface-Volume':
+            scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True,
+                                       Normalization=None)
+
+        else:
+            raise ValueError('Unknown data type: ' + Data_Type)
+
         scan_data = torch.tensor(scan_data, dtype=torch_float)
 
         # Compute quality control measurement

@@ -1,4 +1,4 @@
-# Yuncong Ma, 9/28/2023
+# Yuncong Ma, 11/7/2023
 # Quality control module of pNet
 
 #########################################
@@ -48,7 +48,7 @@ def run_quality_control(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 9/28/2023
+    Yuncong Ma, 11/7/2023
     """
 
     # Setup sub-folders in pNet result
@@ -114,6 +114,13 @@ def run_quality_control(dir_pnet_result: str):
         elif Data_Type == 'Volume':
             scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True,
                                        Brain_Mask=Brain_Mask, Normalization=None).astype(np_float)
+
+        elif Data_Type == 'Surface-Volume':
+            scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True,
+                                       Normalization=None)
+
+        else:
+            raise ValueError('Unknown data type: ' + Data_Type)
 
         # Compute quality control measurement
         Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control =\
