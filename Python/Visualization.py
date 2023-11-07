@@ -403,7 +403,12 @@ def plot_brain_surface(brain_map: np.ndarray,
         fig = p.build()
         fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
     else:
-        return p
+        p = p.render()
+        p._check_offscreen()
+        image_rgb = p.to_numpy(transparent_bg=True, scale=(2, 2))
+        del p
+        gc.collect()
+        return image_rgb
 
 
 def merge_mesh_LR(mesh_LR: dict, offset=np.array((90, 0, 0))):
@@ -480,71 +485,54 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     axs[0].axis('off')
 
     # dorsal view
-    p = plot_brain_surface(brain_map, mesh=merge_mesh_LR(brain_template['Shape'], offset=np.array((hemisphere_offset, 0, 0))), mask=merge_mask_LR(brain_template['Brain_Mask']),
+    image_rgb = plot_brain_surface(brain_map, mesh=merge_mesh_LR(brain_template['Shape'], offset=np.array((hemisphere_offset, 0, 0))), mask=merge_mask_LR(brain_template['Brain_Mask']),
                            color_function=color_function,
                            orientation='dorsal', view_angle=view_angle[0], file_output=None, background=(1, 1, 1),
                            figure_size=(int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1])), dpi=dpi)
-    p = p.render()
-    p._check_offscreen()
-    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
-    del p
-    gc.collect()
+
     axs[1].figure_size = (int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1]))
     axs[1].set_position((0, 4*H_S+H_C, 1, H_D))
-    axs[1].imshow(x)
+    axs[1].imshow(image_rgb)
     axs[1].axis('off')
     axs[1].set_title(label=figure_title, loc='center', pad=140, fontsize=150, fontweight='bold', fontname='Arial', color=(1, 1, 1))
 
     # saggital views
     # 1st
-    p = plot_brain_surface(brain_map[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+    image_rgb = plot_brain_surface(brain_map[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
                            color_function=color_function,
                            orientation='lateral', view_angle=view_angle[1], file_output=None,
                            figure_size=(int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1])), dpi=dpi)
-    p = p.render()
-    p._check_offscreen()
-    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
-    p.close()
+
     axs[2].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
     axs[2].set_position((0, 3*H_S+H_C, 1, H_S))
-    axs[2].imshow(x)
+    axs[2].imshow(image_rgb)
     axs[2].axis('off')
 
     # 2nd
-    p = plot_brain_surface(brain_map[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
+    image_rgb = plot_brain_surface(brain_map[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Brain_Mask']['L'],
                            color_function=color_function,
                            orientation='medial', view_angle=view_angle[1], file_output=None, dpi=dpi)
-    p = p.render()
-    p._check_offscreen()
-    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
-    p.close()
+
     axs[3].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
     axs[3].set_position((0, 2*H_S+H_C, 1, H_S))
-    axs[3].imshow(x)
+    axs[3].imshow(image_rgb)
     axs[3].axis('off')
     # 3rd
-    p = plot_brain_surface(brain_map[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
+    image_rgb = plot_brain_surface(brain_map[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
                            color_function=color_function,
                            orientation='medial', view_angle=view_angle[1], file_output=None, dpi=dpi)
-    p = p.render()
-    p._check_offscreen()
-    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
-    p.close()
+
     axs[4].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
     axs[4].set_position((0, 1*H_S+H_C, 1, H_S))
-    axs[4].imshow(x)
+    axs[4].imshow(image_rgb)
     axs[4].axis('off')
     # 4th
-    p = plot_brain_surface(brain_map[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
+    image_rgb = plot_brain_surface(brain_map[Nv_L:], mesh=brain_template['Shape']['R'], mask=brain_template['Brain_Mask']['R'],
                            color_function=color_function,
                            orientation='lateral', view_angle=view_angle[1], file_output=None, dpi=dpi)
-    p = p.render()
-    p._check_offscreen()
-    x = p.to_numpy(transparent_bg=True, scale=(2, 2))
-    p.close()
     axs[5].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
     axs[5].set_position((0, H_C, 1, H_S))
-    axs[5].imshow(x)
+    axs[5].imshow(image_rgb)
     axs[5].axis('off')
 
     # color bar
@@ -872,6 +860,13 @@ def run_gFN_Visualization(dir_pnet_result: str):
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
             plot_FN_brain_volume_3view(gFN[:, :, :, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+    elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
+        K = gFN.shape[1]
+        file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
+        for i in range(K):
+            figure_title = 'FN '+str(int(i+1))
+            plot_FN_brain_surface_volume_5view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
 
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
