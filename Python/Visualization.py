@@ -845,7 +845,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
     dataFormat = setting['Data_Input']['Data_Format']
 
     gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
-    brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+    brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
     if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
         K = gFN.shape[1]

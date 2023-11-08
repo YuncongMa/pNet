@@ -17,6 +17,7 @@ from FN_Computation_torch import *
 from Computation_Environment import *
 from Quality_Control import *
 from Quality_Control_torch import *
+from Visualization import run_Visualization
 
 
 def workflow(dir_pnet_result: str,
@@ -91,7 +92,7 @@ def workflow(dir_pnet_result: str,
 
     :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
 
-    Yuncong Ma, 10/18/2023
+    Yuncong Ma, 11/7/2023
     """
 
     # Check setting
@@ -177,6 +178,10 @@ def workflow(dir_pnet_result: str,
         run_quality_control_torch(dir_pnet_result)
     # ============================================= #
 
+    # ============== Quality Control ============== #
+    run_Visualization(dir_pnet_result)
+    # ============================================= #
+
 
 def workflow_simple(dir_pnet_result: str,
                     dataType: str, dataFormat: str,
@@ -198,7 +203,7 @@ def workflow_simple(dir_pnet_result: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param file_gFN: directory of a precomputed gFN in .mat format
 
-    Yuncong Ma, 10/18/2023
+    Yuncong Ma, 11/7/2023
     """
 
     # setup all sub-folders in the pNet result folder
@@ -231,6 +236,10 @@ def workflow_simple(dir_pnet_result: str,
     # ============== Quality Control ============== #
     # perform quality control
     run_quality_control_torch(dir_pnet_result)
+    # ============================================= #
+
+    # ============== Quality Control ============== #
+    run_Visualization(dir_pnet_result)
     # ============================================= #
 
 
