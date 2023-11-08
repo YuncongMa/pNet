@@ -33,7 +33,7 @@ def workflow(dir_pnet_result: str,
              K=17, Combine_Scan=False,
              file_gFN=None,
              samplingMethod='Subject', sampleSize=10, nBS=50,
-             maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-6, normW=1,
+             maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8, normW=1,
              Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
              Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
              dataPrecision='double',
@@ -92,7 +92,7 @@ def workflow(dir_pnet_result: str,
 
     :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
 
-    Yuncong Ma, 11/7/2023
+    Yuncong Ma, 11/8/2023
     """
 
     # Check setting

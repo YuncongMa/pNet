@@ -1085,16 +1085,16 @@ def reshape_FN(FN: np.ndarray,
     """
     reshape_fmri_data(scan_data: np.ndarray, dataType: str, Brain_Mask: np.ndarray, logFile=None)
     If dataType is 'Volume'
-    Reshape 4D FNs [X Y Z dim_time] into 2D matrix [dim_time dim_space], extracting voxels in Brain_Mask
+    Reshape 4D FNs [X Y Z dim_time] or [X Y Z] into 2D matrix [dim_time dim_space], extracting voxels in Brain_Mask
     Reshape 2D FNs back to 4D for storage and visualization
 
-    :param FN: 4D or 2D matrix [X Y Z K] [dim_space K]
+    :param FN: 4D 3D, or 2D matrix [X Y Z K] [dim_space K]
     :param dataType: 'Surface', 'Volume', or 'Surface-Volume'
     :param Brain_Mask: 3D matrix
     :param logFile:
     :return: reshaped_FN: 2D matrix if input is 4D, vice versa
 
-    Yuncong Ma, 10/5/2023
+    Yuncong Ma, 11/3/2023
     """
 
     if dataType == 'Volume':
@@ -1103,6 +1103,12 @@ def reshape_FN(FN: np.ndarray,
                 raise ValueError('The shapes of Brain_Mask and FN are not the same when scan_data is a 4D matrix')
             reshaped_FN = np.reshape(FN, (np.prod(FN.shape[0:3]), FN.shape[3]), order='F')   # Match colum based index used in MATLAB
             reshaped_FN = reshaped_FN[Brain_Mask.flatten('F') > 0, :]   # Match colum based index used in MATLAB
+
+        if len(FN.shape) == 3:  # 4D FN [X Y Z], reshape to 2D [dim_space, K]
+            if FN.shape[0:3] != Brain_Mask.shape:
+                raise ValueError('The shapes of Brain_Mask and FN are not the same when scan_data is a 4D matrix')
+            reshaped_FN = np.reshape(FN, np.prod(FN.shape[0:3]), order='F')   # Match colum based index used in MATLAB
+            reshaped_FN = reshaped_FN[Brain_Mask.flatten('F') > 0]   # Match colum based index used in MATLAB
 
         elif len(FN.shape) == 2:  # 2D FN [dim_space, K], reshape back to 4D [X Y Z K]
             if FN.shape[0] != np.sum(Brain_Mask > 0):
@@ -1282,7 +1288,7 @@ def setup_scan_info(dir_pnet_dataInput: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param logFile: None, 'Automatic', or a file directory, for a txt formatted log file
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 11/7/2023
     """
 
     # log file
@@ -1378,6 +1384,13 @@ def setup_scan_info(dir_pnet_dataInput: str,
             for i in range(len(list_subject_folder)):
                 print(list_subject_folder[i], file=file_subject_folder)
             file_subject_folder.close()
+
+    # get number of scans and subjects
+    list_scan = [line.replace('\n', '') for line in open(file_scan, 'r')]
+    N_Scan = len(list_scan)
+    list_subject_ID = [line.replace('\n', '') for line in open(file_subject_ID, 'r')]
+    list_subject_ID_unique = np.unique(np.array(list_subject_ID))
+    N_Subject = list_subject_ID_unique.shape[0]
 
     # print out summary of the scan info
     if logFile is not None:
