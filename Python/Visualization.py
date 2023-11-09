@@ -674,7 +674,7 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
                                file_output=None or str,
                                threshold=99,
                                color_function=None,
-                               view_center='cluster_center',
+                               view_center='max_value',
                                figure_organization=(0.4, 3, 0.6),
                                background=(0, 0, 0),
                                figure_title=None,
@@ -728,7 +728,7 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
 
     if isinstance(view_center, np.ndarray):
         Center = view_center
-    elif view_center == 'cluster_center':
+    elif view_center == 'max_value':
         Center = large_3view_center(Map_2)
 
     # Get three images
@@ -812,6 +812,22 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
 
 # =========== Surface-volume data type =========== #
 
+def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
+                                brain_template,
+                                file_output=None or str,
+                                threshold=99,
+                                color_function=None,
+                                background=(0, 0, 0),
+                                figure_organization=(0.6, 1.2, 1, 0.6),
+                                view_angle=1.4,
+                                hemisphere_offset=90,
+                                view_center='max_value',
+                                figure_title=None,
+                                title_font_dic=dict(fontsize=20, fontweight='bold'),
+                                figure_size=(10, 50),
+                                dpi=50):
+
+    return
 
 # =========== Module =========== #
 
@@ -866,7 +882,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
-            plot_FN_brain_surface_volume_5view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+            plot_FN_brain_surface_volume_7view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
 
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')

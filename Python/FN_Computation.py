@@ -942,20 +942,20 @@ def compute_gNb(Brain_Template, logFile=None):
     compute_gNb(Brain_Template, logFile=None)
     Prepare a graph neighborhood variable, using indices as its sparse representation
 
-    :param Brain_Template: a structure variable with keys 'Data_Type', 'Data_Format', 'Shape', 'Brain_Mask'.
+    :param Brain_Template: a structure variable with keys 'Data_Type', 'Template_Format', 'Shape', 'Brain_Mask'.
         If Brain_Template.Data_Type is 'Surface', Shape contains L and R, with vertices and faces as sub keys. Brain_Mask contains L and R.
         If Brain_Template.Data_Type is 'Volume', Shape is None, Brain_Mask is a 3D 0-1 matrix, Overlay_Image is a 3D matrix
         If Brain_Template.Data_Type is 'Surface-Volume', It includes fields from both 'Surface' and 'Volume', 'Brain_Mask' is renamed to be 'Surface_Mask' and 'Volume_Mask'
     :param logFile:
     :return: gNb: a 2D matrix [N, 2], which labels the non-zero elements in a graph. Index starts from 1
 
-    Yuncong Ma, 10/10/2023
+    Yuncong Ma, 11/7/2023
     """
 
     # Check Brain_Template
     if 'Data_Type' not in Brain_Template.keys():
         raise ValueError('Cannot find Data_Type in the Brain_Template')
-    if 'Data_Format' not in Brain_Template.keys():
+    if 'Template_Format' not in Brain_Template.keys():
         raise ValueError('Cannot find Data_Format in the Brain_Template')
 
     # Construct gNb
@@ -1209,7 +1209,7 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=N
 
     :return: setting: a structure
 
-    Yuncong Ma, 10/10/2023
+    Yuncong Ma, 11/7/2023
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
@@ -1308,7 +1308,7 @@ def run_FN_Computation(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 11/7/2023
     """
 
     # get directories of sub-folders
@@ -1335,7 +1335,7 @@ def run_FN_Computation(dir_pnet_result: str):
     dataFormat = setting['Data_Input']['Data_Format']
 
     # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
     if dataType == 'Volume':
         Brain_Mask = Brain_Template['Brain_Mask']
@@ -1348,7 +1348,7 @@ def run_FN_Computation(dir_pnet_result: str):
     if setting['FN_Computation']['Method'] == 'SR-NMF':
         print('FN computation uses spatial-regularized non-negative matrix factorization method', file=logFile_FNC, flush=True)
 
-        if setting['FN_Computation']['Group_FN']['file_gFN'] is not None:
+        if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
             # 2 steps
             # step 1 ============== bootstrap
             # sub-folder in FNC for storing bootstrapped results
