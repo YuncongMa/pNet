@@ -193,6 +193,16 @@ pNet.workflow_simple(
 )
 ```
 
+### Example visualization
+
+**Surface**
+
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/0b69d0c9-d7f5-4a00-9ed3-bad6873afdf0"  width="800">
+
+**Volume**
+
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/ca55d5c4-8757-4d2e-9818-57c6e9b0a7e4"  width="800">
+
 ## Help
 All the functions in pNet come with detailed description of each input <br />
 Example help comment <br />
