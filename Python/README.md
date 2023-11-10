@@ -194,6 +194,7 @@ pNet.workflow_simple(
 ```
 
 ### Visualization examples
+The Python version of pNet offers preconfigured visualizations consistent to the MATLAB version. However, the 3D surface display is slightly different due to different lighting and material settings between MATLAB and matplotlib.
 
 **Surface type**
 
