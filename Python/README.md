@@ -125,10 +125,10 @@ Users can access brain template files in .mat and .json.zip formats, or from the
 pNet.Brain_Template.file_HCP_surf
 ```
 
-## Example script
+## Script examples
 Several simple examples are provided in Example_Workflow.py <br />
 
-**Example for HCP format**
+**HCP format**
 ```
 # This example is to perform pNet using surface-based fMRI in HCP format
 # 1. Specify the result folder directory in dir_pnet_result
@@ -160,7 +160,7 @@ pNet.workflow_simple(
         K=K
 )
 ```
-**Example for NIFTI format**
+**NIFTI format**
 ```
 # This example is to perform pNet using volume-based fMRI in NIFTI format, with co-registration to MNI space
 # 1. Specify the result folder directory in dir_pnet_result
@@ -193,13 +193,13 @@ pNet.workflow_simple(
 )
 ```
 
-### Example visualization
+### Visualization examples
 
-**Surface**
+**Surface type**
 
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/0b69d0c9-d7f5-4a00-9ed3-bad6873afdf0"  width="800">
 
-**Volume**
+**Volume type**
 
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/ca55d5c4-8757-4d2e-9818-57c6e9b0a7e4"  width="800">
 
