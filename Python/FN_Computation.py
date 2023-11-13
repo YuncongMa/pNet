@@ -949,7 +949,7 @@ def compute_gNb(Brain_Template, logFile=None):
     :param logFile:
     :return: gNb: a 2D matrix [N, 2], which labels the non-zero elements in a graph. Index starts from 1
 
-    Yuncong Ma, 11/7/2023
+    Yuncong Ma, 11/13/2023
     """
 
     # Check Brain_Template
@@ -1030,7 +1030,7 @@ def compute_gNb(Brain_Template, logFile=None):
 
     elif Brain_Template['Data_Type'] == 'Volume':
         Brain_Mask = Brain_Template['Brain_Mask'] > 0
-        if len(Brain_Mask.shape) != 3:
+        if len(Brain_Mask.shape) != 3 or (len(Brain_Mask.shape) == 4 and Brain_Mask.shape[3] > 1):
             raise ValueError('Mask in Brain_Template needs to be a 3D matrix when the data type is volume')
 
         # Index starts from 1
