@@ -1030,7 +1030,7 @@ def compute_gNb(Brain_Template, logFile=None):
 
     elif Brain_Template['Data_Type'] == 'Volume':
         Brain_Mask = Brain_Template['Brain_Mask'] > 0
-        if len(Brain_Mask.shape) != 3 or (len(Brain_Mask.shape) == 4 and Brain_Mask.shape[3] > 1):
+        if not (len(Brain_Mask.shape) == 3 or (len(Brain_Mask.shape) == 4 and Brain_Mask.shape[3] == 1)):
             raise ValueError('Mask in Brain_Template needs to be a 3D matrix when the data type is volume')
 
         # Index starts from 1
