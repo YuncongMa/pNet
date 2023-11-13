@@ -822,7 +822,7 @@ def load_brain_template(file_Brain_Template: str,
     :param logFile: directory of a log file
     :return: Brain_Template: nested dictionary storing information and matrices of brain template. Matrices are converted to np.ndarray
 
-    Yuncong Ma, 10/11/2023
+    Yuncong Ma, 11/13/2023
     """
 
     Brain_Template = load_json_setting(file_Brain_Template)
@@ -837,6 +837,8 @@ def load_brain_template(file_Brain_Template: str,
             raise ValueError('Cannot find Brain_Mask and Overlay_Image in the Brain_Template file')
         # convert to np.ndarray
         Brain_Template['Brain_Mask'] = np.array(Brain_Template['Brain_Mask'])
+        if len(Brain_Template['Brain_Mask'].shape) == 4:
+            Brain_Template['Brain_Mask'] = np.squeeze(Brain_Template['Brain_Mask'], axis=3)
         Brain_Template['Overlay_Image'] = np.array(Brain_Template['Overlay_Image'])
         if 'Volume_Order' in Brain_Template.keys():
             Brain_Template['Volume_Order'] = np.array(Brain_Template['Volume_Order'])
@@ -894,6 +896,8 @@ def load_brain_template(file_Brain_Template: str,
             raise ValueError("Cannot find faces in Brain_Template['Shape']['R']")
         # convert to np.ndarray
         Brain_Template['Volume_Mask'] = np.array(Brain_Template['Volume_Mask'])
+        if len(Brain_Template['Volume_Mask'].shape) == 4:
+            Brain_Template['Volume_Mask'] = np.squeeze(Brain_Template['Volume_Mask'], axis=3)
         if 'Volume_Order' in Brain_Template.keys():
             Brain_Template['Volume_Order'] = np.array(Brain_Template['Volume_Order'])
         Brain_Template['Overlay_Image'] = np.array(Brain_Template['Overlay_Image'])
