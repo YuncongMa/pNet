@@ -1064,6 +1064,9 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
             # NMF on bootstrapped subsets
             print('Start to NMF for each bootstrap at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
+            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
+            K = setting['FN_Computation']['K']
+            nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
             for rep in range(1, 1+nBS):
                 # log file
                 logFile = os.path.join(dir_pnet_BS, str(rep), 'Log.log')
@@ -1082,6 +1085,9 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             # step 2 ============== fuse results
             # Generate gFNs
             print('Start to fuse bootstrapped results using NCut at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
+            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
+            K = setting['FN_Computation']['K']
+            nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
             FN_BS = np.empty(nBS, dtype=np.ndarray)
             # load bootstrapped results
             for rep in range(1, nBS+1):

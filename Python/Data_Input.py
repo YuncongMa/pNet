@@ -304,7 +304,7 @@ def load_fmri_scan(file_scan_list: str,
     :param logFile: a log file to save the output
     :return: Data: a 2D or 4D NumPy array [dim_time dim_space]
 
-    By Yuncong Ma, 10/18/2023
+    By Yuncong Ma, 11/14/2023
     """
 
     # Check setting
@@ -629,7 +629,7 @@ def compute_brain_template(dataType: str,
     :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
                             a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
 
-    Yuncong Ma, 10/18/2023
+    Yuncong Ma, 11/14/2023
     """
 
     # log file
@@ -654,6 +654,10 @@ def compute_brain_template(dataType: str,
         Overlay_Image = load_fmri_scan(file_overlayImage, dataType=dataType, dataFormat='Volume (*.nii, *.nii.gz, *.mat)', Reshape=False, Normalization=None)
         Brain_Mask = (Brain_Mask == maskValue).astype(np.int32)
         print_log(f"There are {np.sum(Brain_Mask)} voxels in the brain", stop=False, logFile=logFile)
+        if len(Brain_Mask.shape) == 4:
+            Brain_Mask = np.squeeze(Brain_Mask, axis=3)
+        if len(Overlay_Image.shape) == 4:
+            Overlay_Image = np.squeeze(Overlay_Image, axis=3)
         Brain_Template = {'Data_Type': dataType,
                           'Template_Format': templateFormat,
                           'Brain_Mask': Brain_Mask,
@@ -668,6 +672,10 @@ def compute_brain_template(dataType: str,
         Volume_Order = Volume_Order[Volume_Order > 0]
         Brain_Mask = (Brain_Mask > 0).astype(np.int32)
         print_log(f"There are {np.sum(Brain_Mask)} voxels in the brain", stop=False, logFile=logFile)
+        if len(Brain_Mask.shape) == 4:
+            Brain_Mask = np.squeeze(Brain_Mask, axis=3)
+        if len(Overlay_Image.shape) == 4:
+            Overlay_Image = np.squeeze(Overlay_Image, axis=3)
         Brain_Template = {'Data_Type': dataType,
                           'Template_Format': templateFormat,
                           'Brain_Mask': Brain_Mask,
@@ -728,6 +736,11 @@ def compute_brain_template(dataType: str,
         print_log(f"There are {np.sum(Brain_Template['Surface_Mask']['L'])} vertices in the left hemisphere \nand "
                   f"{np.sum(Brain_Template['Surface_Mask']['R'])} vertices in the right hemisphere", stop=False, logFile=logFile)
         print_log(f"There are {np.sum(Volume_Mask)} voxels in the volume-based part of the brain", stop=False, logFile=logFile)
+
+        if len(Brain_Template['Volume_Mask'].shape) == 4:
+            Brain_Template['Volume_Mask'] = np.squeeze(Brain_Template['Volume_Mask'], axis=3)
+        if len(Brain_Template['Overlay_Image'].shape) == 4:
+            Brain_Template['Overlay_Image'] = np.squeeze(Brain_Template['Overlay_Image'], axis=3)
 
     else:
         raise ValueError('Unknown data type: ' + dataType)
@@ -967,7 +980,7 @@ def setup_brain_template(dir_pnet_dataInput: str,
 
     :param logFile: 'Automatic', None, or a txt formatted file directory
 
-    Yuncong Ma, 10/18/2023
+    Yuncong Ma, 11/14/2023
     """
 
     # log file
