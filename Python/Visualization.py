@@ -882,7 +882,11 @@ def run_gFN_Visualization(dir_pnet_result: str):
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
+<<<<<<< HEAD
+            plot_FN_brain_surface_volume_8view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+=======
             plot_FN_brain_surface_volume_7view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+>>>>>>> 140eb39afd7142c0f6aad924287d2f9554f10724
 
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
