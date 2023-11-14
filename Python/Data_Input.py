@@ -1098,17 +1098,17 @@ def reshape_FN(FN: np.ndarray,
     :param logFile:
     :return: reshaped_FN: 2D matrix if input is 4D, vice versa
 
-    Yuncong Ma, 11/3/2023
+    Yuncong Ma, 11/13/2023
     """
 
     if dataType == 'Volume':
         if len(FN.shape) == 4:  # 4D FN [X Y Z K], reshape to 2D [dim_space, K]
-            if FN.shape[0:3] != Brain_Mask.shape:
+            if FN.shape[0:3] != Brain_Mask.shape[0:3]:
                 raise ValueError('The shapes of Brain_Mask and FN are not the same when scan_data is a 4D matrix')
             reshaped_FN = np.reshape(FN, (np.prod(FN.shape[0:3]), FN.shape[3]), order='F')   # Match colum based index used in MATLAB
             reshaped_FN = reshaped_FN[Brain_Mask.flatten('F') > 0, :]   # Match colum based index used in MATLAB
 
-        if len(FN.shape) == 3:  # 4D FN [X Y Z], reshape to 2D [dim_space, K]
+        elif len(FN.shape) == 3:  # 3D FN [X Y Z], reshape to 2D [dim_space, K]
             if FN.shape[0:3] != Brain_Mask.shape:
                 raise ValueError('The shapes of Brain_Mask and FN are not the same when scan_data is a 4D matrix')
             reshaped_FN = np.reshape(FN, np.prod(FN.shape[0:3]), order='F')   # Match colum based index used in MATLAB
@@ -1123,7 +1123,7 @@ def reshape_FN(FN: np.ndarray,
             reshaped_FN = np.reshape(reshaped_FN, (Brain_Mask.shape[0], Brain_Mask.shape[1], Brain_Mask.shape[2], FN.shape[1]), order='F')   # Match colum based index used in MATLAB
 
         else:
-            raise ValueError('The scan_data needs to be a 2D or 4D matrix')
+            raise ValueError('The scan_data needs to be a 2D, 3D or 4D matrix')
 
     else:
         reshaped_FN = FN

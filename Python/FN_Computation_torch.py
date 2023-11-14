@@ -532,10 +532,10 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
 
         # Prune V if empty components are found in V
         # This is almost impossible to happen without combining FNs
-        prunInd = torch.sum(V != 0, dim=0) == 1
-        if torch.any(prunInd):
-            V[:, prunInd] = torch.zeros((dim_space, torch.sum(prunInd)))
-            U[:, prunInd] = torch.zeros((dim_time, torch.sum(prunInd)))
+        # prunInd = torch.sum(V != 0, dim=0) == 1
+        # if torch.any(prunInd):
+        #     V[:, prunInd] = torch.zeros((dim_space, torch.sum(prunInd)), dtype=torch_float)
+        #     U[:, prunInd] = torch.zeros((dim_time, torch.sum(prunInd)), dtype=torch_float)
 
         # normalize U and V
         U, V = normalize_u_v_torch(U, V, 1, 1)
@@ -554,10 +554,10 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
 
         # Prune U if empty components are found in U
         # This is almost impossible to happen without combining FNs
-        prunInd = torch.sum(U, dim=0) == 0
-        if torch.any(prunInd):
-            V[:, prunInd] = torch.zeros((dim_space, torch.sum(prunInd)))
-            U[:, prunInd] = torch.zeros((dim_time, torch.sum(prunInd)))
+        # prunInd = torch.sum(U, dim=0) == 0
+        # if torch.any(prunInd):
+        #     V[:, prunInd] = torch.zeros((dim_space, torch.sum(prunInd)), dtype=torch_float)
+        #     U[:, prunInd] = torch.zeros((dim_time, torch.sum(prunInd)), dtype=torch_float)
 
         # update lambda
         if ard > 0:
@@ -975,7 +975,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 11/13/2023
     """
 
     # get directories of sub-folders
@@ -1002,7 +1002,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
     dataFormat = setting['Data_Input']['Data_Format']
 
     # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
     if dataType == 'Volume':
         Brain_Mask = Brain_Template['Brain_Mask']
     else:
@@ -1014,7 +1014,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
     if setting['FN_Computation']['Method'] == 'SR-NMF':
         print('FN computation uses spatial-regularized non-negative matrix factorization method', file=logFile_FNC, flush=True)
 
-        if setting['FN_Computation']['Group_FN']['file_gFN'] is not None:
+        if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
             # 2 steps
             # step 1 ============== bootstrap
             # sub-folder in FNC for storing bootstrapped results
@@ -1097,7 +1097,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
         else:  # use precomputed gFNs
             file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
-            gFN = load_matlab_single_array(file_gFN, method=setting['FN_Computation']['Method'])
+            gFN = load_matlab_single_array(file_gFN)
             check_gFN(gFN)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
             print('load precomputed gFNs', file=logFile_FNC, flush=True)

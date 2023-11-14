@@ -523,8 +523,8 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
         # This is almost impossible to happen without combining FNs
         prunInd = np.sum(V != 0, axis=0) == 1
         if np.any(prunInd):
-            V[:, prunInd] = np.zeros((dim_space, np.sum(prunInd)))
-            U[:, prunInd] = np.zeros((dim_time, np.sum(prunInd)))
+            V[:, prunInd] = np.zeros((dim_space, np.sum(prunInd)), dype=np_float)
+            U[:, prunInd] = np.zeros((dim_time, np.sum(prunInd)), dype=np_float)
 
         # normalize U and V
         U, V = normalize_u_v(U, V, 1, 1, dataPrecision)
@@ -545,8 +545,8 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
         # This is almost impossible to happen without combining FNs
         prunInd = np.sum(U, axis=0) == 0
         if np.any(prunInd):
-            V[:, prunInd] = np.zeros((dim_space, np.sum(prunInd)))
-            U[:, prunInd] = np.zeros((dim_time, np.sum(prunInd)))
+            V[:, prunInd] = np.zeros((dim_space, np.sum(prunInd)), dype=np_float)
+            U[:, prunInd] = np.zeros((dim_time, np.sum(prunInd)), dype=np_float)
 
         # update lambda
         if ard > 0:
@@ -1032,6 +1032,8 @@ def compute_gNb(Brain_Template, logFile=None):
         Brain_Mask = Brain_Template['Brain_Mask'] > 0
         if not (len(Brain_Mask.shape) == 3 or (len(Brain_Mask.shape) == 4 and Brain_Mask.shape[3] == 1)):
             raise ValueError('Mask in Brain_Template needs to be a 3D matrix when the data type is volume')
+        if len(Brain_Mask.shape) == 4:
+            Brain_Mask = np.squeeze(Brain_Mask, axis=3)
 
         # Index starts from 1
         sx = Brain_Mask.shape[0]

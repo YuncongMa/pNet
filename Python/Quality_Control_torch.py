@@ -69,7 +69,7 @@ def run_quality_control_torch(dir_pnet_result: str):
     # Load gFNs
     gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))  # [dim_space, K]
     if Data_Type == 'Volume':
-        Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))['Brain_Mask']
+        Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
         gFN = reshape_FN(gFN, dataType=Data_Type, Brain_Mask=Brain_Mask)
 
     # data precision
