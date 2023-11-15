@@ -630,7 +630,7 @@ def plot_voxel_map_3view(Anatomy: np.ndarray, Voxel_Map: np.ndarray, center: np.
 
     # Assemble the figure based on the organization
     if organization in ([[1, 3], [2, 0]], [[2, 3], [1, 0]]):
-        image_rgb = np.zeros((*Dimension[:2], 3)) + background
+        image_rgb = np.zeros((Dimension[0]*2, Dimension[1]*2, 3)) + background
         for i, val in np.ndenumerate(np.array(organization)):
             if val:
                 image_rgb[i[0]*Dimension[0]:(i[0]+1)*Dimension[0], i[1]*Dimension[1]:(i[1]+1)*Dimension[1], :] = Anatomy2D[val-1] * Mask[val-1] + Voxel_Map2D[val-1] * (1 - Mask[val-1])
@@ -681,7 +681,8 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
                                title_font_dic=dict(fontsize=20, fontweight='bold'),
                                interpolation='nearest',
                                figure_size=(10, 40),
-                               dpi=250
+                               dpi=250,
+                               file_setting=None
                                ):
 
     # check NaN in brain_map
@@ -690,10 +691,12 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
     # set color function
     if color_function is None:
         threshold_value = np.percentile(np.abs(reshape_FN(brain_map, dataType='Volume', Brain_Mask=brain_template['Brain_Mask'])), threshold)
+        if threshold_value == 0:
+            threshold_value = 1.0
         color_range = np.array((threshold_value/2, threshold_value))
         color_function = color_theme('Seed_Map_3_Positive', color_range)
     else:
-        color_range = (color_function[0, 0], color_function[-1, 0])
+        color_range = np.array((color_function[0, 0], color_function[-1, 0]))
 
     if not brain_map.shape == brain_template['Brain_Mask'].shape:
         raise ValueError('the brain_map must have the same image size as the Brain_Mask in brain_template')
@@ -731,7 +734,16 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
     elif view_center == 'max_value':
         Center = large_3view_center(Map_2)
 
-    # Get three images
+    # output essential figure settings
+    if file_setting is not None:
+        dict_setting = {'Color_Function': ndarray_list(color_function, n_digit=3), 'Color_Range': ndarray_list(color_range, n_digit=3),
+                        'Background': list(background),
+                        'Center': ndarray_list(Center), 'Threshold': threshold,
+                        'Figure_Organization': list(figure_organization),
+                        'Figure_Size': list(figure_size), 'dpi': dpi}
+        write_json_setting(dict_setting, file_setting)
+
+    # Get three images into one
     rotation = np.array((1, 1, 1))
     organization = np.array((2, 1, 0))
     image_rgb = plot_voxel_map_3view(Overlay_Image_2, Map_2, center=Center, rotation=rotation, organization=organization, color_function=color_function)
@@ -818,16 +830,182 @@ def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
                                 threshold=99,
                                 color_function=None,
                                 background=(0, 0, 0),
-                                figure_organization=(0.6, 1.2, 1, 0.6),
+                                figure_organization=(0.6, 1.2, 1.5, 0.6),
                                 view_angle=1.4,
                                 hemisphere_offset=90,
                                 view_center='max_value',
+                                interpolation='nearest',
                                 figure_title=None,
                                 title_font_dic=dict(fontsize=20, fontweight='bold'),
                                 figure_size=(10, 50),
                                 dpi=50):
 
-    return
+    # check NaN in brain_map
+    brain_map[np.isnan(brain_map)] = 0
+
+    # settings for subplot
+    fig, axs = matplotlib.pyplot.subplots(nrows=8, ncols=1, figsize=figure_size)
+
+    # set color function
+    if color_function is None:
+        threshold_value = np.percentile(np.abs(brain_map), threshold)
+        color_range = np.array((threshold_value/2, threshold_value))
+        color_function = color_theme('Seed_Map_3_Positive', color_range)
+    else:
+        color_range = (color_function[0, 0], color_function[-1, 0])
+
+    # sub figure organization
+    H = figure_organization[0] + 4*figure_organization[1] + figure_organization[2] + figure_organization[3]
+    H_T = figure_organization[0]/H  # height of title
+    H_S = figure_organization[1]/H  # height of surface view
+    H_V = figure_organization[2]/H  # height of volume view
+    H_C = figure_organization[3]/H  # height of color bar
+
+    # number of used vertices in left hemisphere
+    Nv_L = int(sum(brain_template['Surface_Mask']['L'] > 0))
+    Nv_LR = Nv_L+int(sum(brain_template['Surface_Mask']['R'] > 0))
+
+    # title
+    axs[0].set_position((0, 4*H_S+H_V+H_C, 1, H_T))
+    axs[0].figure_size = (int(dpi*figure_size[0]), int(dpi*H_T*figure_size[1]))
+    axs[0].facecolor = background
+    axs[0].axis('off')
+
+    # saggital views
+    # 1st
+    image_rgb = plot_brain_surface(brain_map[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Surface_Mask']['L'],
+                           color_function=color_function,
+                           orientation='lateral', view_angle=view_angle, file_output=None,
+                           figure_size=(int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1])), dpi=dpi)
+
+    axs[1].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
+    axs[1].set_position((0, 3*H_S+H_V+H_C, 1, H_S))
+    axs[1].imshow(image_rgb)
+    axs[1].axis('off')
+    axs[1].set_title(label=figure_title, loc='center', pad=40, fontsize=150, fontweight='bold', fontname='Arial', color=(1, 1, 1))
+
+    # 2nd
+    image_rgb = plot_brain_surface(brain_map[0:Nv_L], mesh=brain_template['Shape']['L'], mask=brain_template['Surface_Mask']['L'],
+                           color_function=color_function,
+                           orientation='medial', view_angle=view_angle, file_output=None, dpi=dpi)
+
+    axs[2].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
+    axs[2].set_position((0, 2*H_S+H_V+H_C, 1, H_S))
+    axs[2].imshow(image_rgb)
+    axs[2].axis('off')
+    # 3rd
+    image_rgb = plot_brain_surface(brain_map[Nv_L:Nv_LR], mesh=brain_template['Shape']['R'], mask=brain_template['Surface_Mask']['R'],
+                           color_function=color_function,
+                           orientation='medial', view_angle=view_angle, file_output=None, dpi=dpi)
+
+    axs[3].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
+    axs[3].set_position((0, 1*H_S+H_V+H_C, 1, H_S))
+    axs[3].imshow(image_rgb)
+    axs[3].axis('off')
+    # 4th
+    image_rgb = plot_brain_surface(brain_map[Nv_L:Nv_LR], mesh=brain_template['Shape']['R'], mask=brain_template['Surface_Mask']['R'],
+                           color_function=color_function,
+                           orientation='lateral', view_angle=view_angle, file_output=None, dpi=dpi)
+    axs[4].figure_size = (int(dpi*figure_size[0]), int(dpi*H_S*figure_size[1]))
+    axs[4].set_position((0, H_V+H_C, 1, H_S))
+    axs[4].imshow(image_rgb)
+    axs[4].axis('off')
+
+    # volume view
+    brain_map = reshape_FN(brain_map[Nv_LR:], dataType='Volume', Brain_Mask=brain_template['Volume_Mask'], Volume_Order=brain_template['Volume_Order'])
+    # upsampling
+    upsampling = np.round(brain_template['Overlay_Image'].shape[0] / brain_map.shape[0])
+    if np.sum(np.abs(np.array(brain_map.shape) * upsampling - np.array(brain_template['Overlay_Image'].shape))) > 0:
+        raise ValueError('the Overlay_Image does NOT have an integer upsampling scale to the brain map')
+
+    if interpolation == 'nearest':
+        Map = scipy.ndimage.zoom(brain_map, upsampling, order=0)  # 'nearest' interpolation is order=0
+    elif interpolation == 'spline-3':
+        Map = scipy.ndimage.zoom(brain_map, upsampling, order=3)
+    else:
+        raise ValueError('Unknown ')
+
+    Brain_Mask = scipy.ndimage.zoom(brain_template['Volume_Mask'], upsampling, order=0)
+    Brain_Mask_2, _, Crop_Parameter = fTruncate_Image_3D_4D(Brain_Mask, Voxel_Size=np.array((1, 1, 1)), Extend=np.array((2, 2, 2)))
+
+    Overlay_Image = brain_template['Overlay_Image']
+    Overlay_Image_2 = fApply_Cropped_FOV(Overlay_Image, Crop_Parameter)
+    Map_2 = fApply_Cropped_FOV(Map, Crop_Parameter)
+
+    Max_Dim = np.max(Map_2.shape)
+    Crop_Parameter['FOV_Old'] = [[1, Max_Dim]] * 3
+    Crop_Parameter['FOV'] = np.array([[1, s] for s in Map_2.shape]) + np.tile(np.round((np.array([Max_Dim] * 3) - np.array(Map_2.shape)) / 2), (2, 1)).T
+    Crop_Parameter['FOV'] = np.array(Crop_Parameter['FOV'], dtype=np.int32)
+
+    Map_2 = fInverse_Crop_EPI_Image_3D_4D(Map_2, Crop_Parameter)
+    Overlay_Image_2 = fInverse_Crop_EPI_Image_3D_4D(Overlay_Image_2, Crop_Parameter)
+
+    if isinstance(view_center, np.ndarray):
+        Center = view_center
+    elif view_center == 'max_value':
+        Center = large_3view_center(Map_2)
+    # Get three images into one
+    rotation = np.array((1, 1, 1))
+    organization = np.array((2, 1, 0))
+    image_rgb = plot_voxel_map_3view(Overlay_Image_2, Map_2, center=Center, rotation=rotation, organization=[[2, 3], [1, 0]], color_function=color_function)
+
+    axs[5].figure_size = (int(dpi*figure_size[0]), int(dpi*H_V*figure_size[1]))
+    axs[5].set_position((0, H_C, 1, H_V))
+    axs[5].imshow(image_rgb)
+    axs[5].axis('off')
+
+    # color bar
+    axs[6].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
+    colorbar_width = 0.8
+    colorbar_height = 0.2
+    colorbar_pad = 0.7
+    colorbar_step = 100
+    colorbar_ratio = 10
+    colorbar_scale = 100
+    axs[6].set_position(((1-colorbar_width)/2, H_C*colorbar_pad, colorbar_width, H_C*colorbar_height))
+    X = np.tile(np.arange(color_range[0], color_range[1], (color_range[1] - color_range[0])/colorbar_step), (colorbar_ratio, 1))
+    axs[6].imshow(X, cmap=prepare_color_map(color_function=color_function))
+    axs[6].axis('off')
+    cb_tick_pad = 25
+    cb_value_round = True
+    cb_name = 'Loading (%)'
+    cb_name_pad = 45
+    if cb_value_round is True:
+        color_range = np.round(color_range * colorbar_scale)
+        cb_tick = (str(int(color_range[0])), str(int(color_range[1])))
+    else:
+        color_range = color_range * colorbar_scale
+        cb_tick = (str(color_range[0]), str(color_range[1]))
+
+    # add label
+    axs[6].text(0, cb_tick_pad, cb_tick[0],
+                ha='left', va='bottom',
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
+    axs[6].text(colorbar_step, cb_tick_pad, cb_tick[1],
+                ha='right', va='bottom',
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
+    axs[6].text(colorbar_step/2, cb_name_pad, cb_name,
+                ha='center', va='bottom',
+                fontdict=dict(fontsize=80, fontweight='bold', color=(1, 1, 1), fontname='Arial'))
+
+    # add a block to maintain the preconfigured figure size
+    axs[7].figure_size = (int(dpi*figure_size[0]), int(dpi*H_C*figure_size[1]))
+    axs[7].set_position(((1-colorbar_width)/2, 0, colorbar_width, H_C))
+    axs[7].axis('off')
+
+    # save fig
+    if file_output is None:
+        return fig, axs
+    else:
+        fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
+        # Clear the axes
+        for i in range(8):
+            axs[i].cla()
+        matplotlib.pyplot.close(fig)
+        matplotlib.pyplot.cla()
+        matplotlib.pyplot.clf()
+        del fig, axs
+        gc.collect()
 
 # =========== Module =========== #
 
@@ -843,7 +1021,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 11/1/2023
+    Yuncong Ma, 11/15/2023
     """
 
     # get directories of sub-folders
@@ -873,20 +1051,19 @@ def run_gFN_Visualization(dir_pnet_result: str):
     elif dataType == 'Volume':
         K = gFN.shape[3]
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
+        if not os.path.exists(os.path.join(dir_pnet_gFN, 'Figure_Setting')):
+            os.makedirs(os.path.join(dir_pnet_gFN, 'Figure_Setting'))
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
-            plot_FN_brain_volume_3view(gFN[:, :, :, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+            file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i+1}.json')
+            plot_FN_brain_volume_3view(gFN[:, :, :, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title, file_setting=file_setting)
 
     elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
         K = gFN.shape[1]
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
-<<<<<<< HEAD
-            plot_FN_brain_surface_volume_8view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
-=======
             plot_FN_brain_surface_volume_7view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
->>>>>>> 140eb39afd7142c0f6aad924287d2f9554f10724
 
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
@@ -902,7 +1079,7 @@ def run_pFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 11/6/2023
+    Yuncong Ma, 11/15/2023
     """
 
     # get directories of sub-folders
@@ -919,7 +1096,7 @@ def run_pFN_Visualization(dir_pnet_result: str):
     dataType = setting['Data_Input']['Data_Type']
     dataFormat = setting['Data_Input']['Data_Format']
 
-    brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json'))
+    brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
     # setup folders in Personalized_FN
     list_subject_folder = setup_pFN_folder(dir_pnet_result)
@@ -943,7 +1120,14 @@ def run_pFN_Visualization(dir_pnet_result: str):
             for i in range(K):
                 figure_title = 'FN '+str(int(i+1))
                 brain_map = pFN[:, :, :, i]
-                plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+                file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i+1}.json')
+                if os.path.exists(file_setting):
+                    dict_setting = load_json_setting(file_setting)
+                    plot_FN_brain_volume_3view(brain_map, brain_template,
+                                               color_function=None, view_center=np.array(dict_setting['Center']),
+                                               figure_title=figure_title,  file_output=file_output[i])
+                else:
+                    plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
 
         # output an assembled image
         file_output_assembled = os.path.join(dir_pnet_pFN_indv, 'All.jpg')
