@@ -714,7 +714,7 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
         raise ValueError('Unknown ')
 
     Brain_Mask = scipy.ndimage.zoom(brain_template['Brain_Mask'], upsampling, order=0)
-    Brain_Mask_2, _, Crop_Parameter = fTruncate_Image_3D_4D(Brain_Mask, Voxel_Size=np.array((1, 1, 1)), Extend=np.array((2, 2, 2)))
+    Brain_Mask_2, _, Crop_Parameter = fTruncate_Image_3D_4D(Brain_Mask, Voxel_Size=np.array((1, 1, 1)), Extend=np.array((np.inf, np.inf, np.inf)))
 
     Overlay_Image = brain_template['Overlay_Image']
     Overlay_Image_2 = fApply_Cropped_FOV(Overlay_Image, Crop_Parameter)
