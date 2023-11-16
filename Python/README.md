@@ -23,6 +23,7 @@ conda install -c conda-forge nibabel
 conda install pytorch::pytorch torchvision torchaudio -c pytorch
 conda install -c conda-forge vtk
 pip install matplotlib surfplot
+python -m pip install -U scikit-image
 ```
 
 **Download pNet**
