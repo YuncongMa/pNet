@@ -1136,7 +1136,7 @@ def reshape_FN(FN: np.ndarray,
     :param logFile:
     :return: reshaped_FN: 2D matrix if input is 4D, vice versa
 
-    Yuncong Ma, 11/14/2023
+    Yuncong Ma, 11/19/2023
     """
 
     if dataType == 'Volume':
@@ -1174,7 +1174,7 @@ def reshape_FN(FN: np.ndarray,
 
             if Volume_Order is not None:
                 ps = np.array(np.where(ps)[0], dtype=np.int32)
-                reshaped_FN[ps[Volume_Order.astype(np.int32)-1]] = FN
+                reshaped_FN[ps] = FN[Volume_Order.astype(np.int32)-1]
             else:
                 reshaped_FN[ps] = FN
 
