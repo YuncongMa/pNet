@@ -594,7 +594,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
 
 def plot_voxel_map_3view(Anatomy: np.ndarray, Voxel_Map: np.ndarray, center: np.ndarray, color_function: np.ndarray,
                          rotation=np.array((0, 0, 0)), organization=np.array((0, 0, 0)),
-                         background=np.array((0, 0, 0))):
+                         background=np.array((0, 0, 0)), interval=0):
 
     # Check if Anatomy and Voxel_Map have the same size
     if Anatomy.shape != Voxel_Map.shape:
@@ -629,15 +629,37 @@ def plot_voxel_map_3view(Anatomy: np.ndarray, Voxel_Map: np.ndarray, center: np.
         Mask[i] = np.repeat(np.sum(Voxel_Map2D[i], axis=2) == 0, 3).reshape(Voxel_Map2D[i].shape)
 
     # Assemble the figure based on the organization
-    if organization in ([[1, 3], [2, 0]], [[2, 3], [1, 0]]):
-        image_rgb = np.zeros((Dimension[0]*2, Dimension[1]*2, 3)) + background
-        for i, val in np.ndenumerate(np.array(organization)):
-            if val:
-                image_rgb[i[0]*Dimension[0]:(i[0]+1)*Dimension[0], i[1]*Dimension[1]:(i[1]+1)*Dimension[1], :] = Anatomy2D[val-1] * Mask[val-1] + Voxel_Map2D[val-1] * (1 - Mask[val-1])
+    if organization in ([[1, 3], [2, 0]], [[2, 3], [1, 0]]): # MATLAB index
+        organization = np.array(organization)
+        # assemble 3 sub-figures into a matrix shape
+        Slice_Dimension = (Voxel_Map2D[0].shape, Voxel_Map2D[1].shape, Voxel_Map2D[2].shape)
+        image_rgb = np.zeros((Voxel_Map2D[organization[0, 0]-1].shape[0] + Voxel_Map2D[organization[1, 0]-1].shape[0] + interval,
+                              Voxel_Map2D[organization[0, 0]-1].shape[1] + Voxel_Map2D[organization[0, 1]-1].shape[1] + interval, 3)) + background
+
+        ps_list = (Voxel_Map2D[organization[0, 0]-1].shape[0], Voxel_Map2D[organization[0, 0]-1].shape[1], Voxel_Map2D[organization[0, 1]-1].shape[1],
+                   Voxel_Map2D[organization[1, 0]-1].shape[0], Voxel_Map2D[organization[1, 0]-1].shape[1])
+
+        ps = organization[0, 0]-1
+        image_rgb[0:ps_list[0], 0:ps_list[1], :] = (
+                Anatomy2D[ps] * Mask[ps] + Voxel_Map2D[ps] * (1 - Mask[ps]))
+        ps = organization[0, 1]-1
+        image_rgb[0:ps_list[0], ps_list[1]+interval:ps_list[1]+ps_list[2]+interval :] = (
+                Anatomy2D[ps] * Mask[ps] + Voxel_Map2D[ps] * (1 - Mask[ps]))
+        ps = organization[1, 0]-1
+        image_rgb[ps_list[0]+interval:ps_list[0]+ps_list[3]+interval, 0:ps_list[4], :] = (
+                Anatomy2D[ps] * Mask[ps] + Voxel_Map2D[ps] * (1 - Mask[ps]))
+        # for i, val in np.ndenumerate(organization):
+        #     if val:
+        #         image_rgb[i[0]*Dimension[0]:(i[0]+1)*Dimension[0], i[1]*Dimension[1]:(i[1]+1)*Dimension[1], :] = Anatomy2D[val-1] * Mask[val-1] + Voxel_Map2D[val-1] * (1 - Mask[val-1])
+
     elif np.array(organization).shape == (3,):
+        # align sub-figures vertically, which requires cubic shape for the image
+        if not np.array((1,1,1)) * Dimension[0] == Dimension:
+            raise ValueError('It requires a cubic shape image when aligning images vertically')
         image_rgb = np.zeros((Dimension[0]*3, Dimension[1], 3), dtype=np.float32) + background
         for i, val in enumerate(organization.flatten()):
             image_rgb[i*Dimension[0]:(i+1)*Dimension[0], :, :] = Anatomy2D[val-1] * Mask[val-1] + Voxel_Map2D[val-1] * (1 - Mask[val-1])
+
     else:
         raise ValueError('unsupported Organization settings')
 
@@ -928,19 +950,11 @@ def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
         raise ValueError('Unknown ')
 
     Brain_Mask = scipy.ndimage.zoom(brain_template['Volume_Mask'], upsampling, order=0)
-    Brain_Mask_2, _, Crop_Parameter = fTruncate_Image_3D_4D(Brain_Mask, Voxel_Size=np.array((1, 1, 1)), Extend=np.array((2, 2, 2)))
+    Brain_Mask_2, _, Crop_Parameter = fTruncate_Image_3D_4D(Brain_Mask, Voxel_Size=np.array((1, 1, 1)), Extend=10 * np.array((1, 1, 1)))
 
     Overlay_Image = brain_template['Overlay_Image']
     Overlay_Image_2 = fApply_Cropped_FOV(Overlay_Image, Crop_Parameter)
     Map_2 = fApply_Cropped_FOV(Map, Crop_Parameter)
-
-    Max_Dim = np.max(Map_2.shape)
-    Crop_Parameter['FOV_Old'] = [[1, Max_Dim]] * 3
-    Crop_Parameter['FOV'] = np.array([[1, s] for s in Map_2.shape]) + np.tile(np.round((np.array([Max_Dim] * 3) - np.array(Map_2.shape)) / 2), (2, 1)).T
-    Crop_Parameter['FOV'] = np.array(Crop_Parameter['FOV'], dtype=np.int32)
-
-    Map_2 = fInverse_Crop_EPI_Image_3D_4D(Map_2, Crop_Parameter)
-    Overlay_Image_2 = fInverse_Crop_EPI_Image_3D_4D(Overlay_Image_2, Crop_Parameter)
 
     if isinstance(view_center, np.ndarray):
         Center = view_center
@@ -959,11 +973,11 @@ def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
 
     # Get three images into one
     rotation = np.array((1, 1, 1))
-    organization = np.array((2, 1, 0))
-    image_rgb = plot_voxel_map_3view(Overlay_Image_2, Map_2, center=Center, rotation=rotation, organization=[[2, 3], [1, 0]], color_function=color_function)
-
+    organization = [[2, 3], [1, 0]]
+    image_rgb = plot_voxel_map_3view(Overlay_Image_2, Map_2, center=Center, rotation=rotation, organization=organization, color_function=color_function, interval=10)
+    volume_width = 0.9
     axs[5].figure_size = (int(dpi*figure_size[0]), int(dpi*H_V*figure_size[1]))
-    axs[5].set_position((0, H_C, 1, H_V))
+    axs[5].set_position(((1-volume_width)/2, H_C, volume_width, H_V))
     axs[5].imshow(image_rgb)
     axs[5].axis('off')
 
@@ -1093,9 +1107,12 @@ def run_gFN_Visualization(dir_pnet_result: str):
     elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
         K = gFN.shape[1]
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
+        if not os.path.exists(os.path.join(dir_pnet_gFN, 'Figure_Setting')):
+            os.makedirs(os.path.join(dir_pnet_gFN, 'Figure_Setting'))
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
             brain_map = gFN[:, i]
+            file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i + 1}.json')
             plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title, file_setting=file_setting)
 
     # output an assembled image

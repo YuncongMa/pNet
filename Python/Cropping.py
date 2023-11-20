@@ -36,7 +36,7 @@ def fTruncate_Image_3D_4D(Image_3D_4D: np.ndarray, Voxel_Size: np.ndarray, Exten
 
     FOV = np.zeros((3, 2), dtype=int)
     for dim in range(3):
-        temp = np.any(np.any(Mask, axis=(dim+1) % 3, keepdims=True), axis=(dim+2) % 3)
+        temp = np.squeeze(np.any(np.any(Mask, axis=(dim+1) % 3, keepdims=True), axis=(dim+2) % 3))
         FOV[dim, :] = [np.argmax(temp) + 1, Size[dim] - np.argmax(temp[::-1])]
 
     for dim in range(3):
