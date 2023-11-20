@@ -838,7 +838,9 @@ def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
                                 figure_title=None,
                                 title_font_dic=dict(fontsize=20, fontweight='bold'),
                                 figure_size=(10, 50),
-                                dpi=50):
+                                dpi=50,
+                                file_setting=None
+                                       ):
 
     # check NaN in brain_map
     brain_map[np.isnan(brain_map)] = 0
@@ -944,6 +946,17 @@ def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
         Center = view_center
     elif view_center == 'max_value':
         Center = large_3view_center(Map_2)
+
+    # output essential figure settings
+    if file_setting is not None:
+        dict_setting = {'Color_Function': ndarray_list(color_function, n_digit=3),
+                        'Color_Range': ndarray_list(color_range, n_digit=3),
+                        'Background': list(background),
+                        'Center': ndarray_list(Center), 'Threshold': threshold,
+                        'Figure_Organization': list(figure_organization),
+                        'Figure_Size': list(figure_size), 'dpi': dpi}
+        write_json_setting(dict_setting, file_setting)
+
     # Get three images into one
     rotation = np.array((1, 1, 1))
     organization = np.array((2, 1, 0))
@@ -1007,10 +1020,27 @@ def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
         del fig, axs
         gc.collect()
 
+
 # =========== Module =========== #
 
 
-def setup_Visualization(file_figure, ):
+def setup_Visualization(dir_pnet_result: str, synchronized_view=True or bool, synchronized_colorbar=False or bool):
+    """
+    Setup visualization styles, including synchronized display
+
+    :param dir_pnet_result: directory of pNet result folder
+    :param synchronized_view: True or False, whether to synchronize view centers for volume data between gFNs and pFNs
+    :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
+    :return: None
+
+    Yuncong Ma, 11/15/2023
+    """
+
+    setting = {'Synchronized_View': synchronized_view, 'Synchronized_Colorbar': synchronized_colorbar}
+
+    # output
+    write_json_setting(setting, os.path.join(dir_pnet_result, 'Personalized_FN', 'Setting.json'))
+
     return
 
 
@@ -1021,7 +1051,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 11/15/2023
+    Yuncong Ma, 11/20/2023
     """
 
     # get directories of sub-folders
@@ -1046,7 +1076,8 @@ def run_gFN_Visualization(dir_pnet_result: str):
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
-            plot_FN_brain_surface_5view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+            brain_map = gFN[:, i]
+            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
 
     elif dataType == 'Volume':
         K = gFN.shape[3]
@@ -1056,14 +1087,16 @@ def run_gFN_Visualization(dir_pnet_result: str):
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
             file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i+1}.json')
-            plot_FN_brain_volume_3view(gFN[:, :, :, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title, file_setting=file_setting)
+            brain_map = gFN[:, :, :, i]
+            plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title, file_setting=file_setting)
 
     elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
         K = gFN.shape[1]
         file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
-            plot_FN_brain_surface_volume_7view(gFN[:, i], brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+            brain_map = gFN[:, i]
+            plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title, file_setting=file_setting)
 
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
@@ -1079,7 +1112,7 @@ def run_pFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 11/15/2023
+    Yuncong Ma, 11/20/2023
     """
 
     # get directories of sub-folders
@@ -1129,6 +1162,21 @@ def run_pFN_Visualization(dir_pnet_result: str):
                 else:
                     plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
 
+        elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
+            K = pFN.shape[1]
+            file_output = [os.path.join(dir_pnet_pFN_indv, str(int(i+1))+'.jpg') for i in range(K)]
+            for i in range(K):
+                figure_title = 'FN ' + str(int(i + 1))
+                brain_map = pFN[:, :, :, i]
+                file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i + 1}.json')
+                if os.path.exists(file_setting):
+                    dict_setting = load_json_setting(file_setting)
+                    plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None, view_center=np.array(dict_setting['Center']),
+                                                       file_output=file_output[i], figure_title=figure_title)
+                else:
+                    plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None,
+                                                       file_output=file_output[i], figure_title=figure_title)
+
         # output an assembled image
         file_output_assembled = os.path.join(dir_pnet_pFN_indv, 'All.jpg')
         assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
@@ -1143,9 +1191,10 @@ def run_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 11/6/2023
+    Yuncong Ma, 11/15/2023
     """
 
+    # Run gFN and pFN visualization
     run_gFN_Visualization(dir_pnet_result)
     run_pFN_Visualization(dir_pnet_result)
 
