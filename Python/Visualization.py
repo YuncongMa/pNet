@@ -24,7 +24,9 @@ import scipy
 from collections import defaultdict
 
 # reduce the memory leakage issue in macOS
-matplotlib.use('TkAgg')  # Use the Tkinter backend
+from sys import platform
+if platform == "darwin":
+    matplotlib.use('TkAgg')  # Use the Tkinter backend
 
 # =============== basic functions =============== #
 
