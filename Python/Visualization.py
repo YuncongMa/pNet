@@ -1131,7 +1131,7 @@ def run_pFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 11/20/2023
+    Yuncong Ma, 11/22/2023
     """
 
     # get directories of sub-folders
@@ -1141,8 +1141,10 @@ def run_pFN_Visualization(dir_pnet_result: str):
     if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
         raise ValueError('Cannot find the setting json file in folder Data_Input')
     settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
+    # load figure settings
+    settingVisualization = load_json_setting(os.path.join(dir_pnet_pFN, 'Setting.json'))
 
-    setting = {'Data_Input': settingDataInput}
+    setting = {'Data_Input': settingDataInput, 'Visualization': settingVisualization}
 
     # load basic settings
     dataType = setting['Data_Input']['Data_Type']
@@ -1175,8 +1177,17 @@ def run_pFN_Visualization(dir_pnet_result: str):
                 file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i+1}.json')
                 if os.path.exists(file_setting):
                     dict_setting = load_json_setting(file_setting)
+                    if setting['Visualization']['Synchronized_View']:
+                        view_center = np.array(dict_setting['Center'])
+                    else:
+                        view_center = 'max_value'
+                    if setting['Visualization']['Synchronized_Colorbar']:
+                        color_function = np.array(dict_setting['Color_Function'])
+                    else:
+                        color_function = None
+
                     plot_FN_brain_volume_3view(brain_map, brain_template,
-                                               color_function=None, view_center=np.array(dict_setting['Center']),
+                                               color_function=color_function, view_center=view_center,
                                                figure_title=figure_title,  file_output=file_output[i])
                 else:
                     plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
@@ -1190,7 +1201,16 @@ def run_pFN_Visualization(dir_pnet_result: str):
                 file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i + 1}.json')
                 if os.path.exists(file_setting):
                     dict_setting = load_json_setting(file_setting)
-                    plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None, view_center=np.array(dict_setting['Center']),
+                    if setting['Visualization']['Synchronized_View']:
+                        view_center = np.array(dict_setting['Center'])
+                    else:
+                        view_center = 'max_value'
+                    if setting['Visualization']['Synchronized_Colorbar']:
+                        color_function = np.array(dict_setting['Color_Function'])
+                    else:
+                        color_function = None
+
+                    plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=color_function, view_center=view_center,
                                                        file_output=file_output[i], figure_title=figure_title)
                 else:
                     plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None,
