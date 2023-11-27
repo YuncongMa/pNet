@@ -619,7 +619,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     return U, V
 
 
-def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
+def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=200, error=1e-8, normW=1,
             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, dataPrecision='double', logFile='Log_pFN_NMF.log'):
     """
     Compute group-level FNs using NMF method
@@ -643,7 +643,7 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 11/27/2023
     """
 
     # setup log file

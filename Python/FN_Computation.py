@@ -603,7 +603,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     return U, V
 
 
-def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
+def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=200, error=1e-8, normW=1,
             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, dataPrecision='double', logFile='Log_pFN_NMF.log'):
     """
     gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
@@ -629,7 +629,7 @@ def gFN_NMF(Data, K, gNb, maxIter=1000, minIter=30, error=1e-8, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 11/27/2023
     """
 
     # setup log file
@@ -1176,7 +1176,7 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
         FID.close()
 
 
-def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
+def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=200, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='Both'):
     """
     setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
@@ -1211,7 +1211,7 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=N
 
     :return: setting: a structure
 
-    Yuncong Ma, 11/7/2023
+    Yuncong Ma, 11/27/2023
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
