@@ -418,7 +418,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 9/26/2023
+    Yuncong Ma, 11/28/2023
     """
 
     # Setup data precision and eps
@@ -472,7 +472,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     # Initialize U
     U = X @ V / np.tile(np.sum(V, axis=0), (dim_time, 1))
 
-    U = initialize_u(X, U, V, error=error, maxIter=100, minIter=minIter, meanFitRatio=meanFitRatio, initConv=initConv)
+    U = initialize_u(X, U, V, error=error, maxIter=100, minIter=30, meanFitRatio=meanFitRatio, initConv=initConv)
 
     initV = V.copy()
 
@@ -1488,7 +1488,7 @@ def run_FN_Computation(dir_pnet_result: str):
 
 def check_gFN(gFN: np.ndarray, method='SR-NMF', logFile=None):
     """
-    Check the values in gFNs to ensure compatibility to the desired FN model\
+    Check the values in gFNs to ensure compatibility to the desired FN model
 
     :param gFN: group level FNs, 2D matrix for surface type [V K], 4D matrix for volume type [X Y Z K], where K is the number of FNs
     :param method: 'SR-NMF'

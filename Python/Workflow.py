@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/7/2023
+# Yuncong Ma, 11/28/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -264,9 +264,14 @@ def workflow_server(dir_pnet_result: str,
                     Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
                     dataPrecision='double',
                     outputFormat='Both',
-                    server_submit_job=None,
-                    server_setting=dict(Memory_gFN=50, Memory_pFn=10, Memory_QC=10, Memory_Visualization=10,
-                                        Thread_gFN=4, Thread_pFN=1, Thread_QC=1, Thread_Visualization=1)
+                    dir_pnet=None,
+                    dir_python=None,
+                    submit_command='qsub -terse -j y',
+                    thread_command='-pe threaded ',
+                    memory_command='-l h_vmem=',
+                    log_command='-o ',
+                    server_setting=dict(Memory_gFN=50, Memory_NCut=10, Memory_pFn=10, Memory_QC=10, Memory_Visualization=10,
+                                        Thread_gFN=4, Thread_NCut=4, Thread_pFN=1, Thread_QC=1, Thread_Visualization=1)
                     ):
     """
     Run the workflow of pNet, including Data Input, FN Computation, Quality Control and Visualization
@@ -323,7 +328,7 @@ def workflow_server(dir_pnet_result: str,
 
     :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
 
-    Yuncong Ma, 11/27/2023
+    Yuncong Ma, 11/28/2023
     """
 
     # Check setting

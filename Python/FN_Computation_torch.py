@@ -414,7 +414,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 11/28/2023
     """
 
     # Setup data precision and eps
@@ -483,7 +483,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     # Initialize U
     U = X @ V / torch.tile(torch.sum(V, dim=0), (dim_time, 1))
 
-    U = initialize_u_torch(X, U, V, error=error, maxIter=100, minIter=minIter, meanFitRatio=meanFitRatio, initConv=initConv)
+    U = initialize_u_torch(X, U, V, error=error, maxIter=100, minIter=30, meanFitRatio=meanFitRatio, initConv=initConv)
 
     initV = V.clone()
 
@@ -975,7 +975,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 11/13/2023
+    Yuncong Ma, 11/28/2023
     """
 
     # get directories of sub-folders
@@ -1009,11 +1009,11 @@ def run_FN_Computation_torch(dir_pnet_result: str):
         Brain_Mask = None
     print('Brain template is loaded from folder Data_Input', file=logFile_FNC, flush=True)
 
-    # ============== gFN Computation ============== #
     # Start computation using SP-NMF
     if setting['FN_Computation']['Method'] == 'SR-NMF':
         print('FN computation uses spatial-regularized non-negative matrix factorization method', file=logFile_FNC, flush=True)
 
+        # ============== gFN Computation ============== #
         if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
             # 2 steps
             # step 1 ============== bootstrap
@@ -1159,3 +1159,8 @@ def run_FN_Computation_torch(dir_pnet_result: str):
         # ============================================= #
 
         print('Finished FN computation at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
+
+
+def run_FN_Computation_server_torch(dir_pnet_result: str):
+
+    return
