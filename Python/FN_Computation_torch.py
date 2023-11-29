@@ -1161,6 +1161,13 @@ def run_FN_Computation_torch(dir_pnet_result: str):
         print('Finished FN computation at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
 
 
-def run_FN_Computation_server_torch(dir_pnet_result: str):
+def run_FN_Computation_torch_server(dir_pnet_result: str):
+    """
+    run the FN Computation module in the server mode
+
+    :param dir_pnet_result: directory of pNet result folder
+
+    Yuncong Ma, 11/29/2023
+    """
 
     return
