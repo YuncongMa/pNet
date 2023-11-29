@@ -151,8 +151,8 @@ def workflow_server(dir_pnet_result: str,
                     thread_command='-pe threaded ',
                     memory_command='-l h_vmem=',
                     log_command='-o ',
-                    computation_resource=dict(memory_gFN=50, memory_fusion=10, memory_pFN=10, memory_qc=10, memory_visualization=10,
-                                        thread_gFN=4, thread_fusion=4, thread_pFN=1, thread_qc=1, thread_visualization=1)
+                    computation_resource=dict(memory_boostrap=50, memory_fusion=10, memory_pFN=10, memory_qc=10, memory_visualization=10,
+                                        thread_bootstrap=4, thread_fusion=4, thread_pFN=1, thread_qc=1, thread_visualization=1)
                     ):
     """
     Run the workflow of pNet, including Data Input, FN Computation, Quality Control and Visualization
@@ -319,7 +319,7 @@ def workflow_server(dir_pnet_result: str,
 
 def workflow_server_main(dir_pnet_result: str):
     """
-    run the
+    run the main server job for the workflow
 
     :param dir_pnet_result: directory of the pNet result folder
     :return:
