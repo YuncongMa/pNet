@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/22/2023
+# Yuncong Ma, 11/30/2023
 # Visualization module of pNet
 
 #########################################
@@ -14,14 +14,14 @@ import matplotlib
 import surfplot
 from brainspace.mesh.mesh_creation import build_polydata
 from PIL import Image
+import scipy
 
 # other functions of pNet
 import pNet
 from Data_Input import *
 from FN_Computation import setup_pFN_folder
 from Cropping import fApply_Cropped_FOV, fInverse_Crop_EPI_Image_3D_4D, fTruncate_Image_3D_4D, fMass_Center
-import scipy
-from collections import defaultdict
+from Server import submit_bash_job
 
 # reduce the memory leakage issue in macOS
 from sys import platform
@@ -1236,5 +1236,178 @@ def run_Visualization(dir_pnet_result: str):
     # Run gFN and pFN visualization
     run_gFN_Visualization(dir_pnet_result)
     run_pFN_Visualization(dir_pnet_result)
+
+    return
+
+
+def run_Visualization_server(dir_pnet_result: str):
+    """
+    Run preconfigured visualizations for gFNs and pFNs in server mode
+
+    :param dir_pnet_result: directory of the pnet result folder
+    :return:
+
+    Yuncong Ma, 11/30/2023
+    """
+
+    print('\nStart Visualization at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
+
+    # Setup sub-folders in pNet result
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
+
+    # load setting
+    settingServer = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
+    setting = {'Server': settingServer}
+
+    # Run gFN and pFN visualization
+    memory = setting['Server']['computation_resource']['memory_visualization']
+    n_thread = setting['Server']['computation_resource']['thread_visualization']
+    submit_bash_job(dir_pnet_result,
+                    python_command=f'run_gFN_Visualization(dir_pnet_result)',
+                    memory=memory,
+                    n_thread=n_thread,
+                    bashFile=os.path.join(dir_pnet_gFN, 'server_job.sh'),
+                    pythonFile=os.path.join(dir_pnet_gFN, 'server_job.py'),
+                    logFile=os.path.join(dir_pnet_gFN, 'server_job.log')
+                    )
+
+    # Information about scan list
+    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+    list_subject_folder = np.array([line.replace('\n', '') for line in open(file_subject_folder, 'r')])
+    list_subject_folder_unique = np.unique(list_subject_folder)
+    nFolder = list_subject_folder_unique.shape[0]
+
+    # submit jobs
+    for rep in range(1, 1+nFolder):
+        time.sleep(1)
+        dir_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[rep-1])
+        os.makedirs(dir_indv, exist_ok=True)
+        submit_bash_job(dir_pnet_result,
+                        python_command=f'run_pFN_Visualization_server(dir_pnet_result,{rep})',
+                        memory=memory,
+                        n_thread=n_thread,
+                        bashFile=os.path.join(dir_indv, 'server_job_bootstrap.sh'),
+                        pythonFile=os.path.join(dir_indv, 'server_job_bootstrap.py'),
+                        logFile=os.path.join(dir_indv, 'server_job_bootstrap.log')
+                        )
+
+    # check completion
+    wait_time = 3
+    # check gFN
+    flag_complete = 0
+    while flag_complete == 0:
+        time.sleep(wait_time)
+        if os.path.isfile(os.path.join(dir_pnet_gFN, 'All.jpb')):
+            flag_complete = 1
+            break
+    # check pFN
+    flag_complete = np.zeros(nFolder)
+    while np.sum(flag_complete) < nFolder:
+        time.sleep(wait_time)
+        for rep in range(1, 1+nFolder):
+            dir_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[rep-1])
+            if flag_complete[rep-1] == 0 and os.path.isfile(os.path.join(dir_indv, 'All.jpb')):
+                flag_complete[rep-1] = 1
+
+    print('\nFinished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
+    return
+
+
+def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
+    """
+    Run preconfigured visualizations for pFNs in server mode
+
+    :param dir_pnet_result: directory of the pnet result folder
+    :param jobID: jobID starting from 1
+    :return:
+
+    Yuncong Ma, 11/30/2023
+    """
+
+    # get directories of sub-folders
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
+
+    # load settings for data input and FN computation
+    if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
+        raise ValueError('Cannot find the setting json file in folder Data_Input')
+    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
+    # load figure settings
+    settingVisualization = load_json_setting(os.path.join(dir_pnet_pFN, 'Setting.json'))
+
+    setting = {'Data_Input': settingDataInput, 'Visualization': settingVisualization}
+
+    # load basic settings
+    dataType = setting['Data_Input']['Data_Type']
+    dataFormat = setting['Data_Input']['Data_Format']
+
+    brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
+
+    # setup folders in Personalized_FN
+    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+    list_subject_folder = np.array([line.replace('\n', '') for line in open(file_subject_folder, 'r')])
+    list_subject_folder_unique = np.unique(list_subject_folder)
+    dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[jobID-1])
+
+    pFN = load_matlab_single_array(os.path.join(dir_pnet_pFN_indv, 'FN.mat'))
+
+    if dataType == 'Surface' and dataFormat == 'HCP Surface (*.cifti, *.mat)':
+        K = pFN.shape[1]
+        file_output = [os.path.join(dir_pnet_pFN_indv, str(int(i+1))+'.jpg') for i in range(K)]
+        for i in range(K):
+            figure_title = 'FN '+str(int(i+1))
+            brain_map = pFN[:, i]
+            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+    elif dataType == 'Volume':
+        K = pFN.shape[3]
+        file_output = [os.path.join(dir_pnet_pFN_indv, str(int(i+1))+'.jpg') for i in range(K)]
+        for i in range(K):
+            figure_title = 'FN '+str(int(i+1))
+            brain_map = pFN[:, :, :, i]
+            file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i+1}.json')
+            if os.path.exists(file_setting):
+                dict_setting = load_json_setting(file_setting)
+                if setting['Visualization']['Synchronized_View']:
+                    view_center = np.array(dict_setting['Center'])
+                else:
+                    view_center = 'max_value'
+                if setting['Visualization']['Synchronized_Colorbar']:
+                    color_function = np.array(dict_setting['Color_Function'])
+                else:
+                    color_function = None
+
+                plot_FN_brain_volume_3view(brain_map, brain_template,
+                                           color_function=color_function, view_center=view_center,
+                                           figure_title=figure_title,  file_output=file_output[i])
+            else:
+                plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+    elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
+        K = pFN.shape[1]
+        file_output = [os.path.join(dir_pnet_pFN_indv, str(int(i+1))+'.jpg') for i in range(K)]
+        for i in range(K):
+            figure_title = 'FN ' + str(int(i + 1))
+            brain_map = pFN[:, :, :, i]
+            file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i + 1}.json')
+            if os.path.exists(file_setting):
+                dict_setting = load_json_setting(file_setting)
+                if setting['Visualization']['Synchronized_View']:
+                    view_center = np.array(dict_setting['Center'])
+                else:
+                    view_center = 'max_value'
+                if setting['Visualization']['Synchronized_Colorbar']:
+                    color_function = np.array(dict_setting['Color_Function'])
+                else:
+                    color_function = None
+
+                plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=color_function, view_center=view_center,
+                                                   file_output=file_output[i], figure_title=figure_title)
+            else:
+                plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None,
+                                                   file_output=file_output[i], figure_title=figure_title)
+
+    # output an assembled image
+    file_output_assembled = os.path.join(dir_pnet_pFN_indv, 'All.jpg')
+    assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
 
     return

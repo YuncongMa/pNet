@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/7/2023
+# Yuncong Ma, 11/30/2023
 # Quality control module of pNet using PyTorch
 
 #########################################
@@ -11,9 +11,10 @@ import time
 import torch
 
 # other functions of pNet
-from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder, load_brain_template
+from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder, load_brain_template, load_matlab_single_variable
 from FN_Computation_torch import mat_corr_torch, set_data_precision_torch
 from Quality_Control import print_description_QC
+from Server import submit_bash_job
 
 
 def run_quality_control_torch(dir_pnet_result: str):
@@ -217,3 +218,170 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
     Functional_Homogeneity_Control = Functional_Homogeneity_Control.numpy()
 
     return Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control
+
+
+def run_quality_control_torch_server(dir_pnet_result: str):
+    """
+    Run the quality control module in server mode
+
+    :param dir_pnet_result: the directory of pNet result folder
+    :return: None
+
+    Yuncong Ma, 11/30/2023
+    """
+
+    # Setup sub-folders in pNet result
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
+
+    # load setting
+    settingServer = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
+    setting = {'Server': settingServer}
+
+    # Log file
+    #file_Final_Report = open(os.path.join(dir_pnet_QC, 'Final_Report.txt'), 'w')
+    print('\nStart QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
+
+    settingServer = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
+    setting = {'Server': settingServer}
+
+    # Information about scan list
+    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+    list_subject_folder = np.array([line.replace('\n', '') for line in open(file_subject_folder, 'r')])
+    list_subject_folder_unique = np.unique(list_subject_folder)
+
+    nFolder = list_subject_folder_unique.shape[0]
+
+    # submit jobs
+    memory = setting['Server']['computation_resource']['memory_qc']
+    n_thread = setting['Server']['computation_resource']['thread_qc']
+    for rep in range(1, 1+nFolder):
+        time.sleep(1)
+        dir_indv = os.path.join(dir_pnet_QC, list_subject_folder_unique[rep-1])
+        os.makedirs(dir_indv, exist_ok=True)
+        submit_bash_job(dir_pnet_result,
+                        python_command=f'compute_quality_control_torch_server(dir_pnet_result,{rep})',
+                        memory=memory,
+                        n_thread=n_thread,
+                        bashFile=os.path.join(dir_indv, 'server_job_bootstrap.sh'),
+                        pythonFile=os.path.join(dir_indv, 'server_job_bootstrap.py'),
+                        logFile=os.path.join(dir_indv, 'server_job_bootstrap.log')
+                        )
+
+    # check completion
+    wait_time = 3
+    flag_complete = np.zeros(nFolder)
+    while np.sum(flag_complete) < nFolder:
+        time.sleep(wait_time)
+        for rep in range(1, 1+nFolder):
+            if flag_complete[rep-1] == 0 and os.path.isfile(os.path.join(dir_pnet_QC, list_subject_folder_unique[rep-1], 'Result.mat')):
+                flag_complete[rep-1] = 1
+
+    # gather results and generate final report
+    file_Final_Report = open(os.path.join(dir_pnet_QC, 'Final_Report.txt'), 'w')
+    print('\nStart QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
+          file=file_Final_Report, flush=True)
+    # Description of QC
+    if file_Final_Report is not None:
+        print_description_QC(file_Final_Report)
+    flag_QC = 0
+    for i in range(1, 1+nFolder):
+        Result = load_matlab_single_variable(os.path.join(dir_pnet_QC, list_subject_folder_unique[i-1], 'Result.mat'))
+        if Result['Miss_Match'].shape[0] > 0:
+            flag_QC += 1
+            print(' ' + str(Result['Miss_Match'].shape[0]) + ' miss matched FNs in sub folder: ' + list_subject_folder_unique[i-1],
+                  file=file_Final_Report, flush=True)
+    # Finish the final report
+    if flag_QC == 0:
+        print(f'\nSummary\n All {nFolder} scans passed QC\n'
+              f' This ensures that personalized FNs show highest spatial similarity to their group-level counterparts\n',
+              file=file_Final_Report, flush=True)
+    else:
+        print(f'\nSummary\n Number of failed scans = {flag_QC}\n'
+              f' This means those scans have at least one pFN show higher spatial similarity to a different group-level FN\n',
+              file=file_Final_Report, flush=True)
+
+    print('\nFinished QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
+          file=file_Final_Report, flush=True)
+    file_Final_Report.close()
+
+    print('\nFinished QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
+
+
+def compute_quality_control_torch_server(dir_pnet_result: str, jobID=1):
+    """
+    Run the QC in server mode
+
+    :param dir_pnet_result: directory of pNet result folder
+    :param jobID: jobID starting from 1
+    :return: None
+
+    Yuncong Ma, 11/30/2023
+    """
+
+    # Setup sub-folders in pNet result
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
+
+    print('\nStart QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
+
+    setting = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
+    Data_Type = setting['Data_Type']
+    Data_Format = setting['Data_Format']
+    setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+    dataPrecision = setting['Computation']['dataPrecision']
+
+    # Information about scan list
+    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+    list_subject_folder = np.array([line.replace('\n', '') for line in open(file_subject_folder, 'r')])
+    list_subject_folder_unique = np.unique(list_subject_folder)
+    dir_pFN_indv = list_subject_folder_unique[jobID-1]
+
+    # Load gFNs
+    gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))  # [dim_space, K]
+    if Data_Type == 'Volume':
+        Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
+        gFN = reshape_FN(gFN, dataType=Data_Type, Brain_Mask=Brain_Mask)
+
+    # data precision
+    torch_float, torch_eps = set_data_precision_torch(dataPrecision)
+
+    pFN = load_matlab_single_array(os.path.join(dir_pFN_indv, 'FN.mat'))
+    if Data_Type == 'Volume':
+        pFN = reshape_FN(pFN, dataType=Data_Type, Brain_Mask=Brain_Mask)
+
+    # Get the scan list
+    file_scan_list = os.path.join(dir_pFN_indv, 'Scan_List.txt')
+
+    # Load the data
+    if Data_Type == 'Surface':
+        scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True, Normalization=None)
+
+    elif Data_Type == 'Volume':
+        scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True,
+                                   Brain_Mask=Brain_Mask, Normalization=None)
+
+    elif Data_Type == 'Surface-Volume':
+        scan_data = load_fmri_scan(file_scan_list, dataType=Data_Type, dataFormat=Data_Format, Reshape=True,
+                                   Normalization=None)
+
+    else:
+        raise ValueError('Unknown data type: ' + Data_Type)
+
+    scan_data = torch.tensor(scan_data, dtype=torch_float)
+
+    # Compute quality control measurement
+    Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control =\
+        compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision=dataPrecision, logFile=None)
+
+    # Finalize results
+    Result = {'Spatial_Correspondence': Spatial_Correspondence,
+              'Delta_Spatial_Correspondence': Delta_Spatial_Correspondence,
+              'Miss_Match': Miss_Match,
+              'Functional_Homogeneity': Functional_Homogeneity,
+              'Functional_Homogeneity_Control': Functional_Homogeneity_Control}
+
+    # Save results
+    dir_pFN_indv_QC = os.path.join(dir_pnet_QC, list_subject_folder_unique[jobID-1])
+    os.makedirs(dir_pFN_indv_QC, exist_ok=True)
+    scipy.io.savemat(os.path.join(dir_pFN_indv_QC, 'Result.mat'), {'Result': Result})
+
+

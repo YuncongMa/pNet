@@ -1350,7 +1350,7 @@ def setup_scan_info(dir_pnet_dataInput: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param logFile: None, 'Automatic', or a file directory, for a txt formatted log file
 
-    Yuncong Ma, 11/7/2023
+    Yuncong Ma, 11/30/2023
     """
 
     # log file
@@ -1450,6 +1450,7 @@ def setup_scan_info(dir_pnet_dataInput: str,
     # get number of scans and subjects
     list_scan = [line.replace('\n', '') for line in open(file_scan, 'r')]
     N_Scan = len(list_scan)
+    file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
     list_subject_ID = [line.replace('\n', '') for line in open(file_subject_ID, 'r')]
     list_subject_ID_unique = np.unique(np.array(list_subject_ID))
     N_Subject = list_subject_ID_unique.shape[0]

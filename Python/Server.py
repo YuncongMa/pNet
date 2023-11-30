@@ -8,12 +8,14 @@
 import sys
 from datetime import datetime
 import os
+from sys import platform
 
 from Data_Input import check_data_type_format, setup_scan_info, setup_brain_template
 from Data_Input import setup_result_folder, write_json_setting, load_json_setting
-from FN_Computation import setup_NMF_setting
-from FN_Computation_torch import run_FN_Computation_torch_server
-from Visualization import setup_Visualization
+from FN_Computation import *
+from FN_Computation_torch import *
+from Quality_Control_torch import *
+from Visualization import *
 
 
 #########################################
@@ -67,7 +69,7 @@ def submit_bash_job(dir_pnet_result: str,
     :param pythonFile: full directory of the python file to generate
     :return: None
 
-    Yuncong Ma, 11/28/2023
+    Yuncong Ma, 11/30/2023
     """
 
     # load server setting
@@ -117,8 +119,9 @@ def submit_bash_job(dir_pnet_result: str,
 
     pythonFile.close()
 
-    # execute a shell command to submit a server job
-    # os.system(f'{submit_command} {thread_command}{n_thread} {memory_command}{memory} {log_command}{logFile} {bashFile}')
+    # execute a shell command to submit a server job, only for linux based systems
+    if platform == "linux":
+        os.system(f'{submit_command} {thread_command}{n_thread} {memory_command}{memory} {log_command}{logFile} {bashFile}')
 
 
 def workflow_server(dir_pnet_result: str,
@@ -152,7 +155,7 @@ def workflow_server(dir_pnet_result: str,
                     memory_command='-l h_vmem=',
                     log_command='-o ',
                     computation_resource=dict(memory_boostrap=50, memory_fusion=10, memory_pFN=10, memory_qc=10, memory_visualization=10,
-                                        thread_bootstrap=4, thread_fusion=4, thread_pFN=1, thread_qc=1, thread_visualization=1)
+                                              thread_bootstrap=4, thread_fusion=4, thread_pFN=1, thread_qc=1, thread_visualization=1)
                     ):
     """
     Run the workflow of pNet, including Data Input, FN Computation, Quality Control and Visualization
@@ -216,11 +219,16 @@ def workflow_server(dir_pnet_result: str,
     :param log_command: command to specify the logfile
     :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
 
-    Yuncong Ma, 11/29/2023
+    Yuncong Ma, 11/30/2023
     """
 
     # Check setting
     check_data_type_format(dataType, dataFormat)
+
+    if dir_pnet is None:
+        raise ValueError('Require a valid setting for dir_pnet')
+    if dir_python is None:
+        raise ValueError('Require a valid setting for dir_python')
 
     # setup all sub-folders in the pNet result folder
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT = setup_result_folder(dir_pnet_result)
@@ -299,12 +307,11 @@ def workflow_server(dir_pnet_result: str,
                  memory_command=memory_command,
                  log_command=log_command,
                  computation_resource=computation_resource)
-
     # ================================= #
 
     # ============== Run ============== #
     # create script folder
-    dir_script = os.path.join(dir_pnet_result, 'Script')
+    dir_script = os.path.join(dir_pnet_dataInput, 'Script')
     os.makedirs(dir_script, exist_ok=True)
     # submit bash job
     submit_bash_job(dir_pnet_result=dir_pnet_result,
@@ -324,16 +331,16 @@ def workflow_server_main(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pNet result folder
     :return:
 
-    Yuncong Ma, 11/29/2023
+    Yuncong Ma, 11/30/2023
     """
 
     # ============== FN Computation
     run_FN_Computation_torch_server(dir_pnet_result)
 
     # ============== Quality Control
-    #run_quality_control_torch(dir_pnet_result)
+    run_quality_control_torch_server(dir_pnet_result)
 
     # =============== Visualization
-    #run_Visualization(dir_pnet_result)
+    run_Visualization_server(dir_pnet_result)
 
     return

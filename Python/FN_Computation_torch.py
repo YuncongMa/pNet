@@ -1202,9 +1202,6 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
         Brain_Mask = None
     print('Brain template is loaded from folder Data_Input', flush=True)
 
-    # load server setting
-    python_command = setting['Server']['python_command']
-
     # Start computation using SP-NMF
     if setting['FN_Computation']['Method'] == 'SR-NMF':
         print('FN computation uses spatial-regularized non-negative matrix factorization method', flush=True)
@@ -1224,6 +1221,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             memory = setting['Server']['computation_resource']['memory_bootstrap']
             n_thread = setting['Server']['computation_resource']['thread_bootstrap']
             for rep in range(1, 1+nBS):
+                time.sleep(1)
                 submit_bash_job(dir_pnet_result,
                                 python_command=f'NMF_boostrapping_server(dir_pnet_result,{rep})',
                                 memory=memory,
@@ -1234,7 +1232,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
                                 )
 
             # check completion
-            wait_time = 300
+            wait_time = 3
             flag_complete = np.zeros(nBS)
             dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
             while np.sum(flag_complete) < nBS:
@@ -1258,7 +1256,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
                             )
 
             # check completion
-            wait_time = 30
+            wait_time = 3
             flag_complete = 0
             while flag_complete == 0:
                 if os.path.isfile(os.path.join(dir_pnet_gFN, 'FN.mat')):
@@ -1283,6 +1281,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
         memory = setting['Server']['computation_resource']['memory_pFN']
         n_thread = setting['Server']['computation_resource']['thread_pFN']
         for scan in range(1, 1+nScan):
+            time.sleep(1)
             submit_bash_job(dir_pnet_result,
                             python_command=f'NMF_pFN_server(dir_pnet_result,{scan})',
                             memory=memory,
@@ -1293,7 +1292,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
                             )
 
         # check completion
-        wait_time = 300
+        wait_time = 3
         flag_complete = np.zeros(nScan)
         while np.sum(flag_complete) < nScan:
             time.sleep(wait_time)
