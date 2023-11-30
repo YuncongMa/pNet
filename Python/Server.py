@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/29/2023
+# Yuncong Ma, 11/30/2023
 # pNet
 # Provide functions to submit jobs to server environment
 
@@ -101,6 +101,7 @@ def submit_bash_job(dir_pnet_result: str,
     print(f'\n{dir_python} {pythonFile}\n', file=bashFile, flush=True)
     print(r'echo -e "Finished time : `date +%F-%H:%M:%S`\n" ', file=bashFile, flush=True)
     bashFile.close()
+    bashFile = bashFile.name
 
     # create a Python job file
     if os.path.isfile(pythonFile):
@@ -154,7 +155,7 @@ def workflow_server(dir_pnet_result: str,
                     thread_command='-pe threaded ',
                     memory_command='-l h_vmem=',
                     log_command='-o ',
-                    computation_resource=dict(memory_boostrap=50, memory_fusion=10, memory_pFN=10, memory_qc=10, memory_visualization=10,
+                    computation_resource=dict(memory_boostrap='50G', memory_fusion='10G', memory_pFN='10G', memory_qc='10G', memory_visualization='10G',
                                               thread_bootstrap=4, thread_fusion=4, thread_pFN=1, thread_qc=1, thread_visualization=1)
                     ):
     """
@@ -221,6 +222,8 @@ def workflow_server(dir_pnet_result: str,
 
     Yuncong Ma, 11/30/2023
     """
+
+    print('Start to run pNet workflow in sever mode', flush=True)
 
     # Check setting
     check_data_type_format(dataType, dataFormat)
@@ -301,13 +304,14 @@ def workflow_server(dir_pnet_result: str,
     # =============== Server
     setup_server(dir_pnet,
                  dir_pnet_result=dir_pnet_result,
-                 dir_python=dir_pnet_result,
+                 dir_python=dir_python,
                  submit_command=submit_command,
                  thread_command=thread_command,
                  memory_command=memory_command,
                  log_command=log_command,
                  computation_resource=computation_resource)
     # ================================= #
+    print('All setups are finished', flush=True)
 
     # ============== Run ============== #
     # create script folder
@@ -319,8 +323,9 @@ def workflow_server(dir_pnet_result: str,
                     bashFile=os.path.join(dir_script, 'Workflow.sh'),
                     pythonFile=os.path.join(dir_script, 'Workflow.py'),
                     logFile=os.path.join(dir_script, 'Workflow_Log.o'),
-                    memory=10,
+                    memory='10G',
                     n_thread=1)
+    print('Workflow job is submitted', flush=True)
     # ================================= #
 
 

@@ -6,11 +6,11 @@
 # Packages
 
 import argparse
-import pNet
 
 # Module
 # This script builds the five modules of pNet
 # Functions for modules of pNet
+import Brain_Template
 from Data_Input import *
 from FN_Computation import *
 from FN_Computation_torch import *
@@ -520,15 +520,15 @@ def workflow_guide():
     if Choice == 'Y':
         file_Brain_Template = guide_choice("Select a built-in brain template:", ('HCP Surface', 'MNI Volume', 'FreeSurfer_fsaverage5', 'HCP Surface-Volume', 'HCP Subcortical Volume'))
         if file_Brain_Template == 'HCP Surface':
-            file_Brain_Template = pNet.Brain_Template.file_HCP_surf
+            file_Brain_Template = Brain_Template.file_HCP_surf
         elif file_Brain_Template == 'MNI Volume':
-            file_Brain_Template = pNet.Brain_Template.file_MNI_vol
+            file_Brain_Template = Brain_Template.file_MNI_vol
         elif file_Brain_Template == 'FreeSurfer_fsaverage5':
-            file_Brain_Template = pNet.Brain_Template.file_FS_surf
+            file_Brain_Template = Brain_Template.file_FS_surf
         elif file_Brain_Template == 'HCP Surface-Volume':
-            file_Brain_Template = pNet.Brain_Template.file_HCP_surf_vol
+            file_Brain_Template = Brain_Template.file_HCP_surf_vol
         elif file_Brain_Template == 'HCP Subcortical Volume':
-            file_Brain_Template = pNet.Brain_Template.file_HCP_vol
+            file_Brain_Template = Brain_Template.file_HCP_vol
     else:
         Choice = guide_YN("Would you like to select a customized brain template file?")
         if Choice == 'Y':

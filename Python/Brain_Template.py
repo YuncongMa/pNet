@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/9/2023
+# Yuncong Ma, 11/30/2023
 # Brain template information and data
 # Brain template is a dictionary containing 'Data_Type' and 'Data_Format'
 # 'Data_Type' is 'Surface', 'Volume', 'Surface-Volume'
@@ -22,22 +22,36 @@ dir_pNet = os.path.dirname(dir_python_package)
 
 #########################################
 dir_Template = os.path.join(dir_pNet, 'Brain_Template')
+# HCP surface
+file_HCP_surf = os.path.join(dir_Template, 'HCP_Surface', 'Brain_Template.json.zip')
+
+# HCP surface-volume
+file_HCP_surf_vol = os.path.join(dir_Template, 'HCP_Surface_Volume', 'Brain_Template.json.zip')
+
+# HCP volume
+file_HCP_vol = os.path.join(dir_Template, 'HCP_Volume', 'Brain_Template.json.zip')
+
+# FreeSurfer surface
+file_FS_surf = os.path.join(dir_Template, 'FreeSurfer_fsaverage5', 'Brain_Template.json.zip')
+
+# MNI volume
+file_MNI_vol = os.path.join(dir_Template, 'MNI_Volume', 'Brain_Template.json.zip')
 # Organize example into a class variable
 
 
 class Brain_Template:
 
     # HCP surface
-    file_HCP_surf = os.path.join(dir_Template, 'HCP_Surface', 'Brain_Template.json.zip')
+    file_HCP_surf = file_HCP_surf
 
     # HCP surface-volume
-    file_HCP_surf_vol = os.path.join(dir_Template, 'HCP_Surface_Volume', 'Brain_Template.json.zip')
+    file_HCP_surf_vol = file_HCP_surf_vol
 
     # HCP volume
-    file_HCP_vol = os.path.join(dir_Template, 'HCP_Volume', 'Brain_Template.json.zip')
+    file_HCP_vol = file_HCP_vol
 
     # FreeSurfer surface
-    file_FS_surf = os.path.join(dir_Template, 'FreeSurfer_fsaverage5', 'Brain_Template.json.zip')
+    file_FS_surf = file_FS_surf
 
     # MNI volume
-    file_MNI_vol = os.path.join(dir_Template, 'MNI_Volume', 'Brain_Template.json.zip')
+    file_MNI_vol = file_MNI_vol

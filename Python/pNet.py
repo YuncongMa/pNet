@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/19/2023
+# Yuncong Ma, 11/30/2023
 # pNet
 # This script provides the highest level organization of pNet
 # It provides workflows of pNet, and examples
@@ -17,6 +17,8 @@ dir_example = os.path.join(dir_pNet, 'Example')
 
 # Example
 from Example import Example
+
+# Brain templates
 from Brain_Template import Brain_Template
 
 # Module

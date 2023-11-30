@@ -17,11 +17,11 @@ from PIL import Image
 import scipy
 
 # other functions of pNet
-import pNet
+from pNet import dir_python
 from Data_Input import *
-from FN_Computation import setup_pFN_folder
-from Cropping import fApply_Cropped_FOV, fInverse_Crop_EPI_Image_3D_4D, fTruncate_Image_3D_4D, fMass_Center
-from Server import submit_bash_job
+from FN_Computation import *
+from Cropping import *
+from Server import *
 
 # reduce the memory leakage issue in macOS
 from sys import platform
@@ -149,7 +149,7 @@ def color_theme(theme: str,
             (max_CC,1,1,0)), dtype=np.float32)
 
     elif theme == 'Atlas':
-        Color_Table = load_matlab_single_array(os.path.join(pNet.dir_python, 'Color_Table.mat'))
+        Color_Table = load_matlab_single_array(os.path.join(dir_python, 'Color_Table.mat'))
         Max_Index = parameter[0]
         color_function = np.zeros((2*Max_Index+1, 4), dtype=np.float32)
         color_function[0, 0] = 0.5
