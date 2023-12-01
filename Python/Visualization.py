@@ -17,11 +17,11 @@ from PIL import Image
 import scipy
 
 # other functions of pNet
-from pNet import dir_python
+dir_python = os.path.dirname(os.path.abspath(__file__))
 from Data_Input import *
 from FN_Computation import *
 from Cropping import *
-from Server import *
+from Server import submit_bash_job
 
 # reduce the memory leakage issue in macOS
 from sys import platform
@@ -1263,7 +1263,7 @@ def run_Visualization_server(dir_pnet_result: str):
     memory = setting['Server']['computation_resource']['memory_visualization']
     n_thread = setting['Server']['computation_resource']['thread_visualization']
     submit_bash_job(dir_pnet_result,
-                    python_command=f'run_gFN_Visualization(dir_pnet_result)',
+                    python_command=f'pNet.run_gFN_Visualization(dir_pnet_result)',
                     memory=memory,
                     n_thread=n_thread,
                     bashFile=os.path.join(dir_pnet_gFN, 'server_job.sh'),
@@ -1283,7 +1283,7 @@ def run_Visualization_server(dir_pnet_result: str):
         dir_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[rep-1])
         os.makedirs(dir_indv, exist_ok=True)
         submit_bash_job(dir_pnet_result,
-                        python_command=f'run_pFN_Visualization_server(dir_pnet_result,{rep})',
+                        python_command=f'pNet.run_pFN_Visualization_server(dir_pnet_result,{rep})',
                         memory=memory,
                         n_thread=n_thread,
                         bashFile=os.path.join(dir_indv, 'server_job_bootstrap.sh'),
@@ -1292,7 +1292,7 @@ def run_Visualization_server(dir_pnet_result: str):
                         )
 
     # check completion
-    wait_time = 3
+    wait_time = 30
     # check gFN
     flag_complete = 0
     while flag_complete == 0:

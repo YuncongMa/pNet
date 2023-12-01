@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/11/2023
+# Yuncong Ma, 10/18/2023
 # A script to generate built-in brain template files
 # Some data are missing due to data license, but can be downloaded online
 

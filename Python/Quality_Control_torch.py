@@ -11,9 +11,9 @@ import time
 import torch
 
 # other functions of pNet
-from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder, load_brain_template, load_matlab_single_variable
-from FN_Computation_torch import mat_corr_torch, set_data_precision_torch
-from Quality_Control import print_description_QC
+from Data_Input import *
+from FN_Computation_torch import *
+from Quality_Control import *
 from Server import submit_bash_job
 
 
@@ -259,7 +259,7 @@ def run_quality_control_torch_server(dir_pnet_result: str):
         dir_indv = os.path.join(dir_pnet_QC, list_subject_folder_unique[rep-1])
         os.makedirs(dir_indv, exist_ok=True)
         submit_bash_job(dir_pnet_result,
-                        python_command=f'compute_quality_control_torch_server(dir_pnet_result,{rep})',
+                        python_command=f'pNet.compute_quality_control_torch_server(dir_pnet_result,{rep})',
                         memory=memory,
                         n_thread=n_thread,
                         bashFile=os.path.join(dir_indv, 'server_job_bootstrap.sh'),
@@ -315,7 +315,7 @@ def compute_quality_control_torch_server(dir_pnet_result: str, jobID=1):
     :param jobID: jobID starting from 1
     :return: None
 
-    Yuncong Ma, 11/30/2023
+    Yuncong Ma, 12/1/2023
     """
 
     # Setup sub-folders in pNet result
@@ -333,7 +333,7 @@ def compute_quality_control_torch_server(dir_pnet_result: str, jobID=1):
     file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
     list_subject_folder = np.array([line.replace('\n', '') for line in open(file_subject_folder, 'r')])
     list_subject_folder_unique = np.unique(list_subject_folder)
-    dir_pFN_indv = list_subject_folder_unique[jobID-1]
+    dir_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[jobID-1])
 
     # Load gFNs
     gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))  # [dim_space, K]

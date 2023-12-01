@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/28/2023
+# Yuncong Ma, 12/1/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -10,14 +10,15 @@ import argparse
 # Module
 # This script builds the five modules of pNet
 # Functions for modules of pNet
-import Brain_Template
+from Brain_Template import Brain_Template
 from Data_Input import *
 from FN_Computation import *
 from FN_Computation_torch import *
 from Computation_Environment import *
 from Quality_Control import *
 from Quality_Control_torch import *
-from Visualization import run_Visualization, setup_Visualization
+from Visualization import *
+from Server import *
 
 
 def workflow(dir_pnet_result: str,
@@ -686,3 +687,217 @@ def workflow_guide():
 
     file_script.close()
     print('Customized workflow script is generated successfully, please open to check the details.')
+
+
+def workflow_server(dir_pnet_result: str,
+                    # data input
+                    file_scan: str,
+                    dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
+                    file_subject_ID=None, file_subject_folder=None, file_group_ID=None,
+                    file_Brain_Template=None,
+                    templateFormat='HCP',
+                    file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
+                    file_mask_vol=None, file_overlayImage=None,
+                    maskValue=0,
+                    file_surfL_inflated=None, file_surfR_inflated=None,
+                    # FN computation
+                    K=17, Combine_Scan=False,
+                    file_gFN=None,
+                    samplingMethod='Subject', sampleSize=10, nBS=50,
+                    maxIter=1000, minIter=200, meanFitRatio=0.1, error=1e-8, normW=1,
+                    Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
+                    outputFormat='Both',
+                    Computation_Mode='CPU_Torch',
+                    dataPrecision='double',
+                    # visualization
+                    synchronized_view=True,
+                    synchronized_colorbar=False,
+                    # server
+                    dir_pnet=None,
+                    dir_python=None,
+                    submit_command='qsub -terse -j y',
+                    thread_command='-pe threaded ',
+                    memory_command='-l h_vmem=',
+                    log_command='-o ',
+                    computation_resource=dict(memory_bootstrap='50G', memory_fusion='10G', memory_pFN='10G', memory_qc='10G', memory_visualization='10G',
+                                              thread_bootstrap=4, thread_fusion=4, thread_pFN=1, thread_qc=1, thread_visualization=1)
+                    ):
+    """
+    Run the workflow of pNet, including Data Input, FN Computation, Quality Control and Visualization
+    This function is for running pNet using multiple jobs to facilitate computation in a server environment
+
+    :param dir_pnet_result: directory of the pNet result folder
+    :param dataType: 'Surface', 'Volume', 'Surface-Volume'
+    :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)', 'HCP Volume (*.cifti)'
+
+    :param file_scan: a txt file that stores directories of all fMRI scans
+    :param file_subject_ID: a txt file that store subject ID information corresponding to fMRI scan in file_scan
+    :param file_subject_folder: a txt file that store subject folder names corresponding to fMRI scans in file_scan
+    :param file_group_ID: a txt file that store group information corresponding to fMRI scan in file_scan
+
+    :param file_Brain_Template: file directory of a brain template file in json format
+    :param templateFormat: 'HCP', 'FreeSurfer', '3D Matrix'
+    :param file_surfL: file that stores the surface shape information of the left hemisphere, including vertices and faces
+    :param file_surfR: file that stores the surface shape information of the right hemisphere, including vertices and faces
+    :param file_maskL: file that stores the mask information of the left hemisphere, a 1D 0-1 vector
+    :param file_maskR: file that stores the mask information of the right hemisphere, a 1D 0-1 vector
+    :param file_surfL_inflated: file that stores the inflated surface shape information of the left hemisphere, including vertices and faces
+    :param file_surfR_inflated: file that stores the inflated surface shape information of the right hemisphere, including vertices and faces
+    :param file_mask_vol: file of a mask file for volume-based data type
+    :param file_overlayImage: file of a background image for visualizing volume-based results
+    :param maskValue: 0 or 1, 0 means 0s in mask files are useful vertices, otherwise vice versa. maskValue=0 for medial wall in HCP data, and maskValue=1 for brain masks
+
+    :param K: number of FNs
+    :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
+
+    :param file_gFN: None or a directory of a precomputed gFN in .mat format
+    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
+    :param sampleSize: number of subjects selected for each bootstrapping run
+    :param nBS: number of runs for bootstrap
+
+    :param maxIter: maximum iteration number for multiplicative update
+    :param minIter: minimum iteration in case fast convergence
+    :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
+    :param error: difference of cost function for convergence
+    :param normW: 1 or 2, normalization method for W used in Laplacian regularization
+    :param Alpha: hyper parameter for spatial sparsity
+    :param Beta: hyper parameter for Laplacian sparsity
+    :param alphaS: internally determined, the coefficient for spatial sparsity based Alpha, data size, K, and gNb
+    :param alphaL: internally determined, the coefficient for Laplacian sparsity based Beta, data size, K, and gNb
+    :param vxI: flag for using the temporal correlation between nodes (vertex, voxel)
+    :param ard: 0 or 1, flat for combining similar clusters
+    :param eta: a hyper parameter for the ard regularization term
+    :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
+    :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
+
+    :param Computation_Mode: 'CPU_Numpy', 'CPU_Torch'
+    :param dataPrecision: 'double' or 'single'
+
+    :param synchronized_view: True or False, whether to synchronize view centers for volume data between gFNs and pFNs
+    :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
+
+    :param dir_pnet: directory of the pNet toolbox
+    :param dir_python: absolute directory to the python folder, ex. /Users/YuncongMa/.conda/envs/pnet/bin/python
+    :param submit_command: command to submit a server job
+    :param thread_command: command to setup number of threads for each job
+    :param memory_command: command to setup memory allowance for each job
+    :param log_command: command to specify the logfile
+    :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
+
+    Yuncong Ma, 12/1/2023
+    """
+
+    print('Start to run pNet workflow in server mode', flush=True)
+
+    # Check setting
+    check_data_type_format(dataType, dataFormat)
+
+    if dir_pnet is None:
+        raise ValueError('Require a valid setting for dir_pnet')
+    if dir_python is None:
+        raise ValueError('Require a valid setting for dir_python')
+
+    # setup all sub-folders in the pNet result folder
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT = setup_result_folder(dir_pnet_result)
+
+    # Generate a python script for the workflow
+    # create script folder
+    dir_script = os.path.join(dir_pnet_dataInput, 'Script')
+    os.makedirs(dir_script, exist_ok=True)
+    file_script = open(os.path.join(dir_pnet_dataInput, 'Script', 'server_job_workflow.py'), 'w')
+    print('# Customized Python script for pNet workflow in server mode\n# Use corresponding bash script to submit the job\n# Created on ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=file_script)
+    print('\n# Load packages', file=file_script)
+    print('# setup and run a customized workflow\n', file=file_script)
+    print('import sys\nimport os\n', file=file_script, flush=True)
+    print(f"dir_pnet = '{dir_pnet}'", file=file_script, flush=True)
+    print(f"sys.path.append(os.path.join(dir_pnet, 'Python'))", file=file_script, flush=True)
+    print('import pNet\n', file=file_script, flush=True)
+
+    print("\n# ============== Parameter ============== #", file=file_script)
+    print(f"dir_pnet_result = '{dir_pnet_result}'", file=file_script)
+    print('# data input', file=file_script)
+    print(f"dataType = '{dataType}'", file=file_script)
+    print(f"dataFormat = '{dataFormat}'", file=file_script)
+    print(f"file_scan ='{file_scan}'", file=file_script)
+    if file_subject_ID is None:
+        print(f"file_subject_ID = None", file=file_script)
+    else:
+        print(f"file_subject_ID = '{file_subject_ID}'", file=file_script)
+    if file_subject_folder is None:
+        print(f"file_subject_folder = None", file=file_script)
+    else:
+        print(f"file_subject_folder = '{file_subject_folder}'", file=file_script)
+    if file_group_ID is None:
+        print(f"file_group_ID = None", file=file_script)
+    else:
+        print(f"file_group_ID = '{file_group_ID}'", file=file_script)
+    if file_Brain_Template is not None:
+        print(f"file_Brain_Template = '{file_Brain_Template}'", file=file_script)
+    else:
+        if dataType == 'Surface':
+            print(f"templateFormat = '{templateFormat}'", file=file_script)
+            print(f"file_surfL = '{file_surfL}'", file=file_script)
+            print(f"file_surfR = '{file_surfR}'", file=file_script)
+            print(f"file_maskL = '{file_maskL}'", file=file_script)
+            print(f"file_maskR = '{file_maskR}'", file=file_script)
+            if file_surfL_inflated is not None:
+                print(f"file_surfL_inflated = '{file_surfL_inflated}'", file=file_script)
+                print(f"file_surfR_inflated = '{file_surfR_inflated}'", file=file_script)
+        elif dataType == 'Volume':
+            print(f"templateFormat = '{templateFormat}'", file=file_script)
+            print(f"file_mask_vol='{file_mask_vol}'", file=file_script)
+            print(f"file_overlayImage = '{file_overlayImage}'", file=file_script)
+        elif dataType == 'Surface-Volume':
+            print(f"templateFormat = '{templateFormat}'", file=file_script)
+            print(f"file_surfL = '{file_surfL}'", file=file_script)
+            print(f"file_surfR = '{file_surfR}'", file=file_script)
+            print(f"file_maskL = '{file_maskL}'", file=file_script)
+            print(f"file_maskR = '{file_maskR}'", file=file_script)
+            if file_surfL_inflated is not None:
+                print(f"file_surfL_inflated = '{file_surfL_inflated}'", file=file_script)
+                print(f"file_surfR_inflated = '{file_surfR_inflated}'", file=file_script)
+            print(f"file_mask_vol = '{file_mask_vol}'", file=file_script)
+            print(f"file_overlayImage = '{file_overlayImage}'", file=file_script)
+        print(f"maskValue = {maskValue}", file=file_script)
+    print('# FN computation', file=file_script)
+    print(f"K = {K}", file=file_script)
+    print(f"Combine_Scan = {Combine_Scan}", file=file_script)  # True or False
+    if file_gFN is None:
+        print(f"file_gFN = None", file=file_script)
+    else:
+        print(f"file_gFN = '{file_gFN}'", file=file_script)
+    print(f"samplingMethod = '{samplingMethod}'", file=file_script)
+    print(f"sampleSize = {sampleSize}", file=file_script)
+    print(f"nBS = {nBS}", file=file_script)
+    print(f"maxIter = {maxIter}", file=file_script)
+    print(f"minIter = {minIter}", file=file_script)
+    print(f"meanFitRatio = {meanFitRatio}", file=file_script)
+    print(f"error = {error}", file=file_script)
+    print(f"Alpha = {Alpha}", file=file_script)
+    print(f"Beta = {Beta}", file=file_script)
+    print(f"nRepeat = {nRepeat}", file=file_script)
+    print(f"Computation_Mode = '{Computation_Mode}'", file=file_script)
+    print(f"dataPrecision = '{dataPrecision}'", file=file_script)
+    print(f"outputFormat = '{outputFormat}'", file=file_script)
+    print('# visualization', file=file_script)
+    print(f"synchronized_view = {synchronized_view}", file=file_script)
+    print(f"synchronized_colorbar = {synchronized_colorbar}", file=file_script)
+    print('# server', file=file_script)
+    print(f"computation_resource = {computation_resource}", file=file_script)
+
+    # main job
+    print('\n# Main job\n# The following part is imported from /pNet/Python/Workflow_Server_Template.py', file=file_script)
+
+    file_pnet_workflow_server_template = os.path.join(dir_pnet, 'Python', 'Workflow_Server_Template.py')
+    [print(line.replace('\n', ''), file=file_script) for line in open(file_pnet_workflow_server_template, 'r')]
+
+    # submit bash job
+    submit_bash_job(dir_pnet_result=dir_pnet_result,
+                    python_command=None,
+                    bashFile=os.path.join(dir_script, 'server_job_workflow.sh'),
+                    pythonFile=os.path.join(dir_script, 'server_job_workflow.py'),
+                    logFile=os.path.join(dir_script, 'server_job_workflow.log'),
+                    memory='10G',
+                    n_thread=1,
+                    create_python_file=False)
+    print('Workflow job is submitted', flush=True)
