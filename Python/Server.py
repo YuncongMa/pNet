@@ -48,6 +48,7 @@ def setup_server(dir_pnet: str,
 
 
 def submit_bash_job(dir_pnet_result: str,
+
                     python_command: str,
                     memory=50, n_thread=4,
                     logFile=None,
@@ -68,7 +69,7 @@ def submit_bash_job(dir_pnet_result: str,
     :param create_python_file: bool, create a new Python file or not
     :return: None
 
-    Yuncong Ma, 12/1/2023
+    Yuncong Ma, 12/4/2023
     """
 
     # load server setting
@@ -95,7 +96,8 @@ def submit_bash_job(dir_pnet_result: str,
     print('#!/bin/sh\n', file=bashFile, flush=True)
     print('# This bash script is to run a pNet job in the desired server environment', file=bashFile, flush=True)
     print(f'# created on {date_time}\n', file=bashFile, flush=True)
-    print(f'# Use command to submit this job: {submit_command} {thread_command}{n_thread} {memory_command}{memory} {log_command}{logFile} {bashFile.name}\n', file=bashFile, flush=True)
+    print(f'# Use command to submit this job:\n# $ {submit_command} {thread_command}{n_thread} {memory_command}{memory} {log_command}{logFile} {bashFile.name}\n', file=bashFile, flush=True)
+    print(f'source activate {dir_python}')
     print(r'echo -e "Start time : `date +%F-%H:%M:%S`\n" ', file=bashFile, flush=True)
     print(f'\n{dir_python} {pythonFile}\n', file=bashFile, flush=True)
     print(r'echo -e "Finished time : `date +%F-%H:%M:%S`\n" ', file=bashFile, flush=True)

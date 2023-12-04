@@ -906,6 +906,18 @@ def workflow_server(dir_pnet_result: str,
     file_pnet_workflow_server_template = os.path.join(dir_pnet, 'Python', 'Workflow_Server_Template.py')
     [print(line.replace('\n', ''), file=file_script) for line in open(file_pnet_workflow_server_template, 'r')]
 
+    # =============== Server
+    setup_server(
+        dir_pnet=dir_pnet,
+        dir_pnet_result=dir_pnet_result,
+        dir_python=dir_python,
+        submit_command=submit_command,
+        thread_command=thread_command,
+        memory_command=memory_command,
+        log_command=log_command,
+        computation_resource=computation_resource
+    )
+
     # submit bash job
     submit_bash_job(dir_pnet_result=dir_pnet_result,
                     python_command=None,
