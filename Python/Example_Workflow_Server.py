@@ -11,8 +11,9 @@
 import os
 import sys
 
+# ======= Python and pNet ======= #
 # get the directory of the Conda Python environment
-dir_python = '/Users/yuncongma/anaconda3/envs/pnet/bin/python'
+dir_python = '~/.conda/envs/pnet/bin/python'
 
 # setup the directory of the pNet toolbox folder
 # User specify the following definition
@@ -22,12 +23,12 @@ import pNet
 
 # ======= Parameters for pNet ======= #
 # Setup the result folder
-dir_pnet_result = '/Users/yuncongma/Documents/Document/fMRI/Myworks/Nichart/OASIS/Test_FN17_Server'
+dir_pnet_result = '/cbica/home/mayun/Projects/NiChart/OASIS/Test_FN17_Server'
 
 # Setup directory of the raw or preprocessed data
-dir_raw_data = '/Users/yuncongma/Documents/Document/fMRI/Myworks/Nichart/OASIS'
+dir_raw_data = '/cbica/home/srinivad/comp_space/For_Yuncong/PFN/OASIS'
 # Setup a local folder which stores txt files for scan information
-dir_oasis_local = '/Users/yuncongma/Documents/Document/fMRI/Myworks/Nichart/OASIS'
+dir_oasis_local = '/cbica/home/mayun/Projects/NiChart/OASIS'
 # A txt file for directory of scans
 file_scan = os.path.join(dir_oasis_local, 'Scan_List.txt')
 # A txt file for corresponding subject ID information of each scan (prefered to be set)
@@ -55,15 +56,8 @@ thread_command = '-pe threaded '
 memory_command = '-l h_vmem='
 log_command = '-o '
 
-# setup computation resource requirement
-computation_resource = \
-    dict(memory_bootstrap='50G', thread_bootstrap=4,
-         memory_fusion='10G', thread_fusion=4,
-         memory_pFN='10G', thread_pFN=1,
-         memory_qc='10G', thread_qc=1,
-         memory_visualization='10G', thread_visualization=1)
 
-# ======= Parameters for pNet ======= #
+# ======= Run pNet workflow ======= #
 pNet.workflow_server(
     dir_pnet_result=dir_pnet_result,
     dataType=dataType,
