@@ -97,6 +97,7 @@ pNet.workflow_simple(dir_pnet_result: str,
 **Server mode**
 
 pNet offers a server mode for its Python version to deploy customized workflows with minimal knowledge about bash jobs
+
 This server mode requires only additional setups for a few server commands to submit bash jobs, as shown below
 1. submit_command = 'qsub -terse -j y'
 2. thread_command = '-pe threaded '
