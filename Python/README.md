@@ -106,6 +106,12 @@ Ensures that pFNs have the highest spatial similarity to their group-level count
 
 Statistics module will come soon
 
+
+## Server mode
+
+pNet offers a server mode for its Python version to deploy customized workflows with minimal setups.
+
+
 ## Additionals
 
 ### Data format
