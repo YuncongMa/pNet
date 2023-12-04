@@ -58,7 +58,7 @@ The workflow code is in Workflow.py
 This streamlines the setup and computation of pNet, including modules below
 1. Data Input (Data_Input.py)
 2. FN Computation (FN_Computation.py)
-3. Visualization (Visualization.py) (still in progress)
+3. Visualization (Visualization.py)
 4. Quality Control (Quality_Control.py)
 
 ```
@@ -94,6 +94,18 @@ pNet.workflow_simple(dir_pnet_result: str,
                     file_gFN=None)
 ```
 
+**Server mode**
+
+pNet offers a server mode for its Python version to deploy customized workflows with minimal knowledge about bash jobs
+This server mode requires only additional setups for a few server commands to submit bash jobs, as shown below
+1. submit_command = 'qsub -terse -j y'
+2. thread_command = '-pe threaded '
+3. memory_command = '-l h_vmem='
+4. log_command = '-o '
+
+Example Python script
+https://github.com/YuncongMa/pNet/blob/main/Python/Example_Workflow_Server.py
+
 ## Module
 1. **Data Input** <br />
 Organize fMRI scans based on subject information, prepare brain template for subsequent FN computation and visualization
@@ -106,10 +118,6 @@ Ensures that pFNs have the highest spatial similarity to their group-level count
 
 Statistics module will come soon
 
-
-## Server mode
-
-pNet offers a server mode for its Python version to deploy customized workflows with minimal setups.
 
 
 ## Additionals
