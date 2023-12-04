@@ -94,7 +94,7 @@ pNet.workflow_simple(dir_pnet_result: str,
                     file_gFN=None)
 ```
 
-**Server mode**
+## Server mode
 
 pNet offers a server mode for its Python version to deploy customized workflows with minimal knowledge about bash jobs <br />
 It can generate bash and python scripts, and automatically submit bash jobs to the server environment and check job completion. <br />
