@@ -1067,7 +1067,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 11/20/2023
+    Yuncong Ma, 12/4/2023
     """
 
     # get directories of sub-folders
@@ -1094,6 +1094,14 @@ def run_gFN_Visualization(dir_pnet_result: str):
             figure_title = 'FN '+str(int(i+1))
             brain_map = gFN[:, i]
             plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+    elif dataType == 'Surface' and dataFormat in ('MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'):
+        K = gFN.shape[1]
+        file_output = [os.path.join(dir_pnet_gFN, str(int(i+1))+'.jpg') for i in range(K)]
+        for i in range(K):
+            figure_title = 'FN '+str(int(i+1))
+            brain_map = gFN[:, i]
+            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, hemisphere_offset=100, file_output=file_output[i], figure_title=figure_title)
 
     elif dataType == 'Volume':
         K = gFN.shape[3]
@@ -1131,7 +1139,7 @@ def run_pFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 11/22/2023
+    Yuncong Ma, 12/4/2023
     """
 
     # get directories of sub-folders
@@ -1167,6 +1175,14 @@ def run_pFN_Visualization(dir_pnet_result: str):
                 figure_title = 'FN '+str(int(i+1))
                 brain_map = pFN[:, i]
                 plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, file_output=file_output[i], figure_title=figure_title)
+
+        elif dataType == 'Surface' and dataFormat in ('MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'):
+            K = pFN.shape[1]
+            file_output = [os.path.join(dir_pnet_pFN_indv, str(int(i+1))+'.jpg') for i in range(K)]
+            for i in range(K):
+                figure_title = 'FN '+str(int(i+1))
+                brain_map = pFN[:, i]
+                plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, hemisphere_offset=100, file_output=file_output[i], figure_title=figure_title)
 
         elif dataType == 'Volume':
             K = pFN.shape[3]
