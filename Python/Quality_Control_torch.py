@@ -227,7 +227,7 @@ def run_quality_control_torch_server(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 11/30/2023
+    Yuncong Ma, 12/4/2023
     """
 
     # Setup sub-folders in pNet result
@@ -268,10 +268,15 @@ def run_quality_control_torch_server(dir_pnet_result: str):
                         )
 
     # check completion
-    wait_time = 3
+    wait_time = 30
     flag_complete = np.zeros(nFolder)
+    report_interval = 20
+    Count = 0
     while np.sum(flag_complete) < nFolder:
         time.sleep(wait_time)
+        Count += 1
+        if Count % report_interval == 0:
+            print(f'--> Found {np.sum(flag_complete)} finished jobs out of {nFolder} at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
         for rep in range(1, 1+nFolder):
             if flag_complete[rep-1] == 0 and os.path.isfile(os.path.join(dir_pnet_QC, list_subject_folder_unique[rep-1], 'Result.mat')):
                 flag_complete[rep-1] = 1

@@ -719,8 +719,11 @@ def workflow_server(dir_pnet_result: str,
                     thread_command='-pe threaded ',
                     memory_command='-l h_vmem=',
                     log_command='-o ',
-                    computation_resource=dict(memory_bootstrap='50G', memory_fusion='10G', memory_pFN='10G', memory_qc='10G', memory_visualization='10G',
-                                              thread_bootstrap=4, thread_fusion=4, thread_pFN=1, thread_qc=1, thread_visualization=1)
+                    computation_resource=dict(memory_bootstrap='50G', thread_bootstrap=4,
+                                              memory_fusion='10G', thread_fusion=4,
+                                              memory_pFN='10G', thread_pFN=1,
+                                              memory_qc='10G', thread_qc=1,
+                                              memory_visualization='10G', thread_visualization=1)
                     ):
     """
     Run the workflow of pNet, including Data Input, FN Computation, Quality Control and Visualization
@@ -873,8 +876,14 @@ def workflow_server(dir_pnet_result: str,
     print(f"minIter = {minIter}", file=file_script)
     print(f"meanFitRatio = {meanFitRatio}", file=file_script)
     print(f"error = {error}", file=file_script)
+    print(f"normW = {normW}", file=file_script)
     print(f"Alpha = {Alpha}", file=file_script)
     print(f"Beta = {Beta}", file=file_script)
+    print(f"alphaS = {alphaS}", file=file_script)
+    print(f"alphaL = {alphaL}", file=file_script)
+    print(f"vxI = {vxI}", file=file_script)
+    print(f"eta = {eta}", file=file_script)
+    print(f"ard = {ard}", file=file_script)
     print(f"nRepeat = {nRepeat}", file=file_script)
     print(f"Computation_Mode = '{Computation_Mode}'", file=file_script)
     print(f"dataPrecision = '{dataPrecision}'", file=file_script)
@@ -883,6 +892,12 @@ def workflow_server(dir_pnet_result: str,
     print(f"synchronized_view = {synchronized_view}", file=file_script)
     print(f"synchronized_colorbar = {synchronized_colorbar}", file=file_script)
     print('# server', file=file_script)
+    print(f"dir_python = '{dir_python}'", file=file_script)
+    print(f"submit_command = '{submit_command}'", file=file_script)
+    print(f"thread_command = '{thread_command}'", file=file_script)
+    print(f"memory_command = '{memory_command}'", file=file_script)
+    print(f"log_command = '{log_command}'", file=file_script)
+
     print(f"computation_resource = {computation_resource}", file=file_script)
 
     # main job

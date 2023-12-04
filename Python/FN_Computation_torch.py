@@ -1168,7 +1168,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 11/30/2023
+    Yuncong Ma, 12/4/2023
     """
 
     # get directories of sub-folders
@@ -1257,8 +1257,13 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             wait_time = 300
             flag_complete = np.zeros(nBS)
             dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
+            report_interval = 12
+            Count = 0
             while np.sum(flag_complete) < nBS:
                 time.sleep(wait_time)
+                Count += 1
+                if Count % report_interval == 0:
+                    print(f'--> Found {np.sum(flag_complete)} finished jobs out of 1 at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
                 for rep in range(1, 1+nBS):
                     if flag_complete[rep-1] == 0 and os.path.isfile(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')):
                         flag_complete[rep-1] = 1
@@ -1315,9 +1320,14 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
 
         # check completion
         wait_time = 30
+        report_interval = 120
         flag_complete = np.zeros(nScan)
+        Count = 0
         while np.sum(flag_complete) < nScan:
             time.sleep(wait_time)
+            Count += 1
+            if Count % report_interval == 0:
+                print(f'--> Found {np.sum(flag_complete)} finished jobs out of {nScan} at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
             for scan in range(1, 1+nScan):
                 if flag_complete[scan-1] == 0 and os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'FN.mat')):
                     flag_complete[scan-1] = 1
