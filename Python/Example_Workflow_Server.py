@@ -55,6 +55,13 @@ thread_command = '-pe threaded '
 memory_command = '-l h_vmem='
 log_command = '-o '
 
+# setup computation resource requirement
+computation_resource = \
+    dict(memory_bootstrap='50G', thread_bootstrap=4,
+         memory_fusion='10G', thread_fusion=4,
+         memory_pFN='10G', thread_pFN=1,
+         memory_qc='10G', thread_qc=1,
+         memory_visualization='10G', thread_visualization=1)
 
 # ======= Parameters for pNet ======= #
 pNet.workflow_server(
