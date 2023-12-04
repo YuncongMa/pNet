@@ -656,7 +656,7 @@ def plot_voxel_map_3view(Anatomy: np.ndarray, Voxel_Map: np.ndarray, center: np.
 
     elif np.array(organization).shape == (3,):
         # align sub-figures vertically, which requires cubic shape for the image
-        if not np.array((1,1,1)) * Dimension[0] == Dimension:
+        if not (np.array((1, 1, 1)) * Dimension[0] == Dimension).all:
             raise ValueError('It requires a cubic shape image when aligning images vertically')
         image_rgb = np.zeros((Dimension[0]*3, Dimension[1], 3), dtype=np.float32) + background
         for i, val in enumerate(organization.flatten()):
@@ -1282,9 +1282,9 @@ def run_Visualization_server(dir_pnet_result: str):
                     python_command=f'pNet.run_gFN_Visualization(dir_pnet_result)',
                     memory=memory,
                     n_thread=n_thread,
-                    bashFile=os.path.join(dir_pnet_gFN, 'server_job.sh'),
-                    pythonFile=os.path.join(dir_pnet_gFN, 'server_job.py'),
-                    logFile=os.path.join(dir_pnet_gFN, 'server_job.log')
+                    bashFile=os.path.join(dir_pnet_gFN, 'server_job_visualization.sh'),
+                    pythonFile=os.path.join(dir_pnet_gFN, 'server_job_visualization.py'),
+                    logFile=os.path.join(dir_pnet_gFN, 'server_job_visualization.log')
                     )
 
     # Information about scan list

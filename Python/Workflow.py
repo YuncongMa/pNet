@@ -818,7 +818,7 @@ def workflow_server(dir_pnet_result: str,
 
     print("\n# ============== Parameter ============== #", file=file_script)
     print(f"dir_pnet_result = '{dir_pnet_result}'", file=file_script)
-    print('# data input', file=file_script)
+    print('\n# data input', file=file_script)
     print(f"dataType = '{dataType}'", file=file_script)
     print(f"dataFormat = '{dataFormat}'", file=file_script)
     print(f"file_scan ='{file_scan}'", file=file_script)
@@ -862,7 +862,7 @@ def workflow_server(dir_pnet_result: str,
             print(f"file_mask_vol = '{file_mask_vol}'", file=file_script)
             print(f"file_overlayImage = '{file_overlayImage}'", file=file_script)
         print(f"maskValue = {maskValue}", file=file_script)
-    print('# FN computation', file=file_script)
+    print('\n# FN computation', file=file_script)
     print(f"K = {K}", file=file_script)
     print(f"Combine_Scan = {Combine_Scan}", file=file_script)  # True or False
     if file_gFN is None:
@@ -891,7 +891,7 @@ def workflow_server(dir_pnet_result: str,
     print('# visualization', file=file_script)
     print(f"synchronized_view = {synchronized_view}", file=file_script)
     print(f"synchronized_colorbar = {synchronized_colorbar}", file=file_script)
-    print('# server', file=file_script)
+    print('\n# server', file=file_script)
     print(f"dir_python = '{dir_python}'", file=file_script)
     print(f"submit_command = '{submit_command}'", file=file_script)
     print(f"thread_command = '{thread_command}'", file=file_script)
