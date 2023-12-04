@@ -327,7 +327,7 @@ def load_fmri_scan(file_scan_list: str,
     :param logFile: a log file to save the output
     :return: Data: a 2D or 4D NumPy array [dim_time dim_space]
 
-    By Yuncong Ma, 11/14/2023
+    By Yuncong Ma, 12/4/2023
     """
 
     # Check setting
@@ -337,10 +337,7 @@ def load_fmri_scan(file_scan_list: str,
     nib.imageglobals.logger.setLevel(40)
 
     # setup log file
-    if logFile is not None:
-        if isinstance(logFile, str):
-            logFile = open(logFile, 'a')
-        print(f'\nStart loading fMRI data at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
+    print_log(f'\nStart loading fMRI data at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', logFile=logFile)
 
     if os.path.isfile(file_scan_list) and file_scan_list.endswith('.txt'):
         scan_list = [line.replace('\n', '') for line in open(file_scan_list, "r")]
@@ -352,8 +349,7 @@ def load_fmri_scan(file_scan_list: str,
         if len(scan_list[i]) == 0:
             break
 
-        if logFile is not None:
-            print(f' loading scan ' + scan_list[i], file=logFile)
+        print_log(f' loading scan ' + scan_list[i], logFile=logFile)
 
         file_list = str.split(scan_list[i], ';')
         for file in file_list:
@@ -443,8 +439,7 @@ def load_fmri_scan(file_scan_list: str,
         # Convert to NumPy array
         if not isinstance(scan_data, np.ndarray):
             scan_data = np.array(scan_data)
-        if logFile is not None:
-            print(f' loaded data size is ' + str(scan_data.shape), file=logFile)
+        print_log(f' loaded data size is ' + str(scan_data.shape), logFile=logFile)
 
         # Combine scans along the time dimension
         # The Data will be permuted to [dim_time dim_space] for both 2D and 4D matrices
@@ -491,8 +486,7 @@ def load_fmri_scan(file_scan_list: str,
             else:
                 raise ValueError('Only supports to concatenate data for output')
 
-    if logFile is not None:
-        print('\nConcatenated data is a 2D matrix with size ' + str(Data.shape), file=logFile)
+    print_log('\nConcatenated data is a 2D matrix with size ' + str(Data.shape), logFile=logFile)
     return Data
 
 
@@ -521,7 +515,7 @@ def compute_brain_surface(file_surfL: str,
     :param logFile:
     :return: Brain_Surface: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R)
 
-    Yuncong Ma, 10/11/2023
+    Yuncong Ma, 12/4/2023
     """
 
     # only save a few digits for vertex location
@@ -613,10 +607,7 @@ def compute_brain_surface(file_surfL: str,
     else:
         raise ValueError('Unknown combination of Data_Type and Template_Format: ' + dataType + ' : ' + templateFormat)
 
-    if logFile is not None:
-        if isinstance(logFile, str):
-            logFile = open(logFile, 'a')
-        print('\nBrain_Surface is created', file=logFile, flush=True)
+    print_log('\nBrain_Surface is created', logFile=logFile)
 
     return Brain_Surface
 
@@ -652,20 +643,17 @@ def compute_brain_template(dataType: str,
     :return: Brain_Template: a structure with keys Data_Type, Data_Format, Shape (including L and R), Shape_Inflated (if used), Mask (including L and R) for surface type
                             a structure with keys Data_Type, Data_Format, Mask, Overlay_Image
 
-    Yuncong Ma, 11/14/2023
+    Yuncong Ma, 12/4/2023
     """
 
     # log file
-    if logFile is not None:
-        if isinstance(logFile, str):
-            logFile = open(logFile, 'a')
-        print('\nCompute brain template at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
-              file=logFile, flush=True)
-        print("Brain template supports both volume and surface data types\n"
+    print_log('\nCompute brain template at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
+              logFile=logFile)
+    print_log("Brain template supports both volume and surface data types\n"
               "For volume data type, a Mask file and a high resolution T1/T2 overlay image are required\n"
               "For surface data type, files for surface mesh shape including vertices and faces are required.\n"
               "And mask files for two hemispheres are required to exclude vertices in medial wall or other low SNR regions.\n"
-              "Inflated surface mesh shape files are optional for different visualization purposes.\n", file=logFile, flush=True)
+              "Inflated surface mesh shape files are optional for different visualization purposes.\n", logFile=logFile)
 
     # check template type and format
     check_template_type_format(dataType, templateFormat, logFile=logFile)
@@ -722,11 +710,11 @@ def compute_brain_template(dataType: str,
         # maskValue could be one value for both surface and volume parts, or a tuple containing two integers
         if isinstance(maskValue, int):
             maskValue = (maskValue, maskValue)
-            print_log(f'Setting mask value = {maskValue} for both surface and volume', stop=False)
+            print_log(f'Setting mask value = {maskValue} for both surface and volume', stop=False, logFile=logFile)
         elif isinstance(maskValue, tuple) and len(maskValue) == 2:
-            print_log(f'Setting mask value = {maskValue[0]} for surface, and mask value = {maskValue[1]} for volume', stop=False)
+            print_log(f'Setting mask value = {maskValue[0]} for surface, and mask value = {maskValue[1]} for volume', stop=False, logFile=logFile)
         else:
-            print_log('maskValue could be one integer for both surface and volume parts, or a tuple containing two integers', stop=True)
+            print_log('maskValue could be one integer for both surface and volume parts, or a tuple containing two integers', stop=True, logFile=logFile)
 
         # load surface part
         if file_surfL is None or file_surfR is None or file_maskL is None or file_maskR is None:
@@ -781,7 +769,7 @@ def save_brain_template(dir_pnet_dataInput: str,
     :param Brain_Template: a structure created by function compute_brain_template
     :param logFile: 'Automatic', None, or a file directory
 
-    Yuncong Ma, 10/9/2023
+    Yuncong Ma, 12/4/2023
     """
 
     # only save a few digits for vertex location
@@ -839,12 +827,8 @@ def save_brain_template(dir_pnet_dataInput: str,
         write_json_setting(Brain_Template, os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
     else:
-        if logFile is not None:
-            if isinstance(logFile, str):
-                logFile = open(logFile, 'a')
-            print('Unsupported data type: ' + Brain_Template['Data_Type'], file=logFile, flush=True)
-        else:
-            raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
+
+        raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
 
     print_log('\nBrain_Template is saved into mat and json.zip files', stop=False, logFile=logFile)
 
@@ -858,7 +842,7 @@ def load_brain_template(file_Brain_Template: str,
     :param logFile: directory of a log file
     :return: Brain_Template: nested dictionary storing information and matrices of brain template. Matrices are converted to np.ndarray
 
-    Yuncong Ma, 11/13/2023
+    Yuncong Ma, 12/4/2023
     """
 
     Brain_Template = load_json_setting(file_Brain_Template)
@@ -960,12 +944,7 @@ def load_brain_template(file_Brain_Template: str,
             Brain_Template['Shape_Inflated']['R']['faces'] = np.array(Brain_Template['Shape_Inflated']['R']['faces'])
 
     else:
-        if logFile is not None:
-            if isinstance(logFile, str):
-                logFile = open(logFile, 'a')
-                print('Unsupported data type: ' + Brain_Template['Data_Type'], file=logFile, flush=True)
-        else:
-            raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
+        raise ValueError('Unsupported data type: ' + Brain_Template['Data_Type'])
 
     return Brain_Template
 
