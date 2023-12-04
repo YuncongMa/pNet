@@ -97,7 +97,7 @@ def submit_bash_job(dir_pnet_result: str,
     print('# This bash script is to run a pNet job in the desired server environment', file=bashFile, flush=True)
     print(f'# created on {date_time}\n', file=bashFile, flush=True)
     print(f'# Use command to submit this job:\n# $ {submit_command} {thread_command}{n_thread} {memory_command}{memory} {log_command}{logFile} {bashFile.name}\n', file=bashFile, flush=True)
-    print(f'source activate {dir_python}')
+    print(f'source activate {dir_python}', file=bashFile, flush=True)
     print(r'echo -e "Start time : `date +%F-%H:%M:%S`\n" ', file=bashFile, flush=True)
     print(f'\n{dir_python} {pythonFile}\n', file=bashFile, flush=True)
     print(r'echo -e "Finished time : `date +%F-%H:%M:%S`\n" ', file=bashFile, flush=True)
