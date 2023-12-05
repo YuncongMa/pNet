@@ -1311,9 +1311,14 @@ def run_Visualization_server(dir_pnet_result: str):
     wait_time = 30
     # check gFN
     flag_complete = 0
+    report_interval = 20
+    Count = 0
     while flag_complete == 0:
         time.sleep(wait_time)
-        if os.path.isfile(os.path.join(dir_pnet_gFN, 'All.jpb')):
+        Count += 1
+        if Count % report_interval == 0:
+            print(f'--> Found {np.sum(flag_complete)} finished jobs out of 1 at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
+        if os.path.isfile(os.path.join(dir_pnet_gFN, 'All.jpg')):
             flag_complete = 1
             break
     # check pFN
@@ -1327,7 +1332,7 @@ def run_Visualization_server(dir_pnet_result: str):
             print(f'--> Found {np.sum(flag_complete)} finished jobs out of {nFolder} at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
         for rep in range(1, 1+nFolder):
             dir_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[rep-1])
-            if flag_complete[rep-1] == 0 and os.path.isfile(os.path.join(dir_indv, 'All.jpb')):
+            if flag_complete[rep-1] == 0 and os.path.isfile(os.path.join(dir_indv, 'All.jpg')):
                 flag_complete[rep-1] = 1
 
     print('\nFinished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)

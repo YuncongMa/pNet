@@ -15,7 +15,8 @@ from Data_Input import write_json_setting, load_json_setting, setup_result_folde
 #########################################
 
 
-def setup_server(dir_pnet: str,
+def setup_server(dir_env: str,
+                 dir_pnet: str,
                  dir_pnet_result: str,
                  dir_python: str,
                  submit_command='qsub -terse -j y',
@@ -27,6 +28,7 @@ def setup_server(dir_pnet: str,
     """
     Setup server environment and commands to submit jobs
 
+    :param dir_env: directory of the desired virtual environment
     :param dir_pnet: directory of the pNet toolbox
     :param dir_pnet_result: directory of pNet result folder
     :param dir_python: absolute directory to the python folder, ex. /Users/YuncongMa/.conda/envs/pnet/bin/python
@@ -37,11 +39,11 @@ def setup_server(dir_pnet: str,
     :param computation_resource: None or a dict which specifies the number of threads and memory for different processes
     :return: None
 
-    Yuncong Ma, 11/30/2023
+    Yuncong Ma, 12/5/2023
     """
 
     dir_pnet_dataInput, _, _, _, _, _ = setup_result_folder(dir_pnet_result)
-    setting = {'dir_pnet': dir_pnet, 'dir_python': dir_python, 'submit_command': submit_command, 'thread_command': thread_command, 'memory_command': memory_command, 'log_command': log_command,
+    setting = {'dir_env': dir_env, 'dir_pnet': dir_pnet, 'dir_python': dir_python, 'submit_command': submit_command, 'thread_command': thread_command, 'memory_command': memory_command, 'log_command': log_command,
                'computation_resource': computation_resource}
 
     write_json_setting(setting, os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
@@ -69,12 +71,13 @@ def submit_bash_job(dir_pnet_result: str,
     :param create_python_file: bool, create a new Python file or not
     :return: None
 
-    Yuncong Ma, 12/4/2023
+    Yuncong Ma, 12/5/2023
     """
 
     # load server setting
     dir_pnet_dataInput, _, _, _, _, _ = setup_result_folder(dir_pnet_result)
     setting = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
+    dir_env = setting['dir_env']
     dir_pnet = setting['dir_pnet']
     dir_python = setting['dir_python']
     submit_command = setting['submit_command']
@@ -97,7 +100,7 @@ def submit_bash_job(dir_pnet_result: str,
     print('# This bash script is to run a pNet job in the desired server environment', file=bashFile, flush=True)
     print(f'# created on {date_time}\n', file=bashFile, flush=True)
     print(f'# Use command to submit this job:\n# $ {submit_command} {thread_command}{n_thread} {memory_command}{memory} {log_command}{logFile} {bashFile.name}\n', file=bashFile, flush=True)
-    print(f'source activate {dir_python}', file=bashFile, flush=True)
+    print(f'source activate {dir_env}\n', file=bashFile, flush=True)
     print(r'echo -e "Start time : `date +%F-%H:%M:%S`\n" ', file=bashFile, flush=True)
     print(f'\n{dir_python} {pythonFile}\n', file=bashFile, flush=True)
     print(r'echo -e "Finished time : `date +%F-%H:%M:%S`\n" ', file=bashFile, flush=True)

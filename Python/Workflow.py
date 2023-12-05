@@ -714,6 +714,7 @@ def workflow_server(dir_pnet_result: str,
                     synchronized_colorbar=False,
                     # server
                     dir_pnet=None,
+                    dir_env=None,
                     dir_python=None,
                     submit_command='qsub -terse -j y',
                     thread_command='-pe threaded ',
@@ -780,6 +781,7 @@ def workflow_server(dir_pnet_result: str,
     :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
 
     :param dir_pnet: directory of the pNet toolbox
+    :param dir_env: directory of the desired virtual environment
     :param dir_python: absolute directory to the python folder, ex. /Users/YuncongMa/.conda/envs/pnet/bin/python
     :param submit_command: command to submit a server job
     :param thread_command: command to setup number of threads for each job
@@ -787,7 +789,7 @@ def workflow_server(dir_pnet_result: str,
     :param log_command: command to specify the logfile
     :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
 
-    Yuncong Ma, 12/1/2023
+    Yuncong Ma, 12/5/2023
     """
 
     print('Start to run pNet workflow in server mode', flush=True)
@@ -892,6 +894,7 @@ def workflow_server(dir_pnet_result: str,
     print(f"synchronized_view = {synchronized_view}", file=file_script)
     print(f"synchronized_colorbar = {synchronized_colorbar}", file=file_script)
     print('\n# server', file=file_script)
+    print(f"dir_env = '{dir_env}'", file=file_script)
     print(f"dir_python = '{dir_python}'", file=file_script)
     print(f"submit_command = '{submit_command}'", file=file_script)
     print(f"thread_command = '{thread_command}'", file=file_script)
@@ -909,6 +912,7 @@ def workflow_server(dir_pnet_result: str,
     # =============== Server
     setup_server(
         dir_pnet=dir_pnet,
+        dir_env=dir_env,
         dir_pnet_result=dir_pnet_result,
         dir_python=dir_python,
         submit_command=submit_command,

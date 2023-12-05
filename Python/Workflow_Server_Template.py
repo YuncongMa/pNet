@@ -73,6 +73,7 @@ pNet.setup_Visualization(
 
 # =============== Server
 pNet.setup_server(
+    dir_env=dir_env,
     dir_pnet=dir_pnet,
     dir_pnet_result=dir_pnet_result,
     dir_python=dir_python,
