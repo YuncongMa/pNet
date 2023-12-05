@@ -226,6 +226,34 @@ def ndarray_list(data: np.ndarray, n_digit=2):
         raise ValueError('Unsupported data dimensions')
 
 
+def read_txt_list(file_txt: str):
+    """
+    Read a txt file containing rows of strings
+    This code can read large txt files
+
+    :param file_txt:
+    :return: list, ndarray of strings
+
+    Yuncong Ma, 12/5/2023
+    """
+
+    Count = 0
+    txt_file = open(file_txt, 'r')
+    for line in txt_file:
+        Count += 1
+    txt_file.close()
+
+    list_ndarray = np.empty(Count, dtype=list)
+    Count = 0
+    txt_file = open(file_txt, 'r')
+    for line in txt_file:
+        list_ndarray[Count] = line.replace('\n', '')
+        Count += 1
+    txt_file.close()
+
+    return list_ndarray
+
+
 def normalize_data(data,
                    algorithm='vp',
                    normalization='vmax'):

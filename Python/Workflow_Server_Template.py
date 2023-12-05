@@ -97,4 +97,4 @@ pNet.run_quality_control_torch_server(dir_pnet_result)
 # Visualization
 pNet.run_Visualization_server(dir_pnet_result)
 
-print('All run s are finished\n', flush=True)
+print('All runs are finished\n', flush=True)
