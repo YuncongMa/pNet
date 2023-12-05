@@ -15,9 +15,9 @@ from Data_Input import write_json_setting, load_json_setting, setup_result_folde
 #########################################
 
 
-def setup_server(dir_env: str,
+def setup_server(dir_pnet_result: str,
+                 dir_env: str,
                  dir_pnet: str,
-                 dir_pnet_result: str,
                  dir_python: str,
                  submit_command='qsub -terse -j y',
                  thread_command='-pe threaded ',
@@ -28,9 +28,9 @@ def setup_server(dir_env: str,
     """
     Setup server environment and commands to submit jobs
 
+    :param dir_pnet_result: directory of pNet result folder
     :param dir_env: directory of the desired virtual environment
     :param dir_pnet: directory of the pNet toolbox
-    :param dir_pnet_result: directory of pNet result folder
     :param dir_python: absolute directory to the python folder, ex. /Users/YuncongMa/.conda/envs/pnet/bin/python
     :param submit_command: command to submit a server job
     :param thread_command: command to setup number of threads for each job
@@ -50,7 +50,6 @@ def setup_server(dir_env: str,
 
 
 def submit_bash_job(dir_pnet_result: str,
-
                     python_command: str,
                     memory=50, n_thread=4,
                     logFile=None,
