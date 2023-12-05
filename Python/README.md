@@ -99,10 +99,12 @@ pNet.workflow_simple(dir_pnet_result: str,
 pNet offers a server mode for its Python version to deploy customized workflows with minimal knowledge about bash jobs <br />
 It can generate bash and python scripts, and automatically submit bash jobs to the server environment and check job completion. <br />
 It only requires additional setups for a few server commands to submit bash jobs, as shown below
-1. submit_command = 'qsub -terse -j y'
-2. thread_command = '-pe threaded '
-3. memory_command = '-l h_vmem='
-4. log_command = '-o '
+1. dir_env = '~/.conda/envs/pnet'
+2. dir_python = '~/.conda/envs/pnet/bin/python'
+3. submit_command = 'qsub -terse -j y'
+4. thread_command = '-pe threaded '
+5. memory_command = '-l h_vmem='
+6. log_command = '-o '
 
 Example Python script
 https://github.com/YuncongMa/pNet/blob/main/Python/Example_Workflow_Server.py
