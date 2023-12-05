@@ -729,6 +729,7 @@ def workflow_server(dir_pnet_result: str,
     """
     Run the workflow of pNet, including Data Input, FN Computation, Quality Control and Visualization
     This function is for running pNet using multiple jobs to facilitate computation in a server environment
+    This script can be re-run to restart the desired workflow from where it stops
 
     :param dir_pnet_result: directory of the pNet result folder
     :param dataType: 'Surface', 'Volume', 'Surface-Volume'
@@ -811,6 +812,7 @@ def workflow_server(dir_pnet_result: str,
     os.makedirs(dir_script, exist_ok=True)
     file_script = open(os.path.join(dir_pnet_dataInput, 'Script', 'server_job_workflow.py'), 'w')
     print('# Customized Python script for pNet workflow in server mode\n# Use corresponding bash script to submit the job\n# Created on ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=file_script)
+    print('# This Python script can be re-run to restart the workflow from where it stops', file=file_script)
     print('\n# Load packages', file=file_script)
     print('# setup and run a customized workflow\n', file=file_script)
     print('import sys\nimport os\n', file=file_script, flush=True)
