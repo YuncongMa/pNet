@@ -1,4 +1,4 @@
-# Yuncong Ma, 10/2/2023
+# Yuncong Ma, 12/5/2023
 # FN Computation module of pNet
 # Pytorch version
 
@@ -1168,15 +1168,13 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 12/4/2023
+    Yuncong Ma, 12/5/2023
     """
 
     # get directories of sub-folders
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
 
     # log file
-    #logFile_FNC = os.path.join(dir_pnet_FNC, 'log.log')
-    #logFile_FNC = open(logFile_FNC, 'w')
     print('\nStart FN computation using PyTorch at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
 
     # load settings for data input and FN computation
@@ -1217,8 +1215,9 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
                 os.makedirs(dir_pnet_BS)
 
             # Generate additional parameters
-            gNb = compute_gNb(Brain_Template)
-            scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb})
+            if not os.path.isfile(os.path.join(dir_pnet_FNC, 'gNb.mat')):
+                gNb = compute_gNb(Brain_Template)
+                scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb})
 
             # Input files
             file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
@@ -1226,7 +1225,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
             file_group_ID = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
             if not os.path.exists(file_group_ID):
-                file_group = None
+                file_group_ID = None
             # Parameters
             combineScan = setting['FN_Computation']['Combine_Scan']
             samplingMethod = setting['FN_Computation']['Group_FN']['BootStrap']['samplingMethod']
@@ -1234,7 +1233,12 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
 
             # create scan lists for bootstrap
-            bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder,
+            flag_complete = np.zeros(nBS)
+            for i in range(1, 1+nBS):
+                if os.path.exists(os.path.join(dir_pnet_BS, str(i))) and os.path.isfile(os.path.join(dir_pnet_BS, str(i), 'Scan_List.txt')):
+                    flag_complete[i-1] = 1
+            if np.sum(flag_complete) < nBS:
+                bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder,
                                  file_group_ID=file_group_ID, combineScan=combineScan,
                                  samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, logFile=None)
 
@@ -1242,8 +1246,9 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             memory = setting['Server']['computation_resource']['memory_bootstrap']
             n_thread = setting['Server']['computation_resource']['thread_bootstrap']
             for rep in range(1, 1+nBS):
-                time.sleep(1)
-                os.makedirs(os.path.join(dir_pnet_BS, str(rep)), exist_ok=True)
+                time.sleep(0.1)
+                if os.path.isfile(os.path.join(dir_pnet_BS, str(i), 'FN.mat')):
+                    continue
                 submit_bash_job(dir_pnet_result,
                                 python_command=f'pNet.NMF_boostrapping_server(dir_pnet_result,{rep})',
                                 memory=memory,
@@ -1273,7 +1278,9 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             print('Start to fuse bootstrapped results using NCut at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
             memory = setting['Server']['computation_resource']['memory_fusion']
             n_thread = setting['Server']['computation_resource']['thread_fusion']
-            submit_bash_job(dir_pnet_result,
+
+            if not os.path.isfile(os.path.join(dir_pnet_pFN, 'FN.mat')):
+                submit_bash_job(dir_pnet_result,
                             python_command='pNet.fuse_FN_server(dir_pnet_result)',
                             memory=memory,
                             n_thread=n_thread,
@@ -1308,7 +1315,9 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
         memory = setting['Server']['computation_resource']['memory_pFN']
         n_thread = setting['Server']['computation_resource']['thread_pFN']
         for scan in range(1, 1+nScan):
-            time.sleep(1)
+            time.sleep(0.1)
+            if os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'FN.mat')):
+                continue
             submit_bash_job(dir_pnet_result,
                             python_command=f'pNet.NMF_pFN_server(dir_pnet_result,{scan})',
                             memory=memory,

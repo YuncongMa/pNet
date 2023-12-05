@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/30/2023
+# Yuncong Ma, 12/5/2023
 # Quality control module of pNet using PyTorch
 
 #########################################
@@ -227,7 +227,7 @@ def run_quality_control_torch_server(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 12/4/2023
+    Yuncong Ma, 12/5/2023
     """
 
     # Setup sub-folders in pNet result
@@ -255,9 +255,11 @@ def run_quality_control_torch_server(dir_pnet_result: str):
     memory = setting['Server']['computation_resource']['memory_qc']
     n_thread = setting['Server']['computation_resource']['thread_qc']
     for rep in range(1, 1+nFolder):
-        time.sleep(1)
+        time.sleep(0.1)
         dir_indv = os.path.join(dir_pnet_QC, list_subject_folder_unique[rep-1])
         os.makedirs(dir_indv, exist_ok=True)
+        if os.path.isfile(os.path.join(dir_indv, 'Result.mat')):
+            continue
         submit_bash_job(dir_pnet_result,
                         python_command=f'pNet.compute_quality_control_torch_server(dir_pnet_result,{rep})',
                         memory=memory,

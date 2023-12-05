@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/30/2023
+# Yuncong Ma, 12/5/2023
 # Visualization module of pNet
 
 #########################################
@@ -1263,7 +1263,7 @@ def run_Visualization_server(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 12/4/2023
+    Yuncong Ma, 12/5/2023
     """
 
     print('\nStart Visualization at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
@@ -1278,7 +1278,8 @@ def run_Visualization_server(dir_pnet_result: str):
     # Run gFN and pFN visualization
     memory = setting['Server']['computation_resource']['memory_visualization']
     n_thread = setting['Server']['computation_resource']['thread_visualization']
-    submit_bash_job(dir_pnet_result,
+    if not os.path.isfile(os.path.join(dir_pnet_gFN, 'All.jpg')):
+        submit_bash_job(dir_pnet_result,
                     python_command=f'pNet.run_gFN_Visualization(dir_pnet_result)',
                     memory=memory,
                     n_thread=n_thread,
@@ -1295,9 +1296,11 @@ def run_Visualization_server(dir_pnet_result: str):
 
     # submit jobs
     for rep in range(1, 1+nFolder):
-        time.sleep(1)
+        time.sleep(0.1)
         dir_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[rep-1])
         os.makedirs(dir_indv, exist_ok=True)
+        if os.path.isfile(os.path.join(dir_indv, 'All.jpg')):
+            continue
         submit_bash_job(dir_pnet_result,
                         python_command=f'pNet.run_pFN_Visualization_server(dir_pnet_result,{rep})',
                         memory=memory,
