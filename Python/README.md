@@ -22,7 +22,7 @@ pip install numpy scipy scikit-learn pandas h5py
 conda install -c conda-forge nibabel
 conda install pytorch::pytorch torchvision torchaudio -c pytorch
 conda install -c conda-forge vtk
-pip install matplotlib surfplot
+pip install matplotlib surfplot ggplot
 python -m pip install -U scikit-image
 ```
 
