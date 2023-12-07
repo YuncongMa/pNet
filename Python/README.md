@@ -212,7 +212,7 @@ pNet.workflow_simple(
 ```
 
 ### Visualization examples
-The Python version of pNet offers preconfigured visualizations consistent to the MATLAB version. However, the 3D surface display is slightly different due to different lighting and material settings between MATLAB and matplotlib.
+The Python version also offers preconfigured visualizations consistent to the MATLAB version. However, the 3D surface display is slightly different due to different lighting and material settings between MATLAB and matplotlib.
 
 **Surface type**
 
@@ -221,6 +221,13 @@ The Python version of pNet offers preconfigured visualizations consistent to the
 **Volume type**
 
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/ca55d5c4-8757-4d2e-9818-57c6e9b0a7e4"  width="800">
+
+
+### QC figure
+The Python version also generate figure for QC report to investigate the benefit of using personalized FN modeling.
+
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/922312fa-4e6f-4c0c-b660-b9eb243bc3fc"  width="600">
+
 
 ## Help
 All the functions in pNet come with detailed description of each input <br />
