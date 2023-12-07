@@ -105,6 +105,13 @@ The data organization is as below.
 <img src="https://user-images.githubusercontent.com/20191790/223320985-12aed4d4-6bef-4b23-a9a2-ff67f79eced3.jpg" width="600">
 </p>
 
+# Quality Control
+pNet generates a file report for the examination about the one-to-one match between gFNs and pFNs, with another figure to investigate the benefit of using personalized FN modeling.
+
+<p align="center">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/922312fa-4e6f-4c0c-b660-b9eb243bc3fc"  width="600">
+</p>
+
 # MATLAB and system Compatibility
 Note: it is recommended to run pNet as a MATLAB APP to allow for maximum compatibility. Although we are striving for maximizing the compatibility of pNet on different MATLAB versions and operation systems, it is difficult to conduct comprehensive tests on all cases. Our primary test environment is MATLAB 2022B and macOS Ventura 13.
 
