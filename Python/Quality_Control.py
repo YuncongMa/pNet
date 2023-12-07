@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/7/2023
+# Yuncong Ma, 12/7/2023
 # Quality control module of pNet
 
 #########################################
@@ -6,12 +6,26 @@
 import numpy as np
 import scipy
 import os
-import re
 import time
+import pandas as pd
+from plotnine import (
+    ggplot,
+    aes,
+    stage,
+    geom_violin,
+    geom_point,
+    geom_line,
+    geom_boxplot,
+    scale_fill_manual,
+    theme,
+    theme_classic,
+    element_text,
+    element_line
+)
 
 # other functions of pNet
-from Data_Input import load_json_setting, load_matlab_single_array, load_fmri_scan, reshape_FN, setup_result_folder, load_brain_template
-from FN_Computation import mat_corr, set_data_precision
+from Data_Input import *
+from FN_Computation import *
 
 
 def print_description_QC(logFile: str):
@@ -48,7 +62,7 @@ def run_quality_control(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 11/7/2023
+    Yuncong Ma, 12/6/2023
     """
 
     # Setup sub-folders in pNet result
@@ -155,9 +169,13 @@ def run_quality_control(dir_pnet_result: str):
               f' This means those scans have at least one pFN show higher spatial similarity to a different group-level FN\n',
               file=file_Final_Report, flush=True)
 
+    file_Final_Report.close()
+
+    # Generate visualization
+    visualize_quality_control(dir_pnet_result)
+
     print('\nFinished QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
           file=file_Final_Report, flush=True)
-    file_Final_Report.close()
 
 
 def compute_quality_control(scan_data: np.ndarray, gFN: np.ndarray, pFN: np.ndarray, dataPrecision='double', logFile=None):
@@ -179,7 +197,7 @@ def compute_quality_control(scan_data: np.ndarray, gFN: np.ndarray, pFN: np.ndar
     Functional_Homogeneity is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of pFNs
     Functional_Homogeneity_Control is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of gFNs
 
-    Yuncong Ma, 10/2/2023
+    Yuncong Ma, 12/6/2023
     """
 
     # Spatial correspondence
@@ -200,10 +218,117 @@ def compute_quality_control(scan_data: np.ndarray, gFN: np.ndarray, pFN: np.ndar
     # Functional homogeneity
     pFN_signal = scan_data @ pFN / np.sum(pFN, axis=0, keepdims=True)
     Corr_FH = mat_corr(pFN_signal, scan_data, dataPrecision=dataPrecision)
+    Corr_FH[np.isnan(Corr_FH)] = 0  # in case of zero signals
     Functional_Homogeneity = np.sum(Corr_FH.T * pFN, axis=0) / np.sum(pFN, axis=0)
     # Use gFN as control
     gFN_signal = scan_data @ gFN / np.sum(pFN, axis=0, keepdims=True)
     Corr_FH = mat_corr(gFN_signal, scan_data, dataPrecision=dataPrecision)
+    Corr_FH[np.isnan(Corr_FH)] = 0  # in case of zero signals
     Functional_Homogeneity_Control = np.sum(Corr_FH.T * gFN, axis=0) / np.sum(gFN, axis=0)
 
     return Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control
+
+
+def visualize_quality_control(dir_pnet_result: str):
+    """
+    Visualize the results of quality control for all scans in the dataset
+    :param dir_pnet_result: directory of the pNet result folder
+    :return: None
+
+    Yuncong Ma, 12/7/2023
+    """
+
+    # Setup sub-folders in pNet result
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
+
+    # get settings
+    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+    K = settingFNC['K']
+
+    # folder info
+    list_subject_folder = load_txt_list(os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt'))
+    list_subject_folder_unique = np.unique(list_subject_folder)
+    nFolder = list_subject_folder_unique.shape[0]
+
+    # load results
+    Functional_Homogeneity = np.zeros((nFolder, K))
+    Functional_Homogeneity_Control = np.zeros((nFolder, K))
+    for i in range(nFolder):
+        dir_indv = os.path.join(dir_pnet_QC, list_subject_folder_unique[i])
+        Result = load_matlab_single_variable(os.path.join(dir_indv, 'Result.mat'))
+
+        # get functional homogeneity using pFNs and gFNs
+        Functional_Homogeneity[i, :] = Result['Functional_Homogeneity'][0, 0]
+        Functional_Homogeneity_Control[i, :] = Result['Functional_Homogeneity_Control'][0, 0]
+
+    # output results
+    Result = {'Functional_Homogeneity': Functional_Homogeneity,
+              'Functional_Homogeneity_Control': Functional_Homogeneity_Control}
+
+    sio.savemat(os.path.join(dir_pnet_QC, 'Result.mat'), {'Result': Result})
+
+    # visualization
+    before = np.nanmean(Functional_Homogeneity_Control, axis=1)
+    after = np.nanmean(Functional_Homogeneity, axis=1)
+
+    Axes_Name = ['Functional Network Definition', 'Average Functional Homogeneity']
+    Group_Name = ['Group', 'Personalized']
+    Group_Color = ['dodgerblue', 'tomato']
+    Line_Color = 'gray'
+
+    n = before.shape[0]
+
+    df = pd.DataFrame({
+        Axes_Name[1]: np.hstack([before, after]),
+        Axes_Name[0]: np.repeat(Group_Name, n),
+        'id': np.hstack([range(n), range(n)])
+    })
+
+    df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
+    df.head()
+
+    shift = 0.1
+
+    def alt_sign(x):
+        return (-1) ** x
+
+    m1 = aes(x=stage(Axes_Name[0], after_scale='x+shift*alt_sign(x)'))              # shift outward
+    m2 = aes(x=stage(Axes_Name[0], after_scale='x-shift*alt_sign(x)'), group='id')  # shift inward
+
+    line_size = 0.6
+    # set the transparency for filling area
+    fill_alpha = 0.8
+    point_alpha = 0.5
+    # set the transparency for lines
+    if n < 10:
+        line_alpha = 1
+    elif n < 50:
+        line_alpha = 0.5
+    elif n < 100:
+        line_alpha = 0.3
+    elif n < 500:
+        line_alpha = 0.2
+    elif n < 1000:
+        line_alpha = 0.1
+    else:
+        line_alpha = 0.05
+
+    Figure = (ggplot(df, aes(Axes_Name[0], Axes_Name[1], fill=Axes_Name[0]))
+     + geom_violin(m1, style='left-right', alpha=fill_alpha, size=line_size, show_legend=False)
+     + geom_line(m2, color=Line_Color, size=line_size, alpha=line_alpha)
+     + geom_point(m2, color='none', alpha=point_alpha, size=2, show_legend=False)
+     + geom_boxplot(width=shift, alpha=fill_alpha, size=line_size, outlier_alpha=point_alpha, show_legend=False)
+     + scale_fill_manual(values=Group_Color)
+     + theme_classic()
+     + theme(figure_size=(5, 4),
+             axis_title=element_text(family='Arial', size=16, weight='bold', color='black'),
+             axis_text=element_text(family='Arial', size=14, weight='bold', color='black'),
+             axis_line=element_line(size=2, color='black'),)
+    )
+
+    Figure.save(os.path.join(dir_pnet_QC, 'Functional_Homogeneity.jpg'), verbose=False, dpi=500)
+
+
+
+
+
