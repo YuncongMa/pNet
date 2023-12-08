@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/5/2023
+# Yuncong Ma, 12/6/2023
 # FN Computation module of pNet
 # Pytorch version
 
@@ -15,6 +15,7 @@ import torch
 from Data_Input import *
 from FN_Computation import construct_Laplacian_gNb, check_gFN, compute_gNb, bootstrap_scan, setup_pFN_folder
 from Server import submit_bash_job
+from Quality_Control import visualize_quality_control
 
 
 def mat_corr_torch(X, Y=None, dataPrecision='double'):
@@ -28,7 +29,7 @@ def mat_corr_torch(X, Y=None, dataPrecision='double'):
     :return: Corr
 
     Note: this method will use memory as it concatenates X and Y along column direction.
-    By Yuncong Ma, 9/5/2023
+    By Yuncong Ma, 12/6/2023
     """
 
     torch_float, torch_eps = set_data_precision_torch(dataPrecision)
@@ -976,7 +977,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 11/28/2023
+    Yuncong Ma, 12/6/2023
     """
 
     # get directories of sub-folders
@@ -1105,7 +1106,12 @@ def run_FN_Computation_torch(dir_pnet_result: str):
         else:  # use precomputed gFNs
             file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
             gFN = load_matlab_single_array(file_gFN)
+            if dataType == 'Volume':
+                Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
+                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
             check_gFN(gFN)
+            if dataType == 'Volume':
+                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
             print('load precomputed gFNs', file=logFile_FNC, flush=True)
         # ============================================= #
@@ -1168,7 +1174,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 12/5/2023
+    Yuncong Ma, 12/8/2023
     """
 
     # get directories of sub-folders
@@ -1268,7 +1274,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
                 time.sleep(wait_time)
                 Count += 1
                 if Count % report_interval == 0:
-                    print(f'--> Found {np.sum(flag_complete)} finished jobs out of 1 at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
+                    print(f'--> Found {np.sum(flag_complete)} finished jobs out of {nBS} at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
                 for rep in range(1, 1+nBS):
                     if flag_complete[rep-1] == 0 and os.path.isfile(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')):
                         flag_complete[rep-1] = 1
@@ -1279,20 +1285,26 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             memory = setting['Server']['computation_resource']['memory_fusion']
             n_thread = setting['Server']['computation_resource']['thread_fusion']
 
-            if not os.path.isfile(os.path.join(dir_pnet_pFN, 'FN.mat')):
+            if not os.path.isfile(os.path.join(dir_pnet_gFN, 'FN.mat')):
                 submit_bash_job(dir_pnet_result,
-                            python_command='pNet.fuse_FN_server(dir_pnet_result)',
-                            memory=memory,
-                            n_thread=n_thread,
-                            bashFile=os.path.join(dir_pnet_BS, 'server_job_fusion.sh'),
-                            pythonFile=os.path.join(dir_pnet_BS, 'server_job_fusion.py'),
-                            logFile=os.path.join(dir_pnet_BS, 'server_job_fusion.log')
-                            )
+                                python_command='pNet.fuse_FN_server(dir_pnet_result)',
+                                memory=memory,
+                                n_thread=n_thread,
+                                bashFile=os.path.join(dir_pnet_BS, 'server_job_fusion.sh'),
+                                pythonFile=os.path.join(dir_pnet_BS, 'server_job_fusion.py'),
+                                logFile=os.path.join(dir_pnet_BS, 'server_job_fusion.log')
+                                )
 
             # check completion
-            wait_time = 10
+            wait_time = 60
+            report_interval = 30
             flag_complete = 0
+            Count = 0
             while flag_complete == 0:
+                time.sleep(wait_time)
+                Count += 1
+                if Count % report_interval == 0:
+                    print(f'--> Found {np.sum(flag_complete)} finished jobs out of 1 at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
                 if os.path.isfile(os.path.join(dir_pnet_gFN, 'FN.mat')):
                     flag_complete = 1
                     break
@@ -1300,7 +1312,12 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
         else:  # use precomputed gFNs
             file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
             gFN = load_matlab_single_array(file_gFN)
+            if dataType == 'Volume':
+                Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
+                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
             check_gFN(gFN)
+            if dataType == 'Volume':
+                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
             print('load precomputed gFNs', flush=True)
         # ============================================= #
