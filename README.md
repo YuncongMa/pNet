@@ -110,7 +110,7 @@ Personalized FN modeling methods will enhance the functional homogeneity (ex. av
 pNet generates a file report for the examination about the one-to-one match between gFNs and pFNs, with another figure to investigate the benefit of using personalized FN modeling.
 
 <p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/922312fa-4e6f-4c0c-b660-b9eb243bc3fc"  width="400">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/a83c5da5-0efb-404f-9d36-a0cbb64bdf62"  width="400">
 </p>
 
 # MATLAB and system Compatibility
