@@ -71,7 +71,7 @@ def color_theme(theme: str,
     color_function = color_theme('Gray_Scale',(Min_Value,Min_Gray,Max_Value,Max_Gray))
     color_function = color_theme('Rainbow',(Min_Value,Max_Value))
 
-    Yuncong Ma, 10/27/2023
+    Yuncong Ma, 12/9/2023
     """
 
     if theme == 'Seed_Map':
@@ -152,10 +152,10 @@ def color_theme(theme: str,
         Color_Table = load_matlab_single_array(os.path.join(dir_python, 'Color_Table.mat'))
         Max_Index = parameter[0]
         color_function = np.zeros((2*Max_Index+1, 4), dtype=np.float32)
-        color_function[0, 0] = 0.5
-        for i in range(1, 2, 2*Max_Index):
-            color_function[i, :] = (i/2-0.5, Color_Table[i, :])
-            color_function[i+1, :] = (i/2+0.5, Color_Table[i, :])
+        color_function[0, 0] = 0
+        for i in range(1, 2*Max_Index, 2):
+            color_function[i, :] = np.hstack((i/2-0.5, Color_Table[i, :]))
+            color_function[i+1, :] = np.hstack((i/2+0.5, Color_Table[i, :]))
 
     elif theme == 'Gray_Scale':
         Min_Value = parameter[0]
