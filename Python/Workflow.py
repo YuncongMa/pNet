@@ -790,7 +790,7 @@ def workflow_server(dir_pnet_result: str,
     :param log_command: command to specify the logfile
     :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
 
-    Yuncong Ma, 12/5/2023
+    Yuncong Ma, 12/11/2023
     """
 
     print('Start to run pNet workflow in server mode', flush=True)
@@ -825,7 +825,7 @@ def workflow_server(dir_pnet_result: str,
     print('\n# data input', file=file_script)
     print(f"dataType = '{dataType}'", file=file_script)
     print(f"dataFormat = '{dataFormat}'", file=file_script)
-    print(f"file_scan ='{file_scan}'", file=file_script)
+    print(f"file_scan = '{file_scan}'", file=file_script)
     if file_subject_ID is None:
         print(f"file_subject_ID = None", file=file_script)
     else:
