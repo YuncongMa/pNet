@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/7/2023
+# Yuncong Ma, 12/12/2023
 # Quality control module of pNet
 
 #########################################
@@ -8,6 +8,7 @@ import scipy
 import os
 import time
 import pandas as pd
+import pandas.api.types as pdtypes
 from plotnine import (
     ggplot,
     aes,
