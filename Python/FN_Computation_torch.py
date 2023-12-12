@@ -83,7 +83,7 @@ def normalize_data_torch(data, algorithm='vp', normalization='vmax', dataPrecisi
     :return: data
 
     Consistent to MATLAB function normalize_data(X, algorithm, normalization, dataPrecision)
-    By Yuncong Ma, 9/8/2023
+    By Yuncong Ma, 12/12/2023
     """
 
     if len(data.shape) != 2:
@@ -645,7 +645,7 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=200, error=1e-8, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 11/27/2023
+    Yuncong Ma, 12/12/2023
     """
 
     # setup log file
@@ -687,7 +687,7 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=200, error=1e-8, normW=1,
         alphaL = np.round(Beta * dim_time / K / nM)
 
     # Prepare and normalize scan
-    Data = normalize_data_torch(Data, 'vp', 'vmax')
+    Data = normalize_data_torch(Data, 'vp', 'vmax', dataPrecision=dataPrecision)
     X = Data  # Save memory
 
     # Construct the spatial affinity graph
