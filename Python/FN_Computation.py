@@ -418,7 +418,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 11/28/2023
+    Yuncong Ma, 12/13/2023
     """
 
     # Setup data precision and eps
@@ -457,7 +457,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
         alphaL = np.round(Beta * dim_time / K / nM)
 
     # Prepare and normalize scan
-    Data = normalize_data(Data, 'vp', 'vmax', dataPrecision)
+    Data = normalize_data(Data, 'vp', 'vmax', dataPrecision=dataPrecision)
     X = Data    # Save memory
 
     # Construct the spatial affinity graph
@@ -472,7 +472,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
     # Initialize U
     U = X @ V / np.tile(np.sum(V, axis=0), (dim_time, 1))
 
-    U = initialize_u(X, U, V, error=error, maxIter=100, minIter=30, meanFitRatio=meanFitRatio, initConv=initConv)
+    U = initialize_u(X, U, V, error=error, maxIter=100, minIter=30, meanFitRatio=meanFitRatio, initConv=initConv, dataPrecision=dataPrecision)
 
     initV = V.copy()
 
@@ -1434,7 +1434,12 @@ def run_FN_Computation(dir_pnet_result: str):
         else:  # use precomputed gFNs
             file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
             gFN = load_matlab_single_array(file_gFN)
+            if dataType == 'Volume':
+                Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
+                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
             check_gFN(gFN, method=setting['FN_Computation']['Method'])
+            if dataType == 'Volume':
+                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
             print('load precomputed gFNs', file=logFile_FNC, flush=True)
         # ============================================= #

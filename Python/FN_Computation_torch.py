@@ -416,7 +416,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     :param logFile: str, directory of a txt log file
     :return: U and V. U is the temporal components of pFNs, a 2D matrix [dim_time, K], and V is the spatial components of pFNs, a 2D matrix [dim_space, K]
 
-    Yuncong Ma, 11/28/2023
+    Yuncong Ma, 12/13/2023
     """
 
     # Setup data precision and eps
@@ -470,7 +470,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
         alphaL = np.round(Beta * dim_time / K / nM)
 
     # Prepare and normalize scan
-    Data = normalize_data_torch(Data, 'vp', 'vmax')
+    Data = normalize_data_torch(Data, 'vp', 'vmax', dataPrecision=dataPrecision)
     X = Data    # Save memory
 
     # Construct the spatial affinity graph
@@ -485,7 +485,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     # Initialize U
     U = X @ V / torch.tile(torch.sum(V, dim=0), (dim_time, 1))
 
-    U = initialize_u_torch(X, U, V, error=error, maxIter=100, minIter=30, meanFitRatio=meanFitRatio, initConv=initConv)
+    U = initialize_u_torch(X, U, V, error=error, maxIter=100, minIter=30, meanFitRatio=meanFitRatio, initConv=initConv, dataPrecision=dataPrecision)
 
     initV = V.clone()
 
@@ -738,8 +738,8 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=200, error=1e-8, normW=1,
                 XU = XU + 0.5 * alphaS * negTerm
 
             if alphaL > 0:
-                WV = torch.matmul(W, V.type(torch.float64))
-                DV = torch.matmul(D, V.type(torch.float64))
+                WV = torch.matmul(W, V)  # WV = torch.matmul(W, V.type(torch.float64))
+                DV = torch.matmul(D, V)  # DV = torch.matmul(D, V.type(torch.float64))
 
                 XU = torch.add(XU, WV)
                 VUU = torch.add(VUU, DV)
