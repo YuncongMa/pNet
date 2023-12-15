@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/5/2023
+# Yuncong Ma, 12/15/2023
 # Visualization module of pNet
 
 #########################################
@@ -404,11 +404,15 @@ def plot_brain_surface(brain_map: np.ndarray,
         # build the figure
         fig = p.build()
         fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
+        image_rgb = np.array(Image.open(file_output))
+        matplotlib.pyplot.close()
+        return image_rgb
     else:
         p = p.render()
         p._check_offscreen()
         image_rgb = p.to_numpy(transparent_bg=True, scale=(2, 2))
         del p
+        matplotlib.pyplot.close()
         gc.collect()
         return image_rgb
 
@@ -489,7 +493,7 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     # dorsal view
     image_rgb = plot_brain_surface(brain_map, mesh=merge_mesh_LR(brain_template['Shape'], offset=np.array((hemisphere_offset, 0, 0))), mask=merge_mask_LR(brain_template['Brain_Mask']),
                            color_function=color_function,
-                           orientation='dorsal', view_angle=view_angle[0], file_output=None, background=(1, 1, 1),
+                           orientation='dorsal', view_angle=view_angle[0], file_output=None,
                            figure_size=(int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1])), dpi=dpi)
 
     axs[1].figure_size = (int(dpi*figure_size[0]), int(dpi*H_D*figure_size[1]))
