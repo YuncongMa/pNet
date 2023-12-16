@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>pNet Report</title>
+</head>
+<body>
+
+<h1>pNet Report</h1>
+<text style="font-size:24px;">
+    This is a brief report summarizing the results obtained using pNet. <br />
+    pNet is an open-source toolbox <a href="https://github.com/YuncongMa/pNet" target="_blank">(GitHub link)</a> to obtain personalized functional networks from fMRI data. <br />
+    Report is generated at {$report_time$}
+</text>
+
+<h2>Essential settings for this pNet workflow</h2>
+<text style="font-size:20px;">
+    The personalized functional network modeling is based on the method named as {$pnet_FN_method$}. <br />
+    The number of FNs is set to {$K$}. <br />
+    The fMRI data type is '{$dataType$}' with format as '{$dataFormat$}.' <br />
+    The whole fMRI dataset contains {$nScan$} scans from {$nSubject$} subjects. <br />
+</text>
+
+<h2>Group Functional Networks (gFNs)</h2>
+<text style="font-size:20px;">
+    {$text_gFN$}
+</text>
+<p align="center">
+    <img src='./Group_FN/All.jpg', width="800">
+</p>
+
+<h2>Personalized Functional Networks (pFNs)</h2>
+<text style="font-size:20px;">
+    One example of personalized FNs derived from several subjects are shown as below. <br />
+    <a href="#all_pFNs">Links to all pFNs are at the end of this web report.</a>
+</text>
+<p align="center">
+<img src='{$pFN_subject_1$}', width="800">
+</p>
+
+<h2>Quality Control (QC)</h2>
+<text style="font-size:20px;">
+    The personalized FNs show enhanced functional coherence compared to the group FNs. <br />
+    The functional coherence measures the average functional connectivity with each FN.
+</text>
+<p align="center">
+<img src='./Quality_Control/Functional_Homogeneity.jpg', width="600">
+</p>
+
+<a name="all_pFNs">
+    <h2>Links to All Personalized Functional Networks (pFNs)</h2>
+    <text style="font-size:20px;">
+        Scans are grouped by subject ID <br /><br />
+    </text>
+    <text style="font-size:18px;">
+        {$link_pFN$}
+    </text>
+</a>
+
+</body>
+</html>
