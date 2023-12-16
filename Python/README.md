@@ -230,6 +230,12 @@ The Python version also generate figure for QC report to investigate the benefit
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/a83c5da5-0efb-404f-9d36-a0cbb64bdf62"  width="600">
 
 
+### Web report
+pNet generates a HTML based web report to check all pFNs with hyperlinks.
+
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/261c726d-418d-4d20-ac1b-25b5b74013c2"  width="600">
+
+
 ## Help
 All the functions in pNet come with detailed description of each input <br />
 Example help comment <br />
