@@ -113,6 +113,12 @@ pNet generates a file report for the examination about the one-to-one match betw
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/a83c5da5-0efb-404f-9d36-a0cbb64bdf62"  width="400">
 </p>
 
+
+### Web report
+pNet generates a HTML based web report to check all pFNs with hyperlinks.
+
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/261c726d-418d-4d20-ac1b-25b5b74013c2"  width="600">
+
 # MATLAB and system Compatibility
 Note: it is recommended to run pNet as a MATLAB APP to allow for maximum compatibility. Although we are striving for maximizing the compatibility of pNet on different MATLAB versions and operation systems, it is difficult to conduct comprehensive tests on all cases. Our primary test environment is MATLAB 2022B and macOS Ventura 13.
 
