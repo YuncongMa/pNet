@@ -74,15 +74,6 @@ pNet organizes data structure with respect to the six panels of its GUI version:
 * Perosnalized FNs of each subject or fMRI scan are stored in sub-folders in Personalized_FN.
 
 
-# Installation
-1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall into MATLAB APPS. Compiled pNet is located in folder Compiled_Runtime. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
-2. The Python version is available at https://github.com/YuncongMa/pNet/tree/main/Python.
-3. Additional installation information can be found in the help document (Help_Document.pdf).
-
-# Hardware requirement
-It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 16GB, and free disk storage at least 10GB. Large dataset and parallel computation will require more CPU cores, memory space, and disk space. CPU and memory inf, as well as estimated memory usage can be found in the parallel section.The pNet UI requires screen displaying resolution at least 1280x960. It is recommended to use an external montior with reosolution at least 1920x1080. 2k and 4k displays are desirable.
-
-
 # Brain Template
 Five built-in brain templates are available in the subfolder "Brain_Template".
 1. HCP surface: subfolder "HCP_Surface". It contains 3D mesh shapes (vertices and faces) and brain masks for two hemishperes.
@@ -118,6 +109,17 @@ pNet generates a file report for the examination about the one-to-one match betw
 pNet generates a HTML based web report to check all pFNs with hyperlinks.
 
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/261c726d-418d-4d20-ac1b-25b5b74013c2"  width="600">
+
+
+# Installation
+1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall into MATLAB APPS. Compiled pNet is located in folder Compiled_Runtime. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
+2. The Python version is available at https://github.com/YuncongMa/pNet/tree/main/Python.
+3. Additional installation information can be found in the help document (Help_Document.pdf).
+
+
+# Hardware requirement
+It is recommended to run pNet with CPU at least 4 cores, memory (RAM) at least 16GB, and free disk storage at least 10GB. Large dataset and parallel computation will require more CPU cores, memory space, and disk space. CPU and memory inf, as well as estimated memory usage can be found in the parallel section.The pNet UI requires screen displaying resolution at least 1280x960. It is recommended to use an external montior with reosolution at least 1920x1080. 2k and 4k displays are desirable.
+
 
 # MATLAB and system Compatibility
 Note: it is recommended to run pNet as a MATLAB APP to allow for maximum compatibility. Although we are striving for maximizing the compatibility of pNet on different MATLAB versions and operation systems, it is difficult to conduct comprehensive tests on all cases. Our primary test environment is MATLAB 2022B and macOS Ventura 13.
