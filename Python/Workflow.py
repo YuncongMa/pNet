@@ -724,7 +724,7 @@ def workflow_server(dir_pnet_result: str,
                                               memory_fusion='10G', thread_fusion=4,
                                               memory_pFN='10G', thread_pFN=1,
                                               memory_qc='10G', thread_qc=1,
-                                              memory_visualization='10G', thread_visualization=1)
+                                              memory_visualization='20G', thread_visualization=1)
                     ):
     """
     Run the workflow of pNet, including Data Input, FN Computation, Quality Control and Visualization
@@ -790,7 +790,7 @@ def workflow_server(dir_pnet_result: str,
     :param log_command: command to specify the logfile
     :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
 
-    Yuncong Ma, 12/11/2023
+    Yuncong Ma, 12/18/2023
     """
 
     print('Start to run pNet workflow in server mode', flush=True)

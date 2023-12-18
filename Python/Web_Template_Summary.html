@@ -10,6 +10,7 @@
 <text style="font-size:24px;">
     This is a brief report summarizing the results obtained using pNet. <br />
     pNet is an open-source toolbox <a href="https://github.com/YuncongMa/pNet" target="_blank">(GitHub link)</a> to obtain personalized functional networks from fMRI data. <br />
+    pNet is developed by Yong's lab <a href="https://www.med.upenn.edu/machine-learning-biomed-data/" target="_blank">(lab link)</a>. <br />
     Report is generated at {$report_time$}
 </text>
 
@@ -19,6 +20,8 @@
     The number of FNs is set to {$K$}. <br />
     The fMRI data type is '{$dataType$}' with format as '{$dataFormat$}.' <br />
     The whole fMRI dataset contains {$nScan$} scans from {$nSubject$} subjects. <br />
+    Parameters for the data input are stored in './Data_Input/Setting.json'<br />
+    Parameters for the personalized FN modeling are stored in './FN_Computation/Setting.json' <br />
 </text>
 
 <h2>Group Functional Networks (gFNs)</h2>
@@ -46,6 +49,21 @@
 <p align="center">
 <img src='./Quality_Control/Functional_Homogeneity.jpg', width="600">
 </p>
+
+<h2>Reference</h2>
+<text style="font-size:20px;">
+    [1] Cui, Z. (2020). Individual variation in functional topography of association networks in youth. Neuron, 106(2), 340-353.
+    <br />
+    [2] Cui, Z. (2022). Linking Individual Differences in Personalized Functional Network Topography to Psychopathology in Youth. Biological Psychiatry.
+    <br />
+    [3] Li, H. and Fan, Y., 2016, April. Individualized brain parcellation with integrated funcitonal and morphological information. In 2016 IEEE 13th International Symposium on Biomedical Imaging (ISBI) (pp. 992-995). IEEE.
+    <br />
+    [4] Li H. (2017) Large-scale sparse functional networks from resting state fMRI. Neuroimage 156:1-13.
+    <br />
+    [5] Shanmugan, S. (2022). Sex differences in the functional topography of association networks in youth. Proceedings of the National Academy of Sciences, 119(33), e2110416119.
+    <br />
+    [6] Zhou, Z. (2023). Multiscale functional connectivity patterns of the aging brain learned from harmonized rsfMRI data of the multi-cohort iSTAGING study. NeuroImage, 269, 119911.
+</text>
 
 <a name="all_pFNs">
     <h2>Links to All Personalized Functional Networks (pFNs)</h2>

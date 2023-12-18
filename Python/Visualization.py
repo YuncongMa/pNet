@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/15/2023
+# Yuncong Ma, 12/18/2023
 # Visualization module of pNet
 
 #########################################
@@ -406,6 +406,7 @@ def plot_brain_surface(brain_map: np.ndarray,
         fig.savefig(file_output, dpi=dpi, bbox_inches="tight", facecolor=background)
         image_rgb = np.array(Image.open(file_output))
         matplotlib.pyplot.close()
+        gc.collect()
         return image_rgb
     else:
         p = p.render()
