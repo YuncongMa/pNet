@@ -217,11 +217,11 @@ The Python version also offers preconfigured visualizations consistent to the MA
 
 **Surface type**
 <p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/0b69d0c9-d7f5-4a00-9ed3-bad6873afdf0"  width="600">
-
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/719e7573-a2bf-4257-9e90-bfee38c13fc3"  width="600">
+</p>
 **Volume type**
 <p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/ca55d5c4-8757-4d2e-9818-57c6e9b0a7e4"  width="600">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/ac5b6dfd-c2b8-4338-8238-06ad379bc561"  width="600">
 </p>
 
 
