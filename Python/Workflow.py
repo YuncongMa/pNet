@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/1/2023
+# Yuncong Ma, 12/19/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -19,6 +19,7 @@ from Quality_Control import *
 from Quality_Control_torch import *
 from Visualization import *
 from Server import *
+from Web_Report import *
 
 
 def workflow(dir_pnet_result: str,
@@ -99,7 +100,7 @@ def workflow(dir_pnet_result: str,
     :param synchronized_view: True or False, whether to synchronize view centers for volume data between gFNs and pFNs
     :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
 
-    Yuncong Ma, 11/29/2023
+    Yuncong Ma, 12/19/2023
     """
 
     # Check setting
@@ -190,6 +191,10 @@ def workflow(dir_pnet_result: str,
     run_Visualization(dir_pnet_result)
     # ============================================= #
 
+    # ================= Web Report ================ #
+    run_web_report(dir_pnet_result)
+    # ============================================= #
+
 
 def workflow_simple(dir_pnet_result: str,
                     dataType: str, dataFormat: str,
@@ -211,7 +216,7 @@ def workflow_simple(dir_pnet_result: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param file_gFN: directory of a precomputed gFN in .mat format
 
-    Yuncong Ma, 11/22/2023
+    Yuncong Ma, 12/19/2023
     """
 
     # setup all sub-folders in the pNet result folder
@@ -249,6 +254,10 @@ def workflow_simple(dir_pnet_result: str,
     # =============== Visualization =============== #
     setup_Visualization(dir_pnet_result)
     run_Visualization(dir_pnet_result)
+    # ============================================= #
+
+    # ================= Web Report ================ #
+    run_web_report(dir_pnet_result)
     # ============================================= #
 
 
@@ -790,7 +799,7 @@ def workflow_server(dir_pnet_result: str,
     :param log_command: command to specify the logfile
     :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
 
-    Yuncong Ma, 12/18/2023
+    Yuncong Ma, 12/19/2023
     """
 
     print('Start to run pNet workflow in server mode', flush=True)

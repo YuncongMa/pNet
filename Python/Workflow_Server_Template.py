@@ -97,4 +97,7 @@ pNet.run_quality_control_torch_server(dir_pnet_result)
 # Visualization
 pNet.run_Visualization_server(dir_pnet_result)
 
+# Web Report
+pNet.run_web_report(dir_pnet_result)
+
 print('All runs are finished\n', flush=True)
