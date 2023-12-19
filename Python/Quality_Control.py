@@ -38,32 +38,32 @@ def print_description_QC(logFile: str):
     Yuncong Ma, 9/28/2023
     """
 
-    print('\nQuality control module checks the spatial correspondence and functional homogeneity.\n'
+    print('\nQuality control module checks the spatial correspondence and functional coherence.\n'
           'The spatial correspondence measures the spatial similarity between pFNs and gFNs.\n'
           'pFNs are supposed to have the highest spatial similarity to their group-level counterparts, otherwise violating the QC.\n'
-          'The functional homogeneity measures the average temporal correlation between time series of each pFN and the whole brain.\n'
-          'pFNs are supposed to show improved functional homogeneity compared to gFNs.\n', file=logFile, flush=True)
+          'The functional coherence measures the average temporal correlation between time series of each pFN and the whole brain.\n'
+          'pFNs are supposed to show improved functional coherence compared to gFNs.\n', file=logFile, flush=True)
 
 
 def run_quality_control(dir_pnet_result: str):
     """
     run_quality_control(dir_pnet_result: str)
-    Run the quality control module, which computes spatial correspondence and functional homogeneity
+    Run the quality control module, which computes spatial correspondence and functional coherence
     The quality control result folder has consistent sub-folder organization as Personalized_FN
     Quality control results of each scan or combined scans are stored into sub-folders
     A single matlab file named Result.mat stores all quantitative values, including
     Spatial_Correspondence: spatial correspondence between pFNs and gFNs
     Delta_Spatial_Correspondence: the difference between spatial correspondence of matched pFNs-gFNs and miss-matched pFNs-gFNS
     Miss_Match: A 2D matrix, [N, 2], each row specifies which pFN is miss matched to a different gFN
-    Functional_Homogeneity: weighted average of Pearson correlation between time series of pFNs and all nodes
-    Functional_Homogeneity_Control: weighted average of Pearson correlation between time series of gFNs and all nodes
+    Functional_Coherence: weighted average of Pearson correlation between time series of pFNs and all nodes
+    Functional_Coherence_Control: weighted average of Pearson correlation between time series of gFNs and all nodes
     A final report in txt format saved in the root directory of quality control folder
     It summaries the number of miss matched FNs for each failed scan
 
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 12/6/2023
+    Yuncong Ma, 12/19/2023
     """
 
     # Setup sub-folders in pNet result
@@ -105,7 +105,7 @@ def run_quality_control(dir_pnet_result: str):
     # data precision
     np_float, np_eps = set_data_precision(dataPrecision)
 
-    # compute spatial correspondence and functional homogeneity for each scan
+    # compute spatial correspondence and functional coherence for each scan
     if combineScan == 0:
         N_pFN = list_scan.shape[0]
     else:
@@ -138,15 +138,15 @@ def run_quality_control(dir_pnet_result: str):
             raise ValueError('Unknown data type: ' + Data_Type)
 
         # Compute quality control measurement
-        Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control =\
+        Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Coherence, Functional_Coherence_Control =\
             compute_quality_control(scan_data, gFN, pFN, dataPrecision=dataPrecision, logFile=None)
 
         # Finalize results
         Result = {'Spatial_Correspondence': Spatial_Correspondence,
                   'Delta_Spatial_Correspondence': Delta_Spatial_Correspondence,
                   'Miss_Match': Miss_Match,
-                  'Functional_Homogeneity': Functional_Homogeneity,
-                  'Functional_Homogeneity_Control': Functional_Homogeneity_Control}
+                  'Functional_Coherence': Functional_Coherence,
+                  'Functional_Coherence_Control': Functional_Coherence_Control}
 
         # Report the failed scans in the final report
         if Miss_Match.shape[0] > 0:
@@ -182,21 +182,21 @@ def run_quality_control(dir_pnet_result: str):
 def compute_quality_control(scan_data: np.ndarray, gFN: np.ndarray, pFN: np.ndarray, dataPrecision='double', logFile=None):
     """
     compute_quality_control(scan_data: np.ndarray, gFN: np.ndarray, pFN: np.ndarray, dataPrecision='double', logFile=None)
-    Compute quality control measurements, including spatial correspondence and functional homogeneity
+    Compute quality control measurements, including spatial correspondence and functional coherence
     The spatial correspondence ensures one-to-one match between gFNs and pFNs
-    The functional homogeneity ensures that pFNs gives better data fitting
+    The functional coherence ensures that pFNs gives better data fitting
 
     :param scan_data: 2D matrix, [dim_time, dim_space]
     :param gFN: 2D matrix, [dim_space, K], K is the number of FNs
     :param pFN: 2D matrix, [dim_space, K], K is the number of FNs
     :param dataPrecision: 'double' or 'single'
     :param logFile: None
-    :return: Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control
+    :return: Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Coherence, Functional_Coherence_Control
     Spatial correspondence is a 2D symmetric matrix [K, K], which measures the spatial correlation between gFNs and pFNs
     Delta_Spatial_Correspondence is a vector [K, ], which measures minimum difference of spatial correlation between matched and unmatched gFNs and pFNs
     Miss_Match is a 2D matrix [N, 2]. Each row notes a pair of miss-matched gFN and pFN.
-    Functional_Homogeneity is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of pFNs
-    Functional_Homogeneity_Control is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of gFNs
+    Functional_Coherence is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of pFNs
+    Functional_Coherence_Control is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of gFNs
 
     Yuncong Ma, 12/6/2023
     """
@@ -216,18 +216,18 @@ def compute_quality_control(scan_data: np.ndarray, gFN: np.ndarray, pFN: np.ndar
         ps2 = np.argmax(Spatial_Correspondence, axis=0)
         Miss_Match = np.concatenate((ps[:, np.newaxis] + 1, ps2[ps, np.newaxis] + 1), axis=1)
 
-    # Functional homogeneity
+    # Functional coherence
     pFN_signal = scan_data @ pFN / np.sum(pFN, axis=0, keepdims=True)
     Corr_FH = mat_corr(pFN_signal, scan_data, dataPrecision=dataPrecision)
     Corr_FH[np.isnan(Corr_FH)] = 0  # in case of zero signals
-    Functional_Homogeneity = np.sum(Corr_FH.T * pFN, axis=0) / np.sum(pFN, axis=0)
+    Functional_Coherence = np.sum(Corr_FH.T * pFN, axis=0) / np.sum(pFN, axis=0)
     # Use gFN as control
     gFN_signal = scan_data @ gFN / np.sum(pFN, axis=0, keepdims=True)
     Corr_FH = mat_corr(gFN_signal, scan_data, dataPrecision=dataPrecision)
     Corr_FH[np.isnan(Corr_FH)] = 0  # in case of zero signals
-    Functional_Homogeneity_Control = np.sum(Corr_FH.T * gFN, axis=0) / np.sum(gFN, axis=0)
+    Functional_Coherence_Control = np.sum(Corr_FH.T * gFN, axis=0) / np.sum(gFN, axis=0)
 
-    return Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control
+    return Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Coherence, Functional_Coherence_Control
 
 
 def visualize_quality_control(dir_pnet_result: str):
@@ -252,27 +252,27 @@ def visualize_quality_control(dir_pnet_result: str):
     nFolder = list_subject_folder_unique.shape[0]
 
     # load results
-    Functional_Homogeneity = np.zeros((nFolder, K))
-    Functional_Homogeneity_Control = np.zeros((nFolder, K))
+    Functional_Coherence = np.zeros((nFolder, K))
+    Functional_Coherence_Control = np.zeros((nFolder, K))
     for i in range(nFolder):
         dir_indv = os.path.join(dir_pnet_QC, list_subject_folder_unique[i])
         Result = load_matlab_single_variable(os.path.join(dir_indv, 'Result.mat'))
 
-        # get functional homogeneity using pFNs and gFNs
-        Functional_Homogeneity[i, :] = Result['Functional_Homogeneity'][0, 0]
-        Functional_Homogeneity_Control[i, :] = Result['Functional_Homogeneity_Control'][0, 0]
+        # get functional coherence using pFNs and gFNs
+        Functional_Coherence[i, :] = Result['Functional_Coherence'][0, 0]
+        Functional_Coherence_Control[i, :] = Result['Functional_Coherence_Control'][0, 0]
 
     # output results
-    Result = {'Functional_Homogeneity': Functional_Homogeneity,
-              'Functional_Homogeneity_Control': Functional_Homogeneity_Control}
+    Result = {'Functional_Coherence': Functional_Coherence,
+              'Functional_Coherence_Control': Functional_Coherence_Control}
 
     sio.savemat(os.path.join(dir_pnet_QC, 'Result.mat'), {'Result': Result})
 
     # visualization
-    before = np.nanmean(Functional_Homogeneity_Control, axis=1)
-    after = np.nanmean(Functional_Homogeneity, axis=1)
+    before = np.nanmean(Functional_Coherence_Control, axis=1)
+    after = np.nanmean(Functional_Coherence, axis=1)
 
-    Axes_Name = ['Functional Network Definition', 'Average Functional Homogeneity']
+    Axes_Name = ['Functional Network Definition', 'Average Functional Coherence']
     Group_Name = ['Group', 'Personalized']
     Group_Color = ['dodgerblue', 'tomato']
     Line_Color = 'gray'
@@ -327,7 +327,7 @@ def visualize_quality_control(dir_pnet_result: str):
              axis_line=element_line(size=2, color='black'),)
     )
 
-    Figure.save(os.path.join(dir_pnet_QC, 'Functional_Homogeneity.jpg'), verbose=False, dpi=500)
+    Figure.save(os.path.join(dir_pnet_QC, 'Functional_Coherence.jpg'), verbose=False, dpi=500)
 
 
 
