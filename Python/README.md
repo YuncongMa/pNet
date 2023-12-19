@@ -216,29 +216,30 @@ pNet.workflow_simple(
 The Python version also offers preconfigured visualizations consistent to the MATLAB version. However, the 3D surface display is slightly different due to different lighting and material settings between MATLAB and matplotlib.
 
 **Surface type**
-
+<p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/0b69d0c9-d7f5-4a00-9ed3-bad6873afdf0"  width="600">
 
 **Volume type**
-
+<p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/ca55d5c4-8757-4d2e-9818-57c6e9b0a7e4"  width="600">
+</p>
 
 
 ### QC figure
 The Python version also generate figure for QC report to investigate the benefit of using personalized FN modeling.
-
+<p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/a83c5da5-0efb-404f-9d36-a0cbb64bdf62"  width="600">
-
+</p>
 
 ### Web report
 pNet generates a HTML based web report to check gFNs, all pFNs with hyperlinks, and quality control.
-
+<p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/a130831b-fe02-4d97-b80a-f91e68882102"  width="600">
-
+</p>
 
 ## Help
 All the functions in pNet come with detailed description of each input <br />
 Example help comment <br />
-
+<p align="center">
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/2b040a86-2212-4a48-9081-8d89983babf8" width="500">
-
+</p>
