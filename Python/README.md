@@ -219,6 +219,7 @@ The Python version also offers preconfigured visualizations consistent to the MA
 <p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/719e7573-a2bf-4257-9e90-bfee38c13fc3"  width="600">
 </p>
+
 **Volume type**
 <p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/ac5b6dfd-c2b8-4338-8238-06ad379bc561"  width="600">
