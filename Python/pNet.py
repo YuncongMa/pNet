@@ -1,4 +1,4 @@
-# Yuncong Ma, 11/30/2023
+# Yuncong Ma, 12/19/2023
 # pNet
 # This script provides the highest level organization of pNet
 # It provides workflows of pNet, and examples
@@ -33,6 +33,7 @@ from Quality_Control import *
 from Quality_Control_torch import *
 from Workflow import *
 from Server import *
+from Web_Report import *
 
 
 
