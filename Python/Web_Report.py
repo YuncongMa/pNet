@@ -1,8 +1,11 @@
-# Yuncong Ma, 12/14/2023
+# Yuncong Ma, 12/18/2023
 # Make a web page based report for fast visual examination
 
 import os
 from Data_Input import *
+from PIL import Image
+from Visualization import *
+
 
 dir_python = os.path.dirname(os.path.abspath(__file__))
 
@@ -14,7 +17,7 @@ def run_web_report(dir_pnet_result: str):
     :param dir_pnet_result:
     :return:
 
-    Yuncong Ma, 12/14/2023
+    Yuncong Ma, 12/18/2023
     """
 
     # get directories of sub-folders
@@ -49,12 +52,13 @@ def run_web_report(dir_pnet_result: str):
     nScan = len(list_scan)
     list_subject_ID = load_txt_list(file_subject_ID)
     nSubject = len(np.unique(list_subject_ID))
-    list_subject_folder, subject_index = np.unique(load_txt_list(file_subject_folder), return_index=True)
+    list_subject, subject_index = np.unique(load_txt_list(file_subject_ID), return_index=True)
     list_subject_ID_unqiue = list_subject_ID[subject_index]
-    nFolder = len(list_subject_folder)
+    list_subject_folder = load_txt_list(file_subject_folder)
+    list_subject_folder_unique, folder_index = np.unique(list_subject_folder, return_index=True)
+    nFolder = len(list_subject_folder_unique)
 
     # template for web page
-    template_individual = os.path.join(dir_python, 'Web_Template_Individual.html')
     template_summary = os.path.join(dir_python, 'Web_Template_Summary.html')
 
     # Generate the summary web page
@@ -74,23 +78,42 @@ def run_web_report(dir_pnet_result: str):
     html_as_string = html_as_string.replace('{$dataFormat$}', str(dataFormat))
     html_as_string = html_as_string.replace('{$nScan$}', str(nScan))
     html_as_string = html_as_string.replace('{$nSubject$}', str(nSubject))
+    # Compress images if not done yet
+    image_size = (2000, 10000)
+    if not os.path.isfile(os.path.join(dir_pnet_gFN, 'All(Compressed).jpg')):
+        compress_image(os.path.join(dir_pnet_gFN, 'All(Compressed).jpg'),
+                       os.path.join(dir_pnet_gFN, 'All.jpg'),
+                       image_size=image_size)
+    for i in range(nFolder):
+        if os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder_unique[i], 'All.jpg')) and not os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder_unique[i], 'All(Compressed).jpg')):
+            compress_image(os.path.join(dir_pnet_pFN, list_subject_folder_unique[i], 'All(Compressed).jpg'),
+                           os.path.join(dir_pnet_pFN, list_subject_folder_unique[i], 'All.jpg'),
+                           image_size=image_size)
+
     # gFN
     if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
         text_gFN = 'The group FNs are derived using the whole fMRI dataset'
     else:
         text_gFN = 'The group FNs are loaded from precomputed results at ' + setting['FN_Computation']['Group_FN']['file_gFN']
     html_as_string = html_as_string.replace('{$text_gFN$}', str(text_gFN))
-    # pFN
-    pFN_subject_1 = './' + os.path.join('Personalized_FN', list_subject_folder[0], 'All.jpg')
-    html_as_string = html_as_string.replace('{$pFN_subject_1$}', str(pFN_subject_1))
+    figure_gFN = './Group_FN/All(Compressed).jpg'
+    html_as_string = html_as_string.replace('{$figure_gFN$}', str(figure_gFN))
+    # pFN examples
+    nMax = 10
+    frames = [Image.open(os.path.join(dir_pnet_pFN, list_subject_folder[subject_index[i]], 'All(Compressed).jpg')) for i in range(np.minimum(nMax, nSubject))]
+    frame_one = frames[0]
+    frame_one.save(os.path.join(dir_pnet_pFN, 'Example.gif'), format="GIF", append_images=frames, save_all=True, duration=1000, loop=0, optimize=False)
+    pFN_example = './' + os.path.join('Personalized_FN', 'Example.gif')
+    html_as_string = html_as_string.replace('{$pFN_example$}', str(pFN_example))
+    # pFN links
     link_pFN = ''
     pre_sub = list_subject_ID_unqiue[0]
     for i in range(nFolder):
-        if list_subject_ID_unqiue[i] != pre_sub:
+        if list_subject_ID[folder_index[i]] != pre_sub:
             link_pFN = link_pFN + "<br />"
-            pre_sub = list_subject_ID_unqiue[i]
-        file_pFN_indv = './' + os.path.join('Personalized_FN', list_subject_folder[i], 'All.jpg')
-        link_pFN = link_pFN + f" <a href='{file_pFN_indv}' target='_blank' title='{list_subject_folder[i]}'>({list_subject_folder[i]})</a>\n"
+            pre_sub = list_subject_ID[folder_index[i]]
+        file_pFN_indv = './' + os.path.join('Personalized_FN', list_subject_folder_unique[i], 'All(Compressed).jpg')
+        link_pFN = link_pFN + f" <a href='{file_pFN_indv}' target='_blank' title='{list_subject_folder_unique[i]}'>({list_subject_folder_unique[i]})</a>\n"
     html_as_string = html_as_string.replace('{$link_pFN$}', str(link_pFN))
 
     file_summary = open(file_summary, 'w')

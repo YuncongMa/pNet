@@ -14,6 +14,7 @@ import matplotlib
 import surfplot
 from brainspace.mesh.mesh_creation import build_polydata
 from PIL import Image
+Image.MAX_IMAGE_PIXELS = None
 import scipy
 
 # other functions of pNet
@@ -29,6 +30,25 @@ if platform == "darwin":
     matplotlib.use('TkAgg')  # Use the Tkinter backend
 
 # =============== basic functions =============== #
+
+
+def compress_image(file_compressed_image: str, image_rgb, image_size=(2000, 10000)):
+    """
+    Compress an PIL.Image object to a certain size
+
+    :param file_compressed_image: directory of the output image file
+    :param image_rgb: an Image file or a PIL.Image object
+    :param image_size: (width, height)
+    :return:
+
+    Yuncong Ma, 12/18/2023
+    """
+
+    if isinstance(image_rgb, str):
+        image_rgb = Image.open(image_rgb)
+    image_rgb.thumbnail(image_size)
+    image_rgb.save(file_compressed_image)
+    image_rgb.close()
 
 
 def prepare_BSPolyData(vertices: np.ndarray, faces: np.ndarray):
@@ -1072,7 +1092,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 12/4/2023
+    Yuncong Ma, 12/18/2023
     """
 
     # get directories of sub-folders
@@ -1134,6 +1154,11 @@ def run_gFN_Visualization(dir_pnet_result: str):
     file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
     assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
 
+    # output a compressed image
+    compress_image(os.path.join(dir_pnet_gFN, 'All(Compressed).jpg'),
+                   os.path.join(dir_pnet_gFN, 'All.jpg'),
+                   image_size=(2000, 10000))
+
     return
 
 
@@ -1144,7 +1169,7 @@ def run_pFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 12/4/2023
+    Yuncong Ma, 12/18/2023
     """
 
     # get directories of sub-folders
@@ -1240,6 +1265,11 @@ def run_pFN_Visualization(dir_pnet_result: str):
         # output an assembled image
         file_output_assembled = os.path.join(dir_pnet_pFN_indv, 'All.jpg')
         assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
+
+        # output a compressed image
+        compress_image(os.path.join(dir_pnet_pFN_indv, 'All(Compressed).jpg'),
+                       os.path.join(dir_pnet_pFN_indv, 'All.jpg'),
+                       image_size=(2000, 10000))
 
     return
 
@@ -1355,7 +1385,7 @@ def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
     :param jobID: jobID starting from 1
     :return:
 
-    Yuncong Ma, 11/30/2023
+    Yuncong Ma, 12/18/2023
     """
 
     # get directories of sub-folders
@@ -1443,5 +1473,10 @@ def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_pFN_indv, 'All.jpg')
     assemble_image(file_output, file_output_assembled, interval=(50, 5), background=(0, 0, 0))
+
+    # output a compressed image
+    compress_image(os.path.join(dir_pnet_pFN_indv, 'All(Compressed).jpg'),
+                   os.path.join(dir_pnet_pFN_indv, 'All.jpg'),
+                   image_size=(2000, 10000))
 
     return
