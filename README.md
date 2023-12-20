@@ -98,7 +98,11 @@ The data organization is as below.
 
 # Quality Control
 Personalized FN modeling methods will enhance the functional homogeneity (ex. average functional connectivity with each network) with functional networks, suggesting better functional representation. <br />
-pNet generates a file report for the examination about the one-to-one match between gFNs and pFNs, with another figure to investigate the benefit of using personalized FN modeling.
+pNet generates a file report for the examination about the one-to-one match between gFNs and pFNs, with another figure about the spatial correspondence.
+
+<p align="center">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/745ea55c-23e8-49ab-a475-000b25f342e5"  width="600">
+</p>
 
 <p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/a83c5da5-0efb-404f-9d36-a0cbb64bdf62"  width="400">
