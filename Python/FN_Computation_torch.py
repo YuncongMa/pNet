@@ -474,7 +474,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     X = Data    # Save memory
 
     # Construct the spatial affinity graph
-    L, W, D = construct_Laplacian_gNb_torch(gNb, dim_space, vxI, X, alphaL, normW, dataPrecision)
+    L, W, D = construct_Laplacian_gNb_torch(gNb, dim_space, vxI, X, alphaL, normW, dataPrecision=dataPrecision)
 
     # Initialize V
     V = initV.clone()
@@ -540,7 +540,7 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
         #     U[:, prunInd] = torch.zeros((dim_time, torch.sum(prunInd)), dtype=torch_float)
 
         # normalize U and V
-        U, V = normalize_u_v_torch(U, V, 1, 1)
+        U, V = normalize_u_v_torch(U, V, 1, 1, dataPrecision=dataPrecision)
 
         # ===================== update U =========================
         XV = X @ V
@@ -977,7 +977,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 12/6/2023
+    Yuncong Ma, 12/20/2023
     """
 
     # get directories of sub-folders
@@ -1064,6 +1064,20 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             nRepeat = setting['FN_Computation']['Group_FN']['nRepeat']
             dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
 
+            # separate maxIter and minIter for gFN and pFN
+            if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
+                maxIter_gFN = maxIter
+                maxIter_pFN = maxIter
+            else:
+                maxIter_gFN = maxIter[0]
+                maxIter_pFN = maxIter[1]
+            if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
+                minIter_gFN = minIter
+                minIter_pFN = minIter
+            else:
+                minIter_gFN = minIter[0]
+                minIter_pFN = minIter[1]
+
             # NMF on bootstrapped subsets
             print('Start to NMF for each bootstrap at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
             dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
@@ -1077,7 +1091,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
                 Data = load_fmri_scan(file_scan_list, dataType=dataType, dataFormat=dataFormat, Reshape=True, Brain_Mask=Brain_Mask,
                                       Normalization='vp-vmax', logFile=logFile)
                 # perform NMF
-                FN_BS = gFN_NMF_torch(Data, K, gNb, maxIter=maxIter, minIter=minIter, error=error, normW=normW,
+                FN_BS = gFN_NMF_torch(Data, K, gNb, maxIter=maxIter_gFN, minIter=minIter_gFN, error=error, normW=normW,
                                       Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
                                       nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=logFile)
                 # save results
@@ -1144,6 +1158,21 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             ard = setting['FN_Computation']['Personalized_FN']['ard']
             eta = setting['FN_Computation']['Personalized_FN']['eta']
             dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
+
+            # separate maxIter and minIter for gFN and pFN
+            if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
+                maxIter_gFN = maxIter
+                maxIter_pFN = maxIter
+            else:
+                maxIter_gFN = maxIter[0]
+                maxIter_pFN = maxIter[1]
+            if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
+                minIter_gFN = minIter
+                minIter_pFN = minIter
+            else:
+                minIter_gFN = minIter[0]
+                minIter_pFN = minIter[1]
+
             # log file
             logFile = os.path.join(dir_pnet_pFN_indv, 'Log.log')
             # load data
@@ -1151,7 +1180,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
                                   dataType=dataType, dataFormat=dataFormat,
                                   Reshape=True, Brain_Mask=Brain_Mask, logFile=logFile)
             # perform NMF
-            TC, pFN = pFN_NMF_torch(Data, gFN, gNb, maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio,
+            TC, pFN = pFN_NMF_torch(Data, gFN, gNb, maxIter=maxIter_pFN, minIter=minIter_pFN, meanFitRatio=meanFitRatio,
                                     error=error, normW=normW,
                                     Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
                                     vxI=vxI,  ard=ard, eta=eta,
@@ -1370,7 +1399,7 @@ def NMF_boostrapping_server(dir_pnet_result: str, jobID=1):
     :param jobID: jobID starting from 1
     :return: None
 
-    Yuncong Ma, 11/29/2023
+    Yuncong Ma, 12/20/2023
     """
 
     jobID = int(jobID)
@@ -1410,6 +1439,20 @@ def NMF_boostrapping_server(dir_pnet_result: str, jobID=1):
     nRepeat = setting['FN_Computation']['Group_FN']['nRepeat']
     dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
 
+    # separate maxIter and minIter for gFN and pFN
+    if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
+        maxIter_gFN = maxIter
+        maxIter_pFN = maxIter
+    else:
+        maxIter_gFN = maxIter[0]
+        maxIter_pFN = maxIter[1]
+    if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
+        minIter_gFN = minIter
+        minIter_pFN = minIter
+    else:
+        minIter_gFN = minIter[0]
+        minIter_pFN = minIter[1]
+
     dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
     if not os.path.exists(dir_pnet_BS):
         os.makedirs(dir_pnet_BS)
@@ -1427,7 +1470,7 @@ def NMF_boostrapping_server(dir_pnet_result: str, jobID=1):
     gNb = load_matlab_single_array(os.path.join(dir_pnet_FNC, 'gNb.mat'))
 
     # perform NMF
-    FN_BS = gFN_NMF_torch(Data, K, gNb, maxIter=maxIter, minIter=minIter, error=error, normW=normW,
+    FN_BS = gFN_NMF_torch(Data, K, gNb, maxIter=maxIter_gFN, minIter=minIter_gFN, error=error, normW=normW,
                           Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
                           nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=None)
     # save results
@@ -1494,7 +1537,7 @@ def NMF_pFN_server(dir_pnet_result: str, jobID=1):
     :param jobID: jobID starting from 1
     :return: None
 
-    Yuncong Ma, 11/29/2023
+    Yuncong Ma, 12/20/2023
     """
 
     jobID = int(jobID)
@@ -1548,12 +1591,26 @@ def NMF_pFN_server(dir_pnet_result: str, jobID=1):
     eta = setting['FN_Computation']['Personalized_FN']['eta']
     dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
 
+    # separate maxIter and minIter for gFN and pFN
+    if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
+        maxIter_gFN = maxIter
+        maxIter_pFN = maxIter
+    else:
+        maxIter_gFN = maxIter[0]
+        maxIter_pFN = maxIter[1]
+    if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
+        minIter_gFN = minIter
+        minIter_pFN = minIter
+    else:
+        minIter_gFN = minIter[0]
+        minIter_pFN = minIter[1]
+
     # load data
     Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'),
                           dataType=dataType, dataFormat=dataFormat,
                           Reshape=True, Brain_Mask=Brain_Mask, logFile=None)
     # perform NMF
-    TC, pFN = pFN_NMF_torch(Data, gFN, gNb, maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio,
+    TC, pFN = pFN_NMF_torch(Data, gFN, gNb, maxIter=maxIter_pFN, minIter=minIter_pFN, meanFitRatio=meanFitRatio,
                             error=error, normW=normW,
                             Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
                             vxI=vxI,  ard=ard, eta=eta,

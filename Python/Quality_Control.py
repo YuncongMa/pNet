@@ -236,7 +236,7 @@ def visualize_quality_control(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pNet result folder
     :return: None
 
-    Yuncong Ma, 12/7/2023
+    Yuncong Ma, 12/20/2023
     """
 
     # Setup sub-folders in pNet result
@@ -252,29 +252,86 @@ def visualize_quality_control(dir_pnet_result: str):
     nFolder = list_subject_folder_unique.shape[0]
 
     # load results
+    Spatial_Correspondence = np.zeros((nFolder, K))
+    Delta_Spatial_Correspondence = np.zeros((nFolder, K))
     Functional_Coherence = np.zeros((nFolder, K))
     Functional_Coherence_Control = np.zeros((nFolder, K))
     for i in range(nFolder):
         dir_indv = os.path.join(dir_pnet_QC, list_subject_folder_unique[i])
         Result = load_matlab_single_variable(os.path.join(dir_indv, 'Result.mat'))
 
-        # get functional coherence using pFNs and gFNs
-        Functional_Coherence[i, :] = Result['Functional_Coherence'][0, 0]
-        Functional_Coherence_Control[i, :] = Result['Functional_Coherence_Control'][0, 0]
+        # get spatial correspondence and functional coherence using pFNs and gFNs
+        # Add support for previous terminology 'Functional_Homogeneity'
+        Spatial_Correspondence[i, :] = np.diag(Result['Spatial_Correspondence'][0, 0])
+        Delta_Spatial_Correspondence[i, :] = Result['Delta_Spatial_Correspondence'][0, 0]
+        if 'Functional_Coherence' in Result.dtype.names:
+            Functional_Coherence[i, :] = Result['Functional_Coherence'][0, 0]
+            Functional_Coherence_Control[i, :] = Result['Functional_Coherence_Control'][0, 0]
+        else:
+            Functional_Coherence[i, :] = Result['Functional_Homogeneity'][0, 0]
+            Functional_Coherence_Control[i, :] = Result['Functional_Homogeneity_Control'][0, 0]
 
     # output results
-    Result = {'Functional_Coherence': Functional_Coherence,
+    Result = {'Spatial_Correspondence': Spatial_Correspondence,
+              'Delta_Spatial_Correspondence': Delta_Spatial_Correspondence,
+              'Functional_Coherence': Functional_Coherence,
               'Functional_Coherence_Control': Functional_Coherence_Control}
 
     sio.savemat(os.path.join(dir_pnet_QC, 'Result.mat'), {'Result': Result})
 
-    # visualization
+    # visualization for spatial correspondence
+    before = np.nanmean(Spatial_Correspondence, axis=1)
+
+    Axes_Name = ['Personalized Functional Networks', 'Average Spatial Correspondence']
+    Group_Name = ['']
+    Group_Color = ['dodgerblue']
+
+    n = before.shape[0]
+
+    df = pd.DataFrame({
+        Axes_Name[1]: np.hstack([before]),
+        Axes_Name[0]: np.repeat(Group_Name, n),
+        'id': np.hstack([range(n)])
+    })
+
+    df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
+    df.head()
+
+    line_size = 0.6
+    # set the transparency for filling area
+    fill_alpha = 0.8
+    point_alpha = 0.5
+
+    df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
+    df.head()
+
+    shift = 0.1
+
+    def alt_sign(x):
+        return (-1) ** x
+
+    m1 = aes(x=stage(Axes_Name[0], after_scale='x+shift*alt_sign(x)'))              # shift outward
+
+    Figure = (ggplot(df, aes(Axes_Name[0], Axes_Name[1], fill=Axes_Name[0]))
+     + geom_violin(m1, style='left-right', alpha=fill_alpha, size=line_size, show_legend=False)
+     + geom_boxplot(width=shift, alpha=fill_alpha, size=line_size, outlier_alpha=point_alpha, show_legend=False)
+     + scale_fill_manual(values=Group_Color)
+     + theme_classic()
+     + theme(figure_size=(5, 4),
+             axis_title=element_text(family='Arial', size=16, weight='bold', color='black'),
+             axis_text=element_text(family='Arial', size=14, weight='bold', color='black'),
+             axis_line=element_line(size=2, color='black'),)
+    )
+
+    Figure.save(os.path.join(dir_pnet_QC, 'Spatial_Correspondence.jpg'), verbose=False, dpi=500)
+
+    # visualization for functional coherence
     before = np.nanmean(Functional_Coherence_Control, axis=1)
     after = np.nanmean(Functional_Coherence, axis=1)
 
     Axes_Name = ['Functional Network Definition', 'Average Functional Coherence']
     Group_Name = ['Group', 'Personalized']
-    Group_Color = ['dodgerblue', 'tomato']
+    Group_Color = ['tomato', 'dodgerblue']
     Line_Color = 'gray'
 
     n = before.shape[0]

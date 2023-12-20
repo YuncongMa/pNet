@@ -3,6 +3,7 @@
 
 #########################################
 # Packages
+import numpy
 import numpy as np
 import scipy
 import scipy.io as sio
@@ -527,7 +528,7 @@ def pFN_NMF(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e
             U[:, prunInd] = np.zeros((dim_time, np.sum(prunInd)), dype=np_float)
 
         # normalize U and V
-        U, V = normalize_u_v(U, V, 1, 1, dataPrecision)
+        U, V = normalize_u_v(U, V, 1, 1, dataPrecision=dataPrecision)
 
         # ===================== update U =========================
         XV = X @ V
@@ -1176,11 +1177,9 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
         FID.close()
 
 
-def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=200, meanFitRatio=0.1, error=1e-8,
+def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=(2000, 500), minIter=200, meanFitRatio=0.1, error=1e-8,
                       normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='Both'):
     """
-    setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, Compute_gFN=True, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double')
     Setup the setting for NMF-based method to compute gFNs and pFNs
 
     :param dir_pnet_result: directory of the pNet result folder
@@ -1190,8 +1189,8 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=N
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
     :param sampleSize: 'Automatic' or integer number, number of subjects selected for each bootstrapping run
     :param nBS: 'Automatic' or integer number, number of runs for bootstrap
-    :param maxIter: maximum iteration number for multiplicative update
-    :param minIter: minimum iteration in case fast convergence
+    :param maxIter: maximum iteration number for multiplicative update, which can be one number or two numbers for gFN and pFN separately
+    :param minIter: minimum iteration in case fast convergence, which can be one number or two numbers for gFN and pFN separately
     :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
     :param error: difference of cost function for convergence
     :param normW: 1 or 2, normalization method for W used in Laplacian regularization
@@ -1211,7 +1210,7 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=N
 
     :return: setting: a structure
 
-    Yuncong Ma, 11/27/2023
+    Yuncong Ma, 12/20/2023
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
@@ -1310,7 +1309,7 @@ def run_FN_Computation(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 11/7/2023
+    Yuncong Ma, 12/20/2023
     """
 
     # get directories of sub-folders
@@ -1398,6 +1397,20 @@ def run_FN_Computation(dir_pnet_result: str):
             nRepeat = setting['FN_Computation']['Group_FN']['nRepeat']
             dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
 
+            # separate maxIter and minIter for gFN and pFN
+            if isinstance(maxIter, int) or (isinstance(maxIter, numpy.ndarray) and maxIter.shape == 1):
+                maxIter_gFN = maxIter
+                maxIter_pFN = maxIter
+            else:
+                maxIter_gFN = maxIter[0]
+                maxIter_pFN = maxIter[1]
+            if isinstance(minIter, int) or (isinstance(minIter, numpy.ndarray) and minIter.shape == 1):
+                minIter_gFN = minIter
+                minIter_pFN = minIter
+            else:
+                minIter_gFN = minIter[0]
+                minIter_pFN = minIter[1]
+
             # NMF on bootstrapped subsets
             print('Start to NMF for each bootstrap at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
             for rep in range(1, 1+nBS):
@@ -1408,7 +1421,7 @@ def run_FN_Computation(dir_pnet_result: str):
                 Data = load_fmri_scan(file_scan_list, dataType=dataType, dataFormat=dataFormat, Reshape=True, Brain_Mask=Brain_Mask,
                                       Normalization='vp-vmax', logFile=logFile)
                 # perform NMF
-                FN_BS = gFN_NMF(Data, K, gNb, maxIter=maxIter, minIter=minIter, error=error, normW=normW,
+                FN_BS = gFN_NMF(Data, K, gNb, maxIter=maxIter_gFN, minIter=minIter_gFN, error=error, normW=normW,
                                 Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
                                 nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=logFile)
                 # save results
@@ -1472,6 +1485,21 @@ def run_FN_Computation(dir_pnet_result: str):
             ard = setting['FN_Computation']['Personalized_FN']['ard']
             eta = setting['FN_Computation']['Personalized_FN']['eta']
             dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
+
+            # separate maxIter and minIter for gFN and pFN
+            if isinstance(maxIter, int) or (isinstance(maxIter, numpy.ndarray) and maxIter.shape == 1):
+                maxIter_gFN = maxIter
+                maxIter_pFN = maxIter
+            else:
+                maxIter_gFN = maxIter[0]
+                maxIter_pFN = maxIter[1]
+            if isinstance(minIter, int) or (isinstance(minIter, numpy.ndarray) and minIter.shape == 1):
+                minIter_gFN = minIter
+                minIter_pFN = minIter
+            else:
+                minIter_gFN = minIter[0]
+                minIter_pFN = minIter[1]
+
             # log file
             logFile = os.path.join(dir_pnet_pFN_indv, 'Log.log')
             # load data
@@ -1479,7 +1507,7 @@ def run_FN_Computation(dir_pnet_result: str):
                                   dataType=dataType, dataFormat=dataFormat,
                                   Reshape=True, Brain_Mask=Brain_Mask, logFile=logFile)
             # perform NMF
-            TC, pFN = pFN_NMF(Data, gFN, gNb, maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
+            TC, pFN = pFN_NMF(Data, gFN, gNb, maxIter=maxIter_pFN, minIter=minIter_pFN, meanFitRatio=meanFitRatio, error=error, normW=normW,
                               Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
                               dataPrecision=dataPrecision, logFile=logFile)
             # output

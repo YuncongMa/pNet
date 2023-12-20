@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/5/2023
+# Yuncong Ma, 12/20/2023
 # Quality control module of pNet using PyTorch
 
 #########################################
@@ -19,22 +19,22 @@ from Server import submit_bash_job
 
 def run_quality_control_torch(dir_pnet_result: str):
     """
-    Run the quality control module, which computes spatial correspondence and functional homogeneity
+    Run the quality control module, which computes spatial correspondence and functional coherence
     The quality control result folder has consistent sub-folder organization as Personalized_FN
     Quality control results of each scan or combined scans are stored into sub-folders
     A single matlab file named Result.mat stores all quantitative values, including
     Spatial_Correspondence: spatial correspondence between pFNs and gFNs
     Delta_Spatial_Correspondence: the difference between spatial correspondence of matched pFNs-gFNs and miss-matched pFNs-gFNS
     Miss_Match: A 2D matrix, [N, 2], each row specifies which pFN is miss matched to a different gFN
-    Functional_Homogeneity: weighted average of Pearson correlation between time series of pFNs and all nodes
-    Functional_Homogeneity_Control: weighted average of Pearson correlation between time series of gFNs and all nodes
+    Functional_Coherence: weighted average of Pearson correlation between time series of pFNs and all nodes
+    Functional_Coherence_Control: weighted average of Pearson correlation between time series of gFNs and all nodes
     A final report in txt format saved in the root directory of quality control folder
     It summaries the number of miss matched FNs for each failed scan
 
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 11/7/2023
+    Yuncong Ma, 12/20/2023
     """
 
     # Setup sub-folders in pNet result
@@ -76,7 +76,7 @@ def run_quality_control_torch(dir_pnet_result: str):
     # data precision
     torch_float, torch_eps = set_data_precision_torch(dataPrecision)
 
-    # compute spatial correspondence and functional homogeneity for each scan
+    # compute spatial correspondence and functional coherence for each scan
     if combineScan == 0:
         N_pFN = list_scan.shape[0]
     else:
@@ -111,15 +111,15 @@ def run_quality_control_torch(dir_pnet_result: str):
         scan_data = torch.tensor(scan_data, dtype=torch_float)
 
         # Compute quality control measurement
-        Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control =\
+        Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Coherence, Functional_Coherence_Control =\
             compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision=dataPrecision, logFile=None)
 
         # Finalize results
         Result = {'Spatial_Correspondence': Spatial_Correspondence,
                   'Delta_Spatial_Correspondence': Delta_Spatial_Correspondence,
                   'Miss_Match': Miss_Match,
-                  'Functional_Homogeneity': Functional_Homogeneity,
-                  'Functional_Homogeneity_Control': Functional_Homogeneity_Control}
+                  'Functional_Coherence': Functional_Coherence,
+                  'Functional_Coherence_Control': Functional_Coherence_Control}
 
         # Report the failed scans in the final report
         if Miss_Match.shape[0] > 0:
@@ -154,24 +154,24 @@ def run_quality_control_torch(dir_pnet_result: str):
 
 def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', logFile=None):
     """
-    Compute quality control measurements, including spatial correspondence and functional homogeneity
+    Compute quality control measurements, including spatial correspondence and functional coherence
     The spatial correspondence ensures one-to-one match between gFNs and pFNs
-    The functional homogeneity ensures that pFNs gives better data fitting
+    The functional coherence ensures that pFNs gives better data fitting
 
     :param scan_data: 2D matrix, [dim_time, dim_space], np.ndarray or torch.Tensor
     :param gFN: 2D matrix, [dim_space, K], K is the number of FNs, np.ndarray or torch.Tensor
     :param pFN: 2D matrix, [dim_space, K], K is the number of FNs, np.ndarray or torch.Tensor
     :param dataPrecision: 'double' or 'single'
     :param logFile: None
-    :return: Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control
+    :return: Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Coherence, Functional_Coherence_Control
     Outputs are numpy.ndarray
     Spatial correspondence is a 2D symmetric matrix [K, K], which measures the spatial correlation between gFNs and pFNs
     Delta_Spatial_Correspondence is a vector [K, ], which measures minimum difference of spatial correlation between matched and unmatched gFNs and pFNs
     Miss_Match is a 2D matrix [N, 2]. Each row notes a pair of miss-matched gFN and pFN.
-    Functional_Homogeneity is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of pFNs
-    Functional_Homogeneity_Control is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of gFNs
+    Functional_Coherence is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of pFNs
+    Functional_Coherence_Control is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of gFNs
 
-    Yuncong Ma, 12/6/2023
+    Yuncong Ma, 12/20/2023
     """
 
     # data precision
@@ -191,13 +191,16 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
 
     # Spatial correspondence
     K = gFN.shape[1]
-    Spatial_Correspondence = mat_corr_torch(gFN, pFN, dataPrecision=dataPrecision)
-    Delta_Spatial_Correspondence = torch.diag(Spatial_Correspondence) - torch.max(
-        Spatial_Correspondence - torch.diag(2 * torch.ones(K)), dim=0)[0]
+
+    temp = mat_corr_torch(gFN, pFN, dataPrecision=dataPrecision)
+    QC_Spatial_Correspondence = torch.clone(torch.diag(temp))
+    temp -= torch.diag(2 * torch.ones(K))  # set diagonal values to lower than -1
+    QC_Spatial_Correspondence_Control = torch.max(temp, dim=0)[0]
+    QC_Delta_Sim = torch.min(QC_Spatial_Correspondence - QC_Spatial_Correspondence_Control)
 
     # Convert back to Numpy array
-    Spatial_Correspondence = Spatial_Correspondence.numpy()
-    Delta_Spatial_Correspondence = Delta_Spatial_Correspondence.numpy()
+    Spatial_Correspondence = QC_Spatial_Correspondence.cpu().numpy()
+    Delta_Spatial_Correspondence = QC_Delta_Sim.cpu().numpy()
 
     # Miss match between gFNs and pFNs
     # Index starts from 1
@@ -208,22 +211,22 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
         ps2 = np.argmax(Spatial_Correspondence, axis=0)
         Miss_Match = np.concatenate((ps[:, np.newaxis] + 1, ps2[ps, np.newaxis] + 1), axis=1)
 
-    # Functional homogeneity
+    # Functional coherence
     pFN_signal = scan_data @ pFN / torch.sum(pFN, dim=0, keepdims=True)
     Corr_FH = mat_corr_torch(pFN_signal, scan_data, dataPrecision=dataPrecision)
     Corr_FH[torch.isnan(Corr_FH)] = 0  # in case of zero signals
-    Functional_Homogeneity = torch.sum(Corr_FH.T * pFN, dim=0) / torch.sum(pFN, dim=0)
+    Functional_Coherence = torch.sum(Corr_FH.T * pFN, dim=0) / torch.sum(pFN, dim=0)
     # Use gFN as control
     gFN_signal = scan_data @ gFN / torch.sum(pFN, dim=0, keepdims=True)
     Corr_FH = mat_corr_torch(gFN_signal, scan_data, dataPrecision=dataPrecision)
     Corr_FH[torch.isnan(Corr_FH)] = 0  # in case of zero signals
-    Functional_Homogeneity_Control = torch.sum(Corr_FH.T * gFN, dim=0) / torch.sum(gFN, dim=0)
+    Functional_Coherence_Control = torch.sum(Corr_FH.T * gFN, dim=0) / torch.sum(gFN, dim=0)
 
     # Convert back to Numpy array
-    Functional_Homogeneity = Functional_Homogeneity.numpy()
-    Functional_Homogeneity_Control = Functional_Homogeneity_Control.numpy()
+    Functional_Coherence = Functional_Coherence.numpy()
+    Functional_Coherence_Control = Functional_Coherence_Control.numpy()
 
-    return Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control
+    return Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Coherence, Functional_Coherence_Control
 
 
 def run_quality_control_torch_server(dir_pnet_result: str):
@@ -382,15 +385,15 @@ def compute_quality_control_torch_server(dir_pnet_result: str, jobID=1):
     scan_data = torch.tensor(scan_data, dtype=torch_float)
 
     # Compute quality control measurement
-    Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Homogeneity, Functional_Homogeneity_Control =\
+    Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Coherence, Functional_Coherence_Control =\
         compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision=dataPrecision, logFile=None)
 
     # Finalize results
     Result = {'Spatial_Correspondence': Spatial_Correspondence,
               'Delta_Spatial_Correspondence': Delta_Spatial_Correspondence,
               'Miss_Match': Miss_Match,
-              'Functional_Homogeneity': Functional_Homogeneity,
-              'Functional_Homogeneity_Control': Functional_Homogeneity_Control}
+              'Functional_Coherence': Functional_Coherence,
+              'Functional_Coherence_Control': Functional_Coherence_Control}
 
     # Save results
     dir_pFN_indv_QC = os.path.join(dir_pnet_QC, list_subject_folder_unique[jobID-1])

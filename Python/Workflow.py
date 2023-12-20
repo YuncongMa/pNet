@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/19/2023
+# Yuncong Ma, 12/20/2023
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -35,7 +35,7 @@ def workflow(dir_pnet_result: str,
              K=17, Combine_Scan=False,
              file_gFN=None,
              samplingMethod='Subject', sampleSize=10, nBS=50,
-             maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-8, normW=1,
+             maxIter=(2000, 500), minIter=30, meanFitRatio=0.1, error=1e-8, normW=1,
              Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
              Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
              dataPrecision='double',
@@ -100,7 +100,7 @@ def workflow(dir_pnet_result: str,
     :param synchronized_view: True or False, whether to synchronize view centers for volume data between gFNs and pFNs
     :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
 
-    Yuncong Ma, 12/19/2023
+    Yuncong Ma, 12/20/2023
     """
 
     # Check setting
@@ -713,7 +713,7 @@ def workflow_server(dir_pnet_result: str,
                     K=17, Combine_Scan=False,
                     file_gFN=None,
                     samplingMethod='Subject', sampleSize=10, nBS=50,
-                    maxIter=1000, minIter=200, meanFitRatio=0.1, error=1e-8, normW=1,
+                    maxIter=(2000, 500), minIter=200, meanFitRatio=0.1, error=1e-8, normW=1,
                     Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
                     outputFormat='Both',
                     Computation_Mode='CPU_Torch',
@@ -799,7 +799,7 @@ def workflow_server(dir_pnet_result: str,
     :param log_command: command to specify the logfile
     :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
 
-    Yuncong Ma, 12/19/2023
+    Yuncong Ma, 12/20/2023
     """
 
     print('Start to run pNet workflow in server mode', flush=True)

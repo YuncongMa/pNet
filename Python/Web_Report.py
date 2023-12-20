@@ -17,11 +17,11 @@ def run_web_report(dir_pnet_result: str):
     :param dir_pnet_result:
     :return:
 
-    Yuncong Ma, 12/18/2023
+    Yuncong Ma, 12/20/2023
     """
 
     # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
 
     # log file
     logFile = os.path.join(dir_pnet_result, 'Log_Report.log')
@@ -115,6 +115,16 @@ def run_web_report(dir_pnet_result: str):
         file_pFN_indv = './' + os.path.join('Personalized_FN', list_subject_folder_unique[i], 'All(Compressed).jpg')
         link_pFN = link_pFN + f" <a href='{file_pFN_indv}' target='_blank' title='{list_subject_folder_unique[i]}'>({list_subject_folder_unique[i]})</a>\n"
     html_as_string = html_as_string.replace('{$link_pFN$}', str(link_pFN))
+    # QC
+    Result = load_matlab_single_variable(os.path.join(dir_pnet_QC, 'Result.mat'))
+    n_missmatch = np.sum(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)
+    ps_missmatch = np.where(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)
+    if n_missmatch == 0:
+        text_qc = 'pFNs of all scans passed the QC'
+    else:
+        text_qc = 'There are ' + str(n_missmatch) + ' scans failed the QC, meaning that they have at least one pFN miss matched'
+    print(list_subject_folder_unique[ps_missmatch])
+    html_as_string = html_as_string.replace('{$text_qc$}', str(text_qc))
 
     file_summary = open(file_summary, 'w')
     print(html_as_string, file=file_summary)
