@@ -111,9 +111,9 @@ pNet generates a file report for the examination about the one-to-one match betw
 
 # Web report
 pNet generates a HTML based web report to check gFNs, all pFNs with hyperlinks, and quality control.
-
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/a130831b-fe02-4d97-b80a-f91e68882102"  width="600">
-
+<p align="center">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/9bd77bde-3d94-46c7-8e0d-a69e38f45279"  width="800">
+</p>
 
 # Installation
 1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall into MATLAB APPS. Compiled pNet is located in folder Compiled_Runtime. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
