@@ -236,7 +236,7 @@ def visualize_quality_control(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pNet result folder
     :return: None
 
-    Yuncong Ma, 12/20/2023
+    Yuncong Ma, 12/22/2023
     """
 
     # Setup sub-folders in pNet result
@@ -262,7 +262,10 @@ def visualize_quality_control(dir_pnet_result: str):
 
         # get spatial correspondence and functional coherence using pFNs and gFNs
         # Add support for previous terminology 'Functional_Homogeneity'
-        Spatial_Correspondence[i, :] = np.diag(Result['Spatial_Correspondence'][0, 0])
+        if Result['Spatial_Correspondence'][0, 0].shape[1] == 1:  # For some correlation matrix between gFN and pFN
+            Spatial_Correspondence[i, :] = np.diag(Result['Spatial_Correspondence'][0, 0])
+        else:
+            Spatial_Correspondence[i, :] = Result['Spatial_Correspondence'][0, 0]
         Delta_Spatial_Correspondence[i, :] = Result['Delta_Spatial_Correspondence'][0, 0]
         if 'Functional_Coherence' in Result.dtype.names:
             Functional_Coherence[i, :] = Result['Functional_Coherence'][0, 0]
@@ -282,7 +285,7 @@ def visualize_quality_control(dir_pnet_result: str):
     # visualization for spatial correspondence
     before = np.nanmean(Spatial_Correspondence, axis=1)
 
-    Axes_Name = ['Personalized Functional Networks', 'Average Spatial Correspondence']
+    Axes_Name = ['Personalized Functional Networks', 'Spatial Correspondence']
     Group_Name = ['']
     Group_Color = ['dodgerblue']
 
@@ -329,7 +332,7 @@ def visualize_quality_control(dir_pnet_result: str):
     before = np.nanmean(Functional_Coherence_Control, axis=1)
     after = np.nanmean(Functional_Coherence, axis=1)
 
-    Axes_Name = ['Functional Network Definition', 'Average Functional Coherence']
+    Axes_Name = ['Functional Network Definition', 'Functional Coherence']
     Group_Name = ['Group', 'Personalized']
     Group_Color = ['tomato', 'dodgerblue']
     Line_Color = 'gray'
