@@ -16,7 +16,7 @@
 
 
 # GUI
-The MATLAB version features an intuitive user interface to configure the workflow, carry out the computation and check the results. <br />
+The MATLAB version features an intuitive user interface (/MATLAB/GUI/pNet.mlapp) to configure the workflow, carry out the computation and check the results. <br />
 Video tutorial is availabel at https://github.com/YuncongMa/pNet/blob/main/MATLAB_Old/Video_Tutorial/Demo_Video.gif
 
 <p align="center">
