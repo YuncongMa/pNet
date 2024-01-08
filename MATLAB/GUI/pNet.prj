@@ -1,0 +1,87 @@
+<deployment-project plugin="plugin.apptool" plugin-version="1.0">
+  <configuration build-checksum="1180662175" file="/Volumes/Scratch_0/pNet/pNet.prj" location="/Volumes/Scratch_0/pNet" name="pNet" target="target.mlapps" target-name="Package App">
+    <param.appname>pNet</param.appname>
+    <param.authnamewatermark>Yuncong Ma</param.authnamewatermark>
+    <param.email />
+    <param.company />
+    <param.icon>${PROJECT_ROOT}/pNet_resources/icon_24.png</param.icon>
+    <param.icons>
+      <file>${PROJECT_ROOT}/pNet_resources/icon_48.png</file>
+      <file>${PROJECT_ROOT}/pNet_resources/icon_24.png</file>
+      <file>${PROJECT_ROOT}/pNet_resources/icon_16.png</file>
+    </param.icons>
+    <param.summary />
+    <param.description>A MATLAB GUI for computing group and personalized FN using NMF method on fMRI data</param.description>
+    <param.screenshot>/private/var/folders/f4/64w_00mx2bj2hgh1tt_7f6440000gn/T/tpd44c0ef5_acf2_4773_b5a6_29e2cbc36c8a.png</param.screenshot>
+    <param.version>1.0</param.version>
+    <param.products.name />
+    <param.products.id />
+    <param.products.version />
+    <param.platforms />
+    <param.output>${PROJECT_ROOT}</param.output>
+    <param.guid>90ef32c4-a8f0-4bb4-a803-2b61900b0dae</param.guid>
+    <unset>
+      <param.email />
+      <param.company />
+      <param.summary />
+      <param.version />
+      <param.products.name />
+      <param.products.id />
+      <param.products.version />
+      <param.platforms />
+      <param.output />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}/pNet.mlapp</file>
+    </fileset.main>
+    <fileset.depfun>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Data_Function_Structure/fOption.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Data_Structure/Load_Mathematica_Mat.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Data_Structure/fSave_Variable.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Data_Structure/fUnique_Cell_String.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Figure/fAssemble_Image.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Figure/fColor_Theme.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Figure/fColorize.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Figure/fMass_Center.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/Figure/fVoxel_Map_3View.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/HCP/fHCP_To_32K.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/SSD_Structure/Private/fApply_Mask.m</file>
+      <file>/Volumes/Data/Users/yuncongma/Documents/Document/fMRI/Myworks/MATLAB/SSD_Structure/Private/fMake_Folder.m</file>
+    </fileset.depfun>
+    <fileset.resources>
+      <file>${PROJECT_ROOT}/Help_Document.pdf</file>
+      <file>${PROJECT_ROOT}/Private_Function/APP_Icon</file>
+    </fileset.resources>
+    <fileset.package />
+    <build-deliverables>
+      <file location="/Volumes/Scratch_0" name="pNet" optional="false">/Volumes/Scratch_0/pNet</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>/Applications/MATLAB_R2022b.app</root>
+      <toolboxes>
+        <toolbox name="matlabcoder" />
+      </toolboxes>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>true</unix>
+      <mac>true</mac>
+      <windows>false</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>13.2.1</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>maci64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

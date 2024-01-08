@@ -1,0 +1,296 @@
+% Yuncong Ma, 8/14/2023
+% This script is to test the corresponding python file, in order to ensure
+% the same result of pFN computation
+% Test_pFN_Computation.py
+
+%% Add to path
+addpath(genpath('/Volumes/Scratch_0/pNet'));
+%%
+maxNumCompThreads(1);
+tic
+% load file
+scan = fLoad_MATLAB_Single_Variable('/Volumes/Scratch_0/pNet/Example/HCP_Surface/Data/100206/1/LR/Image.mat');
+gNb = fLoad_MATLAB_Single_Variable('/Volumes/Scratch_0/pNet/Example/HCP_Surface/Test_FN17/FN_Computation/gNb.mat');
+gFN = fLoad_MATLAB_Single_Variable('/Volumes/Scratch_0/pNet/Example/HCP_Surface/Test_FN17/Group_FN/FN.mat');
+Setting = fLoad_MATLAB_Single_Variable('/Volumes/Scratch_0/pNet/Example/HCP_Surface/Test_FN17/FN_Computation/Setting.mat');
+
+scan=single(scan);
+gFN=single(gFN);
+
+
+% parameter
+K = 17
+maxIter = 1000
+minIter = 30
+meanFitRatio = 0.1
+error = 1e-4
+nRepeat = 1
+rounds = 30
+normW = 1
+eta = 0
+alphaS21 = 2
+alphaS1 = 0
+alphaL = 10
+vxI = 0
+spar = 1
+initConv = 1
+ard = 0
+dataPrecision = 'double'
+
+% [np_float,np_eps] = set_data_precision(dataPrecision);
+np_eps = eps(dataPrecision);
+if strcmp(dataPrecision,'single')
+    gFN=single(gFN);
+    scan=single(scan);
+else
+    gFN=double(gFN);
+    scan=double(scan);
+end
+
+% initialization
+initV=gFN;
+
+dim_space = size(scan,1);
+dim_time = size(scan,2);
+
+if alphaS21>=1
+    alphaS21 = round(alphaS21);
+else
+    alphaS21 = alphaS21;
+end
+
+% normalize data
+X = normalize_data(scan','vp','vmax');
+
+
+W = [];
+Wt = [];
+D = [];
+L = [];
+Dt = [];
+Lt = [];
+
+
+% construct the spatial affinity graph
+if vxI==0
+    tmpW = sparse(dim_space,dim_space);
+    for vi=1:dim_space
+        for ni=1:length(gNb{vi})
+            nei = gNb{vi}(ni);
+            tmpW(vi,nei) = 1;
+            tmpW(nei,vi) = 1;
+        end
+    end
+    W = tmpW;
+else
+    tmpW = sparse(dim_space,dim_space);
+    for vi=1:dim_space
+        for ni=1:length(gNb{vi})
+            nei = gNb{vi}(ni);
+            if vi<nei
+                corrVal = (1+corr(X(:,vi),X(:,nei)))/2;
+                if isnan(corrVal)
+                    corrVal = 0;
+                end
+                tmpW(vi,nei) = corrVal;
+                tmpW(nei,vi) = corrVal;
+            else
+                continue;
+            end
+        end
+    end
+    W = tmpW;
+end
+
+% temporal affinity matrix
+Wt = [];
+
+DCol = full(sum(W,2));
+D = spdiags(DCol,0,dim_space,dim_space);
+L = D - W;
+if normW>0
+    D_mhalf = spdiags(DCol.^-0.5,0,dim_space,dim_space);
+    L = D_mhalf * L * D_mhalf * alphaL;
+    W = D_mhalf * W * D_mhalf * alphaL;
+    D = D_mhalf * D * D_mhalf * alphaL;
+end
+
+Dt = [];
+Lt = [];
+
+% initialize V
+V = initV;
+miv = max(V,[],1);
+trimInd = V ./ max(repmat(miv,dim_space,1),np_eps) < 5e-2;
+V(trimInd)=0;
+
+
+% initialize U
+U = X * V ./ repmat(sum(V,1),[dim_time,1]);
+
+U = initialize_u(X, U, V, error, maxIter, minIter, meanFitRatio, initConv);
+
+initU=U;
+initV=V;
+
+%
+% Alternative update of U and V
+
+oldL = Inf;
+j = 0;
+iterLog = [];
+
+% No reuse of initU and initV, can be reference
+U = initU;
+V = initV;
+
+[dim_time,dim_space] = size(X);
+
+if ard>0
+    lambdas = sum(U,1) / dim_time;
+    hyperLam = eta * sum(sum(X.^2,1),2) / (dim_time*dim_space*2);
+else
+    lambdas=0;
+    hyperLam=0;
+end
+
+flagQC=0;
+oldLogL=inf;
+oldU=U;
+oldV=V;
+for i=1:maxIter
+
+    % ===================== update V ========================
+    % Eq. 8-11
+    XU = X'*U;
+    UU = U'*U;
+    VUU = V*UU;
+
+    tmpl2 = V.^2;
+    if alphaS21>0
+        tmpl21 = sqrt(tmpl2);
+        tmpl22 = repmat(sqrt(sum(tmpl2,1)),dim_space,1);
+        tmpl21s = repmat(sum(tmpl21,1),dim_space,1);
+        posTerm = V ./ max(tmpl21.*tmpl22,np_eps);
+        negTerm = V .* tmpl21s ./ max(tmpl22.^3,np_eps);
+
+        VUU = VUU + 0.5 * alphaS21 * posTerm;
+        XU = XU + 0.5 * alphaS21 * negTerm;
+    end
+
+    if alphaL>0
+        WV = W * double(V);
+        DV = D * double(V);
+
+        XU = XU + WV;
+        VUU = VUU + DV;
+    end
+
+    if alphaS1>0
+        sV = max(repmat(sum(V,1),dim_space,1),np_eps);
+        normV = sqrt(sum(V.^2,1));
+        normVmat = repmat(normV,dim_space,1);
+        posTerm = 1./max(normVmat,np_eps);
+        negTerm = V.*sV./max(normVmat.^3,np_eps);
+
+        XU = XU + 0.5*alphaS1*negTerm;
+        VUU = VUU + 0.5*alphaS1*posTerm;
+    end
+
+    V = V.*(XU./max(VUU,np_eps));
+
+    prunInd = sum(V~=0,1)==1;
+    if any(prunInd)
+        V(:,prunInd) = zeros(dim_space,sum(prunInd));
+        U(:,prunInd) = zeros(dim_time,sum(prunInd));
+    end
+
+    % ==== normalize U and V ====
+    [U,V] = normalize_u_v(U, V, 1, 1);
+
+    % ===================== update U =========================
+    XV = X*V;
+    VV = V'*V;
+    UVV = U*VV;
+
+    if ard>0 % ard term for U
+        posTerm = 1./max(repmat(lambdas,dim_time,1),np_eps);
+        UVV = UVV + posTerm*hyperLam;
+    end
+
+    U = U.*(XV./max(UVV,np_eps));
+
+    prunInd = sum(U)==0;
+    if any(prunInd)
+        V(:,prunInd) = zeros(dim_space,sum(prunInd,1));
+        U(:,prunInd) = zeros(dim_time,sum(prunInd,1));
+    end
+
+    % update lambda
+    if ard>0
+        lambdas = sum(U,1) / dim_time;
+    end
+
+    % ==== calculate partial objective function value ====
+    L1 = 0;
+    ardU = 0;
+    tmp1 = 0;
+    tmp2 = 0;
+    tmp3 = 0;
+    tmpl21 = V.^2;
+
+    if alphaS1>0
+        tmpNorm1=sum(V,1);
+        tmpNorm2=sqrt(sum(tmpl21,1));
+        L1=alphaS1*sum(tmpNorm1./max(tmpNorm2,np_eps));
+    end
+
+    if ard>0
+        su=sum(U,1);
+        su(su==0)=1;
+        ardU=sum(log(su))*dim_time*hyperLam;
+    end
+
+    tmpDf=(X-U*V').^2;
+    tmp1=sum(tmpDf(:));
+
+    if alphaL>0
+        tmp2=V'*L.*V';
+    end
+
+    L21=alphaS21*sum(sum(sqrt(tmpl21),1)./max(sqrt(sum(tmpl21,1)),np))
+
+
+    fprintf(['\n  iter:',num2str(i),' inLogL:',num2str(inLogL),',dataFit:',num2str(LDf)...
+        ',spaLap:',num2str(LSl),',temLap:',num2str(LTl),...
+        ',LL21:',num2str(LL21),',ardU:',num2str(LardU),'\n']);
+
+    if i>minIter && abs(oldInLogL-inLogL)/max(oldInLogL,np_eps)<error
+        break;
+    end
+    oldInLogL = inLogL;
+
+    % QC Control
+    temp=corr(initV,V);
+    QC_Spatial_Correspondence=diag(temp);
+    temp=temp-diag(diag(temp));
+    QC_Spatial_Correspondence_Control=max(temp,[],2);
+    QC_Delta_Sim=min(QC_Spatial_Correspondence-QC_Spatial_Correspondence_Control);
+    if QC_Delta_Sim<=0
+        U=oldU;
+        V=oldV;
+        flagQC=1;
+        fprintf('\nMeet QC constraint: Delta sim = %f\n',QC_Delta_Sim);
+        break;
+    else
+        oldU=U;
+        oldV=V;
+        fprintf('\nDelta sim = %f\n',QC_Delta_Sim);
+    end
+
+end
+
+% save();
+toc
+
+
