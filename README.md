@@ -90,8 +90,9 @@ Five built-in brain templates are available in the subfolder "Brain_Template".
 
 # Precomputed gFNs
 pNet can load precomputed gFNs as reference to obtain personalized FNs for individual fMRI data. <br />
-Here we provided 17 FN results (/Group_FN/HCP_Surface/gFN_17.mat) for HCP surface data. <br />
+Here we provided 17 FN results (/Group_FN/HCP_Surface/gFN_17_HCP_Surface.mat) for HCP S1200, and 17 FN results for UKBB (/Group_FN/UKBB_Volume/gFN_17_UKBB_Volume.mat). <br />
 More precomputed gFNs will come in future release.
+
 
 # Example
 We provided results of three examples for users to learn how to run the pFN computation, and navigate through the precomputed results. For each example, we provides examples of simulated fMRI data, and precomputed results of real fMRI data. Examples can be accessed on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link.   <br />
