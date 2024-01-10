@@ -90,7 +90,8 @@ Five built-in brain templates are available in the subfolder "Brain_Template".
 
 # Precomputed gFNs
 pNet can load precomputed gFNs as reference to obtain personalized FNs for individual fMRI data. <br />
-Here we provided 17 FN results (/Group_FN/HCP_Surface/gFN_17_HCP_Surface.mat) for HCP S1200, and 17 FN results for iSTAGING (/Group_FN/iSTAGING_Volume/gFN_17_iSTAGING_Volume.mat). <br />
+Here we provided 17 FN results (/Group_FN/HCP_Surface/gFN_17_HCP_Surface.mat) for HCP S1200. <br />
+And several sets of FN results (k=17, 25, 50, 75, 100, 125, 150) for iSTAGING (/Group_FN/iSTAGING_Volume/gFN_17_iSTAGING_Volume.mat). <br />
 More precomputed gFNs will come in future release.
 
 
@@ -129,7 +130,7 @@ pNet generates a HTML based web report to check gFNs, all pFNs with hyperlinks, 
 
 # Installation
 1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall into MATLAB APPS. Compiled pNet is located in folder Compiled_Runtime. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
-2. The Python version is available at https://github.com/YuncongMa/pNet/tree/main/Python.
+2. The Python version can run in Conda environment or with Singularity. The Python version is available at https://github.com/YuncongMa/pNet/tree/main/Python.
 3. Additional installation information can be found in the help document (Help_Document.pdf).
 
 
