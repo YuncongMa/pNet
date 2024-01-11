@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/6/2023
+# Yuncong Ma, 1/10/2024
 # FN Computation module of pNet
 # Pytorch version
 
@@ -977,7 +977,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 12/20/2023
+    Yuncong Ma, 1/10/2024
     """
 
     # get directories of sub-folders
@@ -1015,6 +1015,10 @@ def run_FN_Computation_torch(dir_pnet_result: str):
     if setting['FN_Computation']['Method'] == 'SR-NMF':
         print('FN computation uses spatial-regularized non-negative matrix factorization method', file=logFile_FNC, flush=True)
 
+        # Generate additional parameters
+        gNb = compute_gNb(Brain_Template)
+        scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb}, do_compression=True)
+
         # ============== gFN Computation ============== #
         if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
             # 2 steps
@@ -1027,9 +1031,6 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             # Log
             logFile = os.path.join(dir_pnet_BS, 'Log.log')
 
-            # Generate additional parameters
-            gNb = compute_gNb(Brain_Template)
-            scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb})
             # Input files
             file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
             file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
@@ -1096,7 +1097,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
                                       nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=logFile)
                 # save results
                 FN_BS = reshape_FN(FN_BS.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-                sio.savemat(os.path.join(dir_pnet_BS, str(rep), 'FN.mat'), {"FN": FN_BS})
+                sio.savemat(os.path.join(dir_pnet_BS, str(rep), 'FN.mat'), {"FN": FN_BS}, do_compression=True)
 
             # step 2 ============== fuse results
             # Generate gFNs
@@ -1115,7 +1116,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             gFN = gFN_fusion_NCut_torch(gFN_BS, K, logFile=logFile)
             # output
             gFN = reshape_FN(gFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
 
         else:  # use precomputed gFNs
             file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
@@ -1126,7 +1127,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             check_gFN(gFN)
             if dataType == 'Volume':
                 gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
             print('load precomputed gFNs', file=logFile_FNC, flush=True)
         # ============================================= #
 
@@ -1190,8 +1191,8 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
             # output
             pFN = reshape_FN(pFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN})
-            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC})
+            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN}, do_compression=True)
+            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC}, do_compression=True)
         # ============================================= #
 
         print('Finished FN computation at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
@@ -1252,7 +1253,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             # Generate additional parameters
             if not os.path.isfile(os.path.join(dir_pnet_FNC, 'gNb.mat')):
                 gNb = compute_gNb(Brain_Template)
-                scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb})
+                scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb}, do_compression=True)
 
             # Input files
             file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
@@ -1347,7 +1348,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             check_gFN(gFN)
             if dataType == 'Volume':
                 gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
             print('load precomputed gFNs', flush=True)
         # ============================================= #
 
@@ -1475,7 +1476,7 @@ def NMF_boostrapping_server(dir_pnet_result: str, jobID=1):
                           nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=None)
     # save results
     FN_BS = reshape_FN(FN_BS.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_BS, str(jobID), 'FN.mat'), {"FN": FN_BS})
+    sio.savemat(os.path.join(dir_pnet_BS, str(jobID), 'FN.mat'), {"FN": FN_BS}, do_compression=True)
 
     print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
 
@@ -1524,7 +1525,7 @@ def fuse_FN_server(dir_pnet_result: str):
     gFN = gFN_fusion_NCut_torch(gFN_BS, K, logFile=None)
     # output
     gFN = reshape_FN(gFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN})
+    sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
 
     print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
 
@@ -1620,7 +1621,7 @@ def NMF_pFN_server(dir_pnet_result: str, jobID=1):
 
     # output
     pFN = reshape_FN(pFN, dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN})
-    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC})
+    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN}, do_compression=True)
+    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC}, do_compression=True)
 
     print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
