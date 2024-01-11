@@ -1204,7 +1204,7 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 12/8/2023
+    Yuncong Ma, 1/11/2024
     """
 
     # get directories of sub-folders
@@ -1240,6 +1240,11 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
     if setting['FN_Computation']['Method'] == 'SR-NMF':
         print('FN computation uses spatial-regularized non-negative matrix factorization method', flush=True)
 
+        # Generate additional parameters
+        if not os.path.isfile(os.path.join(dir_pnet_FNC, 'gNb.mat')):
+            gNb = compute_gNb(Brain_Template)
+            scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb}, do_compression=True)
+
         # ============== gFN Computation ============== #
         if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
             # 2 steps
@@ -1249,11 +1254,6 @@ def run_FN_Computation_torch_server(dir_pnet_result: str):
             dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
             if not os.path.exists(dir_pnet_BS):
                 os.makedirs(dir_pnet_BS)
-
-            # Generate additional parameters
-            if not os.path.isfile(os.path.join(dir_pnet_FNC, 'gNb.mat')):
-                gNb = compute_gNb(Brain_Template)
-                scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb}, do_compression=True)
 
             # Input files
             file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
