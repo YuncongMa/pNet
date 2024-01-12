@@ -40,7 +40,7 @@ This will generate a Python script to run a workflow
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/38efac5d-631a-47d8-a34f-fd686f84602d" width="800">
 </p>
 
-# Sever mode
+# Server mode
 pNet provides bash scripts to interact with server environment for both MATLAN and Python versions. The server mode in Python version is recommended for easier use. <br />
 The MATLAB version uses bash scripts (/MATLAN/Bash_Script) to perform customized pNet workflows. Users need to submit those bash jobs using terminal commands. <br />
 The Python version uses a Python script to generate bash scripts and submit bash jobs to the server.
@@ -95,20 +95,6 @@ And several sets of FN results (k=17, 25, 50, 75, 100, 125, 150) for iSTAGING (/
 More precomputed gFNs will come in future release.
 
 
-# Example
-We provided results of three examples for users to learn how to run the pFN computation, and navigate through the precomputed results. For each example, we provides examples of simulated fMRI data, and precomputed results of real fMRI data. Examples can be accessed on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link.   <br />
-
-1.	HCP surface data. (2 subject, 2 scans per subject, 400 volumes per scan) in .mat format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
-2.	PNC surface data (2 subject, 1 scan per subject, 300 volumes per scan) in .mgh format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
-3.	UKBB volume data (2 subject, 1 scan per subject, 200 volumes per scan) in .nii.gz format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
-
-
-The data organization is as below.
-
-<p align="center">
-<img src="https://user-images.githubusercontent.com/20191790/223320985-12aed4d4-6bef-4b23-a9a2-ff67f79eced3.jpg" width="600">
-</p>
-
 # Quality Control
 Personalized FN modeling methods will enhance the functional homogeneity (ex. average functional connectivity with each network) with functional networks, suggesting better functional representation. <br />
 pNet generates a file report for the examination about the one-to-one match between gFNs and pFNs, with another figure about the spatial correspondence.
@@ -146,6 +132,19 @@ Note: it is recommended to run pNet as a MATLAB APP to allow for maximum compati
 </p>
 
 
+# Example
+We provided results of three examples for users to learn how to run the pFN computation, and navigate through the precomputed results. For each example, we provides examples of simulated fMRI data, and precomputed results of real fMRI data. Examples can be accessed on Google Drive: https://drive.google.com/drive/folders/1xkCy-0WqYvPA9ooq8txTdc0GsGC-YXMq?usp=share_link.   <br />
+
+1.	HCP surface data. (2 subject, 2 scans per subject, 400 volumes per scan) in .mat format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
+2.	PNC surface data (2 subject, 1 scan per subject, 300 volumes per scan) in .mgh format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
+3.	UKBB volume data (2 subject, 1 scan per subject, 200 volumes per scan) in .nii.gz format. Precomputed results of 10 subject data are stored in subfolder "Test_FN17".
+
+
+The data organization is as below.
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/20191790/223320985-12aed4d4-6bef-4b23-a9a2-ff67f79eced3.jpg" width="600">
+</p>
 
 
 
