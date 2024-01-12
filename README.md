@@ -1,11 +1,11 @@
 
 <p align="center">
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/dccff00b-424c-47fb-a3fe-351e2a75bd11"  width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/dccff00b-424c-47fb-a3fe-351e2a75bd11"  width="400">
 </p>
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
 <p align="center">
-<img width="600" src="https://github.com/YuncongMa/pNet/assets/20191790/5697ad6d-280f-467f-8605-b6b729f2d9a7">
+<img width="800" src="https://github.com/YuncongMa/pNet/assets/20191790/5697ad6d-280f-467f-8605-b6b729f2d9a7">
 </p>
 
 * This toolbox is designed to extract personalized functional networks from fMRI data using spatial-regularized non-negative matrix factorization (**NMF**) method (https://doi.org/10.1016/j.neuroimage.2017.05.004) <br />
