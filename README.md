@@ -5,7 +5,7 @@
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
 <p align="center">
-<img width="800" src="https://github.com/YuncongMa/pNet/assets/20191790/73df3f03-be3f-42f1-a9e2-771e2c114457">
+<img width="800" src="https://github.com/YuncongMa/pNet/assets/20191790/e460fe4b-03e1-429b-ad7d-a584b323d910">
 </p>
 
 * This toolbox is designed to extract personalized functional networks from fMRI data using spatial-regularized non-negative matrix factorization (**NMF**) method (https://doi.org/10.1016/j.neuroimage.2017.05.004) <br />
