@@ -110,10 +110,10 @@ pNet generates a file report for the examination about the one-to-one match betw
 </p>
 
 
-# Web report
-pNet generates a HTML based web report to check gFNs, all pFNs with hyperlinks, and quality control.
+# Web-bsed report
+pNet generates a web based web report (HTML format) to check gFNs, all pFNs with hyperlinks, and quality control.
 <p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/fd4d0c88-42a6-4ffa-8ff6-e9f943c3a559"  width="600">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/72b07475-dc4d-43aa-9337-b870b7dada62"  width="600">
 </p>
 
 # Installation
