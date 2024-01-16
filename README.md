@@ -5,7 +5,7 @@
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
 <p align="center">
-<img width="800" src="https://github.com/YuncongMa/pNet/assets/20191790/add0b026-d248-4d63-8197-1d05915be3d5">
+<img width="800" src="https://github.com/YuncongMa/pNet/assets/20191790/72d2f405-21c7-4b3a-92f4-9ef141e1705b">
 </p>
 
 
