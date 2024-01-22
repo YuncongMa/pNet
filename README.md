@@ -5,12 +5,11 @@
 
 # pNet <br /> A toolbox for personalized functional network modeling <br />
 <p align="center">
-<img width="800" src="https://github.com/YuncongMa/pNet/assets/20191790/c92892b8-5534-4a6c-a958-a2b2095c5509">
+<img width="800" src="https://github.com/YuncongMa/pNet/assets/20191790/8e84d7bc-3f9b-48e7-9720-85bd65729c6f">
 </p>
 
-
 * This toolbox is designed to extract personalized functional networks from fMRI data.  <br />
-* It is implemented with our spatial-regularized non-negative matrix factorization (**SR-NMF**) (https://doi.org/10.1016/j.neuroimage.2017.05.004) and Group-Information-Guided Independent Component Analysis (**GIG-ICA**) (https://dx.doi.org/10.1016/j.neuroimage.2012.11.008). <br />
+* It is implemented with our spatial-regularized non-negative matrix factorization (**SR-NMF**) (https://doi.org/10.1016/j.neuroimage.2017.05.004) and Group-Information-Guided Independent Component Analysis (**GIG-ICA**) (https://dx.doi.org/10.1016/j.neuroimage.2012.11.008) to compute personalized FNs. <br />
 * It works with both MATLAB (https://github.com/YuncongMa/pNet/tree/main/MATLAB_Old) and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow script in Python.<br />
 * It supports both surface and volume based fMRI data, and multiple fMRI formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
 * It allows input of precomputed group-level FN definition. <br />
