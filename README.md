@@ -41,10 +41,10 @@ This will generate a Python script to run a workflow
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/38efac5d-631a-47d8-a34f-fd686f84602d" width="800">
 </p>
 
-# Server mode
-pNet provides bash scripts to interact with server environment for both MATLAN and Python versions. The server mode in Python version is recommended for easier use. <br />
+# Cluster Computation
+pNet provides bash scripts to interact with cluster environment for both MATLAN and Python versions. <br />
 The MATLAB version uses bash scripts (/MATLAN/Bash_Script) to perform customized pNet workflows. Users need to submit those bash jobs using terminal commands. <br />
-The Python version uses a Python script to generate bash scripts and submit bash jobs to the server.
+The Python version uses a Python script to generate bash scripts and submit bash jobs to the cluster.
 
 # Manual
 A PDF manual can be accessed below and from the MATLAB GUI <br />
