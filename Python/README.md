@@ -231,11 +231,7 @@ The Python version also offers preconfigured visualizations consistent to the MA
 The Python version also generate figure for QC report to investigate the benefit of using personalized FN modeling.
 
 <p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/745ea55c-23e8-49ab-a475-000b25f342e5"  width="600">
-</p>
-
-<p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/a83c5da5-0efb-404f-9d36-a0cbb64bdf62"  width="600">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/22f08f1f-a085-4df8-907b-1f7ae0e23c13"  width="600">
 </p>
 
 ### Web report
