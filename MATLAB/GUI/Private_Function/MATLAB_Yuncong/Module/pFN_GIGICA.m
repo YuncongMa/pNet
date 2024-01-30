@@ -1,5 +1,5 @@
 function [FN, TC] = pFN_GIGICA(Data, gFN, varargin)
-% Yuncong Ma, 1/29/2024
+% Yuncong Ma, 1/30/2024
 % GIGICA method for obtaining pFNs from individual fMRI Data and
 % group-level FNs gFN
 % This code is adapted from GIG_GIGICA.m Copyright (c) Yuhui DU
@@ -12,13 +12,13 @@ function [FN, TC] = pFN_GIGICA(Data, gFN, varargin)
 
 
 Options.threshold_eign=eps;
-Options.maxIter=100;
+Options.maxIter=1000;
 Options.a=0.5;
 Options.EGv=0.3745672075;
 Options.ErChuPai=2/pi;
 Options.ftol=0.02;
 Options.error=1.e-5;
-Options.Nembda=1;
+Options.Nembda=0.01;
 Options.Spatial_Correspondence=1;
 Options=fOption('pFN_GIGICA',Options,varargin);
 if isempty(Options)
@@ -89,20 +89,30 @@ b=1-a;
 EGv=Options.EGv;
 ErChuPai=Options.ErChuPai;
 ICOutMax=zeros(EsICnum,m);
-for ICnum=1:EsICnum
+Nemda=Options.Nembda;
+for ICnum=15:EsICnum
     reference=ICRefMaxN(ICnum,:);
     wc=(reference*Yinv)';
     wc=wc/norm(wc);
+    if Options.Spatial_Correspondence==1
+        Source=wc'*Y;
+        [~, ps]= max(corr(Source', gFN));
+        if sum(ps~=ICnum)>0
+            display(corr(Source', gFN));
+            display([0,ICnum, i, ps])
+        end
+    end
     y1=wc'*Y;
     EyrInitial=(1/m)*(y1)*reference';
     NegeInitial=nege(y1);
     c=(tan((EyrInitial*pi)/2))/NegeInitial;
     IniObjValue=a*ErChuPai*atan(c*NegeInitial)+b*EyrInitial;
-    Nemda=Options.Nembda;
+   
     % Store history of sources and whether it violates spatial
     % correspondence
     History_Source=zeros(maxIter, m);
     History_SC=zeros(maxIter,1);
+
     for i=1:maxIter
         Cosy1=cosh(y1);
         logCosy1=log(Cosy1);
@@ -116,7 +126,7 @@ for ICnum=1:EsICnum
         %Simgrad=(1/m)*Y*reference';
         Simgrad = YR(:,ICnum);
         g=a*KwDaoshu*2*Negama*EYgy+b*Simgrad;
-        d=g/(g'*g)^0.5;
+        d=g/norm(g);
         wx=wc+Nemda*d;
         wx=wx/norm(wx);
         y3=wx'*Y;
@@ -130,7 +140,7 @@ for ICnum=1:EsICnum
             Source=wx'*Y;
             [~, ps]= max(corr(Source', gFN));
             if sum(ps~=ICnum)>0
-                %display([ICnum, i, ps])
+                display([ICnum, i, ps])
                 %wx=wc;
                 %fprintf('Meet QC constraint\n');
                 %break
@@ -165,7 +175,7 @@ for ICnum=1:EsICnum
         else
             temp=History_SC(History_SC>0);
             if isempty(temp)
-                %display(0);
+                fprintf('Warning: pFN %d is as same as its corresponding gFN\n', ICnum);
                 Source=ICRefMaxN(ICnum,:);
             else
                 ps=max(temp);

@@ -1,8 +1,14 @@
-function fVisualize_FN_Volume(File_FN,File_Brain_Mask,File_Overlay_Image,Dir_Figure)
-% Yuncong Ma, 2/27/2023
+function fVisualize_FN_Volume(File_FN,File_Brain_Mask,File_Overlay_Image,Dir_Figure,varargin)
+% Yuncong Ma, 1/29/2024
 % Visualize FN in volume format for NMF APP
 % fVisualize_FN_Volume(File_FN,File_Brain_Mask,File_Overlay_Image,Dir_Figure)
 % Work for both group-level and individualized FN
+
+Options.Color_Range_Style='NMF_1';
+Options=fOption('fVisualize_FN_Volume',Options,varargin);
+if isempty(Options)
+    return;
+end
 
 load(File_FN,'FN');
 Brain_Mask=fLoad_MATLAB_Single_Variable(File_Brain_Mask);
@@ -21,8 +27,15 @@ K=size(FN,4);
 
 clear Image
 
+% rescale
+switch Options.Color_Range_Style
+    case 'NMF_1'
+        FN=FN*100;
+end
+
 for i=1:K
-    Map=imresize3(FN(:,:,:,i)*100,Upsampling,'nearest');
+    
+    Map=imresize3(FN(:,:,:,i),Upsampling,'nearest');
     [Brain_Mask_2,~,Crop_Parameter]=fTruncate_Image_3D_4D(imresize3(Brain_Mask,Upsampling,'nearest'),[1,1,1],[2,2,2]);
     Overlay_Image_2=fApply_Cropped_FOV(Overlay_Image,Crop_Parameter);
     Map_2=fApply_Cropped_FOV(Map,Crop_Parameter);
@@ -31,6 +44,8 @@ for i=1:K
     Crop_Parameter.FOV=[1,size(Map_2,1);1,size(Map_2,2);1,size(Map_2,3)]+round(([1,1,1]*Max_Dim-size(Map_2))/2)';
     Map_2=fInverse_Crop_EPI_Image_3D_4D(Map_2,Crop_Parameter);
     Overlay_Image_2=fInverse_Crop_EPI_Image_3D_4D(Overlay_Image_2,Crop_Parameter);
+
+   
     threshold=double(round(prctile(Map_2(Brain_Mask_2>0),99.5,"all")));
     Map_Label=bwlabeln(Map_2>threshold*0.9);
     Size=[];
@@ -39,7 +54,19 @@ for i=1:K
     end
     [~,ps]=max(Map_Label);
     Center=round(fMass_Center(Map_Label==ps(1)));
-    Color_Function=fColor_Theme('Seed_Map_3_Positive',round([1/2,1]*threshold));
+    switch Options.Color_Range_Style
+        case 'NMF_1'
+            Color_Range=round([1/2,1]*threshold);
+            Color_Function=fColor_Theme('Seed_Map_3_Positive',Color_Range);
+        case 'ICA'
+            if threshold>1
+                Color_Range=round([0.5,1]*threshold*10)/10;
+                Color_Function=fColor_Theme('Seed_Map_3_Positive',Color_Range);
+            else
+                Color_Range=[threshold/2,threshold];
+                Color_Function=fColor_Theme('Seed_Map_3_Positive',Color_Range);
+            end
+    end
     Image=fVoxel_Map_3View(Overlay_Image_2,Map_2,{Center,[1,1,1],[2;1;3]},Color_Function,{'Interval',[0,0]});
 
     fFigure(1,1,1,'',[200,700]);
@@ -49,7 +76,7 @@ for i=1:K
     imshow(Image);
     title({['FN ',num2str(i)]},'Fontsize',40,'FontName','Arial','Color',[1 1 1]*0.9,'Fontweight','bold');
     fAxes_Colorbar(1,1,1,'Below',[.9,.8],[0,-.1],2,0.1,[.6,.15],[0,.3]);
-    fColor_Bar(Color_Function,{500,50,80,30,'w','Arial','bold'},round([1/2,1]*threshold),'Horizontal Below Inside');
+    fColor_Bar(Color_Function,{500,50,80,30,'w','Arial','bold'},Color_Range,'Horizontal Below Inside');
 
     saveas(gcf,fullfile(Dir_Figure,[num2str(i),'.jpg']));
     close(gcf);
