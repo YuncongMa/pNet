@@ -1,7 +1,8 @@
-function [FN, TC] = pFN_GIGICA(Data, gFN, varargin)
-% Yuncong Ma, 1/30/2024
+function [FN, TC] = GIGICA(Data, gFN, varargin)
+% Yuncong Ma, 2/1/2024
 % GIGICA method for obtaining pFNs from individual fMRI Data and
 % group-level FNs gFN
+% FN, TC] = GIGICA(Data, gFN)
 % This code is adapted from GIG_GIGICA.m Copyright (c) Yuhui DU
 % Data is [Nt Nv]
 % gFN is [Nv K]
@@ -11,19 +12,20 @@ function [FN, TC] = pFN_GIGICA(Data, gFN, varargin)
 % match between gFNs and pFNs
 
 
-Options.threshold_eign=eps;
-Options.maxIter=1000;
+Options.threshold_eign=eps(class(Data)); % the original version uses eps
+Options.maxIter=100;
 Options.a=0.5;
 Options.EGv=0.3745672075;
 Options.ErChuPai=2/pi;
 Options.ftol=0.02;
 Options.error=1.e-5;
-Options.Nembda=0.01;
+Options.Nembda=1;
 Options.Spatial_Correspondence=1;
-Options=fOption('pFN_GIGICA',Options,varargin);
+Options=fOption('GIGICA',Options,varargin);
 if isempty(Options)
     return;
 end
+
 
 % Connect to the orignal code
 FmriMatr = Data; % [Nt Nv]
@@ -90,18 +92,28 @@ EGv=Options.EGv;
 ErChuPai=Options.ErChuPai;
 ICOutMax=zeros(EsICnum,m);
 Nemda=Options.Nembda;
-for ICnum=15:EsICnum
-    reference=ICRefMaxN(ICnum,:);
-    wc=(reference*Yinv)';
-    wc=wc/norm(wc);
+for ICnum=1:EsICnum
+    Initialization_Method='Original';
+    switch Initialization_Method
+        case 'Original'
+            reference=ICRefMaxN(ICnum,:);
+            wc=(reference*Yinv)';
+            wc=wc/norm(wc);
+            
+        case 'Double_Inverse'
+            reference=ICRefMaxN(ICnum,:);
+            wc=pinv(Y*pinv(ICRefMaxN))';
+            wc=wc(:,ICnum);
+            wc=wc/norm(wc);
+    end
     if Options.Spatial_Correspondence==1
         Source=wc'*Y;
         [~, ps]= max(corr(Source', gFN));
         if sum(ps~=ICnum)>0
-            display(corr(Source', gFN));
-            display([0,ICnum, i, ps])
+            fprintf('Warning: the initial pFN %d does not meet spatial correspondence constrain\n', ICnum);
         end
     end
+    
     y1=wc'*Y;
     EyrInitial=(1/m)*(y1)*reference';
     NegeInitial=nege(y1);
@@ -110,8 +122,10 @@ for ICnum=15:EsICnum
    
     % Store history of sources and whether it violates spatial
     % correspondence
-    History_Source=zeros(maxIter, m);
-    History_SC=zeros(maxIter,1);
+%     if Options.Spatial_Correspondence==1
+%         History_Source=zeros(maxIter, m);
+%         History_SC=zeros(maxIter,1);
+%     end
 
     for i=1:maxIter
         Cosy1=cosh(y1);
@@ -136,19 +150,19 @@ for ICnum=15:EsICnum
         dg=g'*d;
         ArmiCondiThr=Nemda*ftol*dg;
         % Spatial correspondence constraint
-        if Options.Spatial_Correspondence==1
-            Source=wx'*Y;
-            [~, ps]= max(corr(Source', gFN));
-            if sum(ps~=ICnum)>0
-                display([ICnum, i, ps])
-                %wx=wc;
-                %fprintf('Meet QC constraint\n');
-                %break
-            else
-                History_SC(i)=i;
-                History_Source(i,:)=Source;
-            end
-        end
+%         if Options.Spatial_Correspondence==1
+%             Source=wx'*Y;
+%             [~, ps]= max(corr(Source', gFN));
+%             if sum(ps~=ICnum)>0
+%                 %display([ICnum, i, ps])
+%                 %wx=wc;
+%                 %fprintf('Meet QC constraint\n');
+%                 %break
+%             else
+%                 History_SC(i)=i;
+%                 History_Source(i,:)=Source;
+%             end
+%         end
         % Stop when the change of wx is small enough
         if (wc-wx)'*(wc-wx) <Options.error
             break;
@@ -168,24 +182,24 @@ for ICnum=15:EsICnum
     end
     % find the last source in the history that meets the spatial
     % correspondence constrain
-    if Options.Spatial_Correspondence==1
-        if History_SC(i)>0
-            %display([1,i]);
-            Source=History_Source(i,:);
-        else
-            temp=History_SC(History_SC>0);
-            if isempty(temp)
-                fprintf('Warning: pFN %d is as same as its corresponding gFN\n', ICnum);
-                Source=ICRefMaxN(ICnum,:);
-            else
-                ps=max(temp);
-                %display([2,i,ps]);
-                Source=History_Source(ps(end),:);
-            end
-        end
-    else
-        Source=wx'*Y;
-    end
+%     if Options.Spatial_Correspondence==1
+%         if History_SC(i)>0
+%             %display([1,i]);
+%             Source=History_Source(i,:);
+%         else
+%             temp=History_SC(History_SC>0);
+%             if isempty(temp)
+%                 fprintf('Warning: pFN %d is as same as its corresponding gFN\n', ICnum);
+%                 Source=ICRefMaxN(ICnum,:);
+%             else
+%                 ps=max(temp);
+%                 fprintf('Warning: pFN %d is chosen from a previous iteration with spatial correspondence constrain\n', ICnum);
+%                 Source=History_Source(ps(end),:);
+%             end
+%         end
+%     else
+%         Source=wx'*Y;
+%     end
     ICOutMax(ICnum,:)=Source;
 end
 TCMax=(1/m)*FmriMatr*ICOutMax';
@@ -194,7 +208,7 @@ TCMax=(1/m)*FmriMatr*ICOutMax';
 SC = corr(ICOutMax', gFN);
 Delta_SC = diag(SC) - max(SC-diag(diag(SC)),[],2);
 if min(Delta_SC<0)
-    fprint('Found %d FNs are not matched\n', sum(Delta_SC<0));
+    fprint('Found %d personalized FNs are not matched to their group-level counterparts\n', sum(Delta_SC<0));
 end
 
 FN = ICOutMax';

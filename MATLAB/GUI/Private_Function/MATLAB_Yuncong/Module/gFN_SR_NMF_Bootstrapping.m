@@ -1,7 +1,7 @@
-function [Flag,Message]=fCompute_gFN_Bootstrapping(App_Dir,Work_Dir,Compute_FN,Bootstrapping)
-% Yuncong Ma, 2/22/2023
+function [Flag,Message]=gFN_SR_NMF_Bootstrapping(App_Dir,Work_Dir,FN_Computation,Bootstrapping)
+% Yuncong Ma, 2/1/2024
 % Perform bootstrapping computation for group-level FN
-% [Flag,Message]=fCompute_gFN_Bootstrapping(App_Dir,Work_Dir,Compute_FN,Bootstrapping)
+% [Flag,Message]=gFN_SR_NMF_Bootstrapping(App_Dir,Work_Dir,FN_Computation,Bootstrapping)
 %
 
 Flag=0;
@@ -17,19 +17,19 @@ fclose(FID);
 if Flag==1
     return
 end
-[gNb,Flag,Message]=fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Compute_FN','gNb.mat'));
+[gNb,Flag,Message]=fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'FN_Computation','gNb.mat'));
 if Flag
     return
 end
 
 % Parameter
-K=Compute_FN.K;
-spaR=Compute_FN.GroupFN.spaR;
-vxI=Compute_FN.GroupFN.vxI;
+K=FN_Computation.K;
+spaR=FN_Computation.GroupFN.spaR;
+vxI=FN_Computation.GroupFN.vxI;
 ard=0;
-iterNum=Compute_FN.GroupFN.iterNum;
-alpha=Compute_FN.GroupFN.Alpha;
-beta=Compute_FN.GroupFN.Beta;
+iterNum=FN_Computation.GroupFN.iterNum;
+alpha=FN_Computation.GroupFN.Alpha;
+beta=FN_Computation.GroupFN.Beta;
 
 nmVec = zeros(length(gNb),1);
 for gni=1:length(gNb)

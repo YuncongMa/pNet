@@ -1,5 +1,5 @@
 function [FN,Flag,Message]=fReformat_FN(App_Dir,Work_Dir,FN)
-% Yuncong Ma, 2/22/2023
+% Yuncong Ma, 2/1/2024
 % Reformat FN for both surface and volume formats
 % [FN,Flag,Message]=fReformat_FN(App_Dir,Work_Dir,FN)
 % Reformat FN for output when it is a 2D matrix
@@ -8,7 +8,7 @@ function [FN,Flag,Message]=fReformat_FN(App_Dir,Work_Dir,FN)
 Flag=0;
 Message='';
 
-[Setting.Load_Data,Flag,Message] =fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Load_Data','Setting.mat'));
+[Setting.Data_Input,Flag,Message] =fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Data_Input','Setting.mat'));
 if Flag
     return
 end
@@ -19,12 +19,17 @@ if ischar(FN)
         FN=[];
         return
     end
-    switch Setting.Load_Data.Data_Type
+    [Brain_Template,Flag,Message]=fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Data_Input','Brain_Template.mat'));
+    if Flag
+        FN=[];
+        return
+    end
+    switch Setting.Data_Input.Data_Type
         case 'Surface'
             return
 
         case 'Volume'
-            [Brain_Mask,Flag,Message] =fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Load_Data','Brain_Mask.mat'));
+            Brain_Mask=Brain_Template.Brain_Mask;
             if Flag
                 FN=[];
                 return
@@ -39,7 +44,7 @@ if ischar(FN)
         otherwise
             FN=[];
             Flag=1;
-            Message=['Unsupported data type: ',Setting.Load_Data.Data_Type];
+            Message=['Unsupported data type: ',Setting.Data_Input.Data_Type];
             return
     end
 
@@ -52,12 +57,12 @@ elseif isnumeric(FN)
         return
     end
 
-    switch Setting.Load_Data.Data_Type
+    switch Setting.Data_Input.Data_Type
         case 'Surface'
             return
 
         case 'Volume'
-            [Brain_Mask,Flag,Message] =fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Load_Data','Brain_Mask.mat'));
+            [Brain_Mask,Flag,Message] =fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Data_Input','Brain_Mask.mat'));
             if Flag
                 FN=[];
                 return
@@ -72,7 +77,7 @@ elseif isnumeric(FN)
         otherwise
             FN=[];
             Flag=1;
-            Message=['Unsupported data type: ',Setting.Load_Data.Data_Type];
+            Message=['Unsupported data type: ',Setting.Data_Input.Data_Type];
             return
     end
 end

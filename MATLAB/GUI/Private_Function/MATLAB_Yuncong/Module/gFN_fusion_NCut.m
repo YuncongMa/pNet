@@ -1,7 +1,7 @@
-function [Flag,Message]=fCompute_gFN_Fusion(App_Dir,Work_Dir,Compute_FN,Bootstrapping)
-% Yuncong Ma, 2/22/2023
+function [Flag,Message]=gFN_fusion_NCut(App_Dir,Work_Dir,Compute_FN,Bootstrapping)
+% Yuncong Ma, 2/1/2024
 % Fuse the bootstrapping results for group-level gFN
-% [Flag,Message]=fCompute_gFN_Fusion(Work_Dir,Compute_FN,Bootstrapping)
+% [Flag,Message]=gFN_fusion_NCut(Work_Dir,Compute_FN,Bootstrapping)
 
 Flag=0;
 Message='';

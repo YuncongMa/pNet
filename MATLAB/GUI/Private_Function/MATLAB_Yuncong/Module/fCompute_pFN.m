@@ -1,22 +1,20 @@
 function [Flag,Message]=fCompute_pFN(App_Dir,Work_Dir)
-% Yuncong Ma, 5/25/2023
+% Yuncong Ma, 2/1/2024
 % Perform personalized FN computation
 % [Flag,Message]=fCompute_pFN(App_Dir,Work_Dir)
 
 Flag=0;
 Message='';
 
-File_Group_FN=fullfile(Work_Dir,'Group_FN','FN.mat');
+Setting.Data_Input=fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Data_Input','Setting.mat'));
+Setting.FN_Computation=fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'FN_Computation','Setting.mat'));
 
-Setting.Load_Data=fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Load_Data','Setting.mat'));
-Setting.Compute_FN=fLoad_MATLAB_Single_Variable(fullfile(Work_Dir,'Compute_FN','Setting.mat'));
-
-FID=fopen(fullfile(Work_Dir,'Load_Data','Scan_List.txt'));
+FID=fopen(fullfile(Work_Dir,'Data_Input','Scan_List.txt'));
 Scan_File=textscan(FID,'%s\n');
 Scan_File=Scan_File{1};
 fclose(FID);
 
-FID=fopen(fullfile(Work_Dir,'Load_Data','Subject_ID.txt'));
+FID=fopen(fullfile(Work_Dir,'Data_Input','Subject_ID.txt'));
 Subject_Folder=textscan(FID,'%s\n');
 Subject_Folder=Subject_Folder{1};
 fclose(FID);
@@ -39,21 +37,21 @@ for i=1:N_Subject_Folder
 end
 
 % Start parallel
-if Setting.Compute_FN.Parallel.Flag
+if Setting.FN_Computation.Parallel.Flag
     CPU=gcp('nocreate');
     if isempty(CPU)
-        parpool('Processes',Setting.Compute_FN.Parallel.N_Thread);
-    elseif CPU.NumWorkers~=Setting.Compute_FN.Parallel.N_Thread
+        parpool('Processes',Setting.FN_Computation.Parallel.N_Thread);
+    elseif CPU.NumWorkers~=Setting.FN_Computation.Parallel.N_Thread
         delete(CPU);
-        parpool('Processes',Setting.Compute_FN.Parallel.N_Thread);
+        parpool('Processes',Setting.FN_Computation.Parallel.N_Thread);
     end
 end
 
-switch Setting.Load_Data.Data_Format
+switch Setting.Data_Input.Data_Format
     case {'HCP Surface (*.cifti, *.mat)','MGH Surface (*.mgh)','MGZ Surface (*.mgz)','Volume (*.nii, *.nii.gz, *.mat)'}
-        if Setting.Compute_FN.Parallel.Flag==0
+        if Setting.FN_Computation.Parallel.Flag==0
             for i=1:N_Subject_Folder
-                [Flag,Message]=fCompute_pFN_Single(App_Dir,Work_Dir,Setting.Compute_FN,fullfile(Work_Dir,'Personalized_FN',Subject_Folder{i}));
+                [Flag,Message]=fCompute_pFN_Single(App_Dir,Work_Dir,Setting.FN_Computation,Subject_Folder{i});
                 if Flag==1
                     %                         Message=['Error in running fCompute_pFN_Single in ',Subject_Folder{i}];
                     return
@@ -62,7 +60,7 @@ switch Setting.Load_Data.Data_Format
         else
             Parallel(1:N_Subject_Folder)=struct('Flag',0,'Message','');
             parfor i=1:N_Subject_Folder
-                [Parallel(i).Flag,Parallel(i).Message]=fCompute_pFN_Single(App_Dir,Work_Dir,Setting.Compute_FN,fullfile(Work_Dir,'Personalized_FN',Subject_Folder{i}));
+                [Parallel(i).Flag,Parallel(i).Message]=fCompute_pFN_Single(App_Dir,Work_Dir,Setting.FN_Computation,Subject_Folder{i});
             end
             for i=1:N_Subject_Folder
                 if Parallel(i).Flag==1
@@ -77,7 +75,7 @@ switch Setting.Load_Data.Data_Format
 
     otherwise
         Flag=1;
-        Message=['Unknown data format : ',Setting.Load_Data.Data_Format];
+        Message=['Unknown data format : ',Setting.Data_Input.Data_Format];
 end
 
 end
