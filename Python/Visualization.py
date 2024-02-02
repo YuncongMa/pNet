@@ -703,8 +703,11 @@ def large_3view_center(weight_map: np.ndarray):
     :param weight_map: a 3D matrix, either 0-1 or weighted
     :return: Center ndarray: [3, 1]
 
-    Yuncong Ma, 11/6/2023
+    Yuncong Ma, 2/1/2024
     """
+
+    # remove negative values for results derived using GIG-ICA
+    weight_map[weight_map < 0] = 0
 
     Center = np.zeros(3, dtype=np.int32)
 
