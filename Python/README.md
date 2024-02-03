@@ -39,7 +39,7 @@ This Python version of pNet provides a step-by-step guidance to customize a Pyth
 **Terminal code**
 ```
 # run a step-by-step terminal guide to set up a Python script for a customized pNet workflow
-python Workflow_guide.py
+python /Workflow/Workflow_guide.py
 ```
 
 **Video tutorial**
@@ -74,6 +74,7 @@ pNet.workflow(dir_pnet_result: str,
              file_mask_vol=None, file_overlayImage=None,
              maskValue=0,
              file_surfL_inflated=None, file_surfR_inflated=None,
+             method='SR-NMF',
              K=17, Combine_Scan=False,
              file_gFN=None,
              samplingMethod='Subject', sampleSize=10, nBS=50,
@@ -90,6 +91,7 @@ pNet.workflow_simple(dir_pnet_result: str,
                     dataType: str, dataFormat: str,
                     file_scan: str,
                     file_Brain_Template: str,
+                    method='SR-NMF',
                     K=17,
                     Combine_Scan=False,
                     file_gFN=None)
