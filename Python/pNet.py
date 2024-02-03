@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/19/2023
+# Yuncong Ma, 1/19/2024
 # pNet
 # This script provides the highest level organization of pNet
 # It provides workflows of pNet, and examples
@@ -9,31 +9,28 @@
 import os
 
 # path of pNet
-dir_python = os.path.dirname(os.path.abspath(__file__))
+current_file_path = os.path.abspath(__file__)
+dir_python = os.path.dirname(current_file_path)
 dir_pNet = os.path.dirname(dir_python)
 dir_brain_template = os.path.join(dir_pNet, 'Brain_Template')
 dir_example = os.path.join(dir_pNet, 'Example')
 
 
 # Example
-from Example import Example
 
 # Brain templates
-from Brain_Template import Brain_Template
 
 # Module
 # This script builds the five modules of pNet
 # Functions for modules of pNet
-from Data_Input import *
-from FN_Computation import *
-from FN_Computation_torch import *
-from Computation_Environment import *
-from Visualization import *
-from Quality_Control import *
-from Quality_Control_torch import *
-from Workflow import *
-from Server import *
-from Web_Report import *
+from Module.Data_Input import *
+from Module.FN_Computation_torch import *
+from Module.FN_Computation import *
+from Module.Visualization import *
+from Module.Quality_Control import *
+from Module.FN_Computation_torch import *
+from Report.Web_Report import *
+from Workflow.Workflow import *
 
 
 

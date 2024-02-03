@@ -1,25 +1,18 @@
-# Yuncong Ma, 12/20/2023
+# Yuncong Ma, 1/17/2024
 # pNet
 # Provide examples of running the whole workflow of pNet
 
 #########################################
 # Packages
 
-import argparse
-
 # Module
 # This script builds the five modules of pNet
 # Functions for modules of pNet
-from Brain_Template import Brain_Template
-from Data_Input import *
-from FN_Computation import *
-from FN_Computation_torch import *
-from Computation_Environment import *
-from Quality_Control import *
-from Quality_Control_torch import *
-from Visualization import *
-from Server import *
-from Web_Report import *
+from Basic.Brain_Template import Brain_Template
+from Module.FN_Computation_torch import *
+from Module.Quality_Control_torch import *
+from Basic.Cluster_Computation import *
+from Report.Web_Report import *
 
 
 def workflow(dir_pnet_result: str,
@@ -32,11 +25,13 @@ def workflow(dir_pnet_result: str,
              file_mask_vol=None, file_overlayImage=None,
              maskValue=0,
              file_surfL_inflated=None, file_surfR_inflated=None,
+             method='SR-NMF',
              K=17, Combine_Scan=False,
              file_gFN=None,
-             samplingMethod='Subject', sampleSize=10, nBS=50,
+             samplingMethod='Subject', sampleSize='Automatic', nBS=50,
              maxIter=(2000, 500), minIter=30, meanFitRatio=0.1, error=1e-8, normW=1,
              Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
+             a=0.5, b=0.5, Nemda=1, ftol=0.02,
              Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
              dataPrecision='double',
              outputFormat='Both',
@@ -71,10 +66,12 @@ def workflow(dir_pnet_result: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
 
     :param file_gFN: None or a directory of a precomputed gFN in .mat format
-    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
-    :param sampleSize: number of subjects selected for each bootstrapping run
-    :param nBS: number of runs for bootstrap
 
+    :param method: 'SR-NMF' or 'GIG-ICA'
+    # parameters for SR-NMF
+    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
+    :param sampleSize: Automatic, number of subjects selected for each bootstrapping run
+    :param nBS: number of runs for bootstrap
     :param maxIter: maximum iteration number for multiplicative update
     :param minIter: minimum iteration in case fast convergence
     :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
@@ -88,6 +85,13 @@ def workflow(dir_pnet_result: str,
     :param ard: 0 or 1, flat for combining similar clusters
     :param eta: a hyper parameter for the ard regularization term
     :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
+    # parameters for GIG-ICA
+    :param maxIter: maximum iteration number for multiplicative update
+    :param a: weighting to the own pFN
+    :param b: weighting to the gFN
+    :param Nemda: step size for iteration
+    :param ftol: tolerance for the objective function
+    :param error: error tolerance for w to obtain pFN
 
     :param Parallel: False or True, whether to enable parallel computation
     :param Computation_Mode: 'CPU_Numpy', 'CPU_Torch'
@@ -100,11 +104,18 @@ def workflow(dir_pnet_result: str,
     :param synchronized_view: True or False, whether to synchronize view centers for volume data between gFNs and pFNs
     :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
 
-    Yuncong Ma, 12/20/2023
+    Yuncong Ma, 2/2/2024
     """
 
     # Check setting
     check_data_type_format(dataType, dataFormat)
+    if not method not in {'SR-NMF', 'GIG-ICA'}:
+        print_log("Method needs to be either 'SR-NMF' or 'GIG-ICA'", logFile=None, stop=True)
+        return
+    if file_gFN is None and method == 'GIG-ICA':
+        print_log("Group-level FNs are required as input when using GIG-ICA to obtain personalized FNs",
+                  logFile=None, stop=True)
+        return
 
     # setup all sub-folders in the pNet result folder
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT = setup_result_folder(dir_pnet_result)
@@ -157,23 +168,35 @@ def workflow(dir_pnet_result: str,
 
     # ============== FN Computation ============== #
     # setup parameters for FN computation
-    setup_NMF_setting(
-        dir_pnet_result,
-        K=K,
-        Combine_Scan=Combine_Scan,
-        file_gFN=file_gFN,
-        samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
-        maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
-        Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
-        vxI=vxI, ard=ard, eta=eta,
-        nRepeat=nRepeat,
-        Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
-        dataPrecision=dataPrecision,
-        outputFormat=outputFormat
-    )
+    if method == 'SR-NMF':
+        SR_NMF.setup_SR_NMF(
+            dir_pnet_result,
+            K=K,
+            Combine_Scan=Combine_Scan,
+            file_gFN=file_gFN,
+            samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
+            maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
+            Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
+            vxI=vxI, ard=ard, eta=eta,
+            nRepeat=nRepeat,
+            Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
+            dataPrecision=dataPrecision,
+            outputFormat=outputFormat
+        )
+    elif method == 'GIG-ICA':
+        GIG_ICA.setup_GIG_ICA(
+            dir_pnet_result,
+            K=K,
+            Combine_Scan=Combine_Scan,
+            file_gFN=file_gFN,
+            maxIter=maxIter, a=a, b=b, Nemda=Nemda, ftol=ftol, error=error,
+            Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
+            dataPrecision=dataPrecision,
+            outputFormat=outputFormat
+        )
     # perform FN computation
     if Computation_Mode == 'CPU_Numpy':
-        run_FN_Computation(dir_pnet_result)
+        run_FN_Computation(dir_pnet_result)  # does not support GIG-ICA yet
     elif Computation_Mode == 'CPU_Torch':
         run_FN_Computation_torch(dir_pnet_result)
     # ============================================= #
@@ -200,6 +223,7 @@ def workflow_simple(dir_pnet_result: str,
                     dataType: str, dataFormat: str,
                     file_scan: str,
                     file_Brain_Template: str,
+                    method='SR-NMF',
                     K=17,
                     Combine_Scan=False,
                     file_gFN=None):
@@ -212,12 +236,23 @@ def workflow_simple(dir_pnet_result: str,
     :param dataFormat: 'HCP Surface (*.cifti, *.mat)', 'MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)', 'Volume (*.nii, *.nii.gz, *.mat)', 'HCP Surface-Volume (*.cifti)', 'HCP Volume (*.cifti)'
     :param file_scan: a txt file that stores directories of all fMRI scans
     :param file_Brain_Template: file directory or content of a brain template file in json format
+    :param method: 'SR-NMF' or 'GIG-ICA'
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param file_gFN: directory of a precomputed gFN in .mat format
 
-    Yuncong Ma, 12/19/2023
+    Yuncong Ma, 2/2/2024
     """
+
+    # Check setting
+    check_data_type_format(dataType, dataFormat)
+    if not method not in {'SR-NMF', 'GIG-ICA'}:
+        print_log("Method needs to be either 'SR-NMF' or 'GIG-ICA'", logFile=None, stop=True)
+        return
+    if file_gFN is None and method == 'GIG-ICA':
+        print_log("Group-level FNs are required as input when using GIG-ICA to obtain personalized FNs",
+                  logFile=None, stop=True)
+        return
 
     # setup all sub-folders in the pNet result folder
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT = setup_result_folder(dir_pnet_result)
@@ -236,12 +271,20 @@ def workflow_simple(dir_pnet_result: str,
 
     # ============== FN Computation ============== #
     # setup parameters for FN computation
-    setup_NMF_setting(
-        dir_pnet_result,
-        K=K,
-        Combine_Scan=Combine_Scan,
-        file_gFN=file_gFN
-    )
+    if method == 'SR-NMF':
+        SR_NMF.setup_SR_NMF(
+            dir_pnet_result,
+            K=K,
+            Combine_Scan=Combine_Scan,
+            file_gFN=file_gFN
+        )
+    elif method == 'GIG-ICA':
+        GIG_ICA.setup_GIG_ICA(
+            dir_pnet_result,
+            K=K,
+            Combine_Scan=Combine_Scan,
+            file_gFN=file_gFN
+        )
     # perform FN computation
     run_FN_Computation_torch(dir_pnet_result)
     # ============================================= #
@@ -698,46 +741,48 @@ def workflow_guide():
     print('Customized workflow script is generated successfully, please open to check the details.')
 
 
-def workflow_server(dir_pnet_result: str,
-                    # data input
-                    file_scan: str,
-                    dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
-                    file_subject_ID=None, file_subject_folder=None, file_group_ID=None,
-                    file_Brain_Template=None,
-                    templateFormat='HCP',
-                    file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
-                    file_mask_vol=None, file_overlayImage=None,
-                    maskValue=0,
-                    file_surfL_inflated=None, file_surfR_inflated=None,
-                    # FN computation
-                    K=17, Combine_Scan=False,
-                    file_gFN=None,
-                    samplingMethod='Subject', sampleSize=10, nBS=50,
-                    maxIter=(2000, 500), minIter=200, meanFitRatio=0.1, error=1e-8, normW=1,
-                    Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
-                    outputFormat='Both',
-                    Computation_Mode='CPU_Torch',
-                    dataPrecision='double',
-                    # visualization
-                    synchronized_view=True,
-                    synchronized_colorbar=False,
-                    # server
-                    dir_pnet=None,
-                    dir_env=None,
-                    dir_python=None,
-                    submit_command='qsub -terse -j y',
-                    thread_command='-pe threaded ',
-                    memory_command='-l h_vmem=',
-                    log_command='-o ',
-                    computation_resource=dict(memory_bootstrap='50G', thread_bootstrap=4,
+def workflow_cluster(dir_pnet_result: str,
+                     # data input
+                     file_scan: str,
+                     dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
+                     file_subject_ID=None, file_subject_folder=None, file_group_ID=None,
+                     file_Brain_Template=None,
+                     templateFormat='HCP',
+                     file_surfL=None, file_surfR=None, file_maskL=None, file_maskR=None,
+                     file_mask_vol=None, file_overlayImage=None,
+                     maskValue=0,
+                     file_surfL_inflated=None, file_surfR_inflated=None,
+                     # FN computation
+                     method='SR-NMF',
+                     K=17, Combine_Scan=False,
+                     file_gFN=None,
+                     samplingMethod='Subject', sampleSize='Automatic', nBS=50,
+                     maxIter=(2000, 500), minIter=30, meanFitRatio=0.1, error=1e-8, normW=1,
+                     Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
+                     a=0.5, b=0.5, Nemda=1, ftol=0.02,
+                     outputFormat='Both',
+                     Computation_Mode='CPU_Torch',
+                     dataPrecision='double',
+                     # visualization
+                     synchronized_view=True,
+                     synchronized_colorbar=False,
+                     # server
+                     dir_pnet=None,
+                     dir_env=None,
+                     dir_python=None,
+                     submit_command='qsub -terse -j y',
+                     thread_command='-pe threaded ',
+                     memory_command='-l h_vmem=',
+                     log_command='-o ',
+                     computation_resource=dict(memory_bootstrap='50G', thread_bootstrap=4,
                                               memory_fusion='10G', thread_fusion=4,
                                               memory_pFN='10G', thread_pFN=1,
                                               memory_qc='10G', thread_qc=1,
                                               memory_visualization='20G', thread_visualization=1)
-                    ):
+                     ):
     """
     Run the workflow of pNet, including Data Input, FN Computation, Quality Control and Visualization
-    This function is for running pNet using multiple jobs to facilitate computation in a server environment
+    This function is for running pNet using multiple jobs to facilitate computation in a cluster environment
     This script can be re-run to restart the desired workflow from where it stops
 
     :param dir_pnet_result: directory of the pNet result folder
@@ -765,10 +810,11 @@ def workflow_server(dir_pnet_result: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
 
     :param file_gFN: None or a directory of a precomputed gFN in .mat format
+    :param method: 'SR-NMF' or 'GIG-ICA'
+    # parameters for SR-NMF
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
-    :param sampleSize: number of subjects selected for each bootstrapping run
+    :param sampleSize: Automatic, number of subjects selected for each bootstrapping run
     :param nBS: number of runs for bootstrap
-
     :param maxIter: maximum iteration number for multiplicative update
     :param minIter: minimum iteration in case fast convergence
     :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
@@ -782,6 +828,14 @@ def workflow_server(dir_pnet_result: str,
     :param ard: 0 or 1, flat for combining similar clusters
     :param eta: a hyper parameter for the ard regularization term
     :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
+    # parameters for GIG-ICA
+    :param maxIter: maximum iteration number for multiplicative update
+    :param a: weighting to the own pFN
+    :param b: weighting to the gFN
+    :param Nemda: step size for iteration
+    :param ftol: tolerance for the objective function
+    :param error: error tolerance for w to obtain pFN
+
     :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
 
     :param Computation_Mode: 'CPU_Numpy', 'CPU_Torch'
@@ -799,13 +853,20 @@ def workflow_server(dir_pnet_result: str,
     :param log_command: command to specify the logfile
     :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
 
-    Yuncong Ma, 12/20/2023
+    Yuncong Ma, 2/2/2024
     """
 
-    print('Start to run pNet workflow in server mode', flush=True)
+    print('Start to run pNet workflow for cluster computation', flush=True)
 
     # Check setting
     check_data_type_format(dataType, dataFormat)
+    if not method not in {'SR-NMF', 'GIG-ICA'}:
+        print_log("Method needs to be either 'SR-NMF' or 'GIG-ICA'", logFile=None, stop=True)
+        return
+    if file_gFN is None and method == 'GIG-ICA':
+        print_log("Group-level FNs are required as input when using GIG-ICA to obtain personalized FNs",
+                  logFile=None, stop=True)
+        return
 
     if dir_pnet is None:
         raise ValueError('Require a valid setting for dir_pnet')
@@ -819,7 +880,7 @@ def workflow_server(dir_pnet_result: str,
     # create script folder
     dir_script = os.path.join(dir_pnet_dataInput, 'Script')
     os.makedirs(dir_script, exist_ok=True)
-    file_script = open(os.path.join(dir_pnet_dataInput, 'Script', 'server_job_workflow.py'), 'w')
+    file_script = open(os.path.join(dir_pnet_dataInput, 'Script', 'cluster_job_workflow.py'), 'w')
     print('# Customized Python script for pNet workflow in server mode\n# Use corresponding bash script to submit the job\n# Created on ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=file_script)
     print('# This Python script can be re-run to restart the workflow from where it stops', file=file_script)
     print('\n# Load packages', file=file_script)
@@ -876,28 +937,40 @@ def workflow_server(dir_pnet_result: str,
             print(f"file_overlayImage = '{file_overlayImage}'", file=file_script)
         print(f"maskValue = {maskValue}", file=file_script)
     print('\n# FN computation', file=file_script)
+    print(f"method = {method}", file=file_script)
     print(f"K = {K}", file=file_script)
     print(f"Combine_Scan = {Combine_Scan}", file=file_script)  # True or False
     if file_gFN is None:
         print(f"file_gFN = None", file=file_script)
     else:
         print(f"file_gFN = '{file_gFN}'", file=file_script)
-    print(f"samplingMethod = '{samplingMethod}'", file=file_script)
-    print(f"sampleSize = {sampleSize}", file=file_script)
-    print(f"nBS = {nBS}", file=file_script)
-    print(f"maxIter = {maxIter}", file=file_script)
-    print(f"minIter = {minIter}", file=file_script)
-    print(f"meanFitRatio = {meanFitRatio}", file=file_script)
-    print(f"error = {error}", file=file_script)
-    print(f"normW = {normW}", file=file_script)
-    print(f"Alpha = {Alpha}", file=file_script)
-    print(f"Beta = {Beta}", file=file_script)
-    print(f"alphaS = {alphaS}", file=file_script)
-    print(f"alphaL = {alphaL}", file=file_script)
-    print(f"vxI = {vxI}", file=file_script)
-    print(f"eta = {eta}", file=file_script)
-    print(f"ard = {ard}", file=file_script)
-    print(f"nRepeat = {nRepeat}", file=file_script)
+
+    if method == 'SR-NMF':
+        if file_gFN is not None:
+            print(f"samplingMethod = '{samplingMethod}'", file=file_script)
+            print(f"sampleSize = {sampleSize}", file=file_script)
+            print(f"nBS = {nBS}", file=file_script)
+        print(f"maxIter = {maxIter}", file=file_script)
+        print(f"minIter = {minIter}", file=file_script)
+        print(f"meanFitRatio = {meanFitRatio}", file=file_script)
+        print(f"error = {error}", file=file_script)
+        print(f"normW = {normW}", file=file_script)
+        print(f"Alpha = {Alpha}", file=file_script)
+        print(f"Beta = {Beta}", file=file_script)
+        print(f"alphaS = {alphaS}", file=file_script)
+        print(f"alphaL = {alphaL}", file=file_script)
+        print(f"vxI = {vxI}", file=file_script)
+        print(f"eta = {eta}", file=file_script)
+        print(f"ard = {ard}", file=file_script)
+        print(f"nRepeat = {nRepeat}", file=file_script)
+    elif method == 'GIG-ICA':
+        print(f"maxIter = {maxIter}", file=file_script)
+        print(f"a = {a}", file=file_script)
+        print(f"b = {b}", file=file_script)
+        print(f"ftol = {ftol}", file=file_script)
+        print(f"error = {error}", file=file_script)
+        print(f"Nemda = {Nemda}", file=file_script)
+
     print(f"Computation_Mode = '{Computation_Mode}'", file=file_script)
     print(f"dataPrecision = '{dataPrecision}'", file=file_script)
     print(f"outputFormat = '{outputFormat}'", file=file_script)
@@ -915,13 +988,13 @@ def workflow_server(dir_pnet_result: str,
     print(f"computation_resource = {computation_resource}", file=file_script)
 
     # main job
-    print('\n# Main job\n# The following part is imported from /pNet/Python/Workflow_Server_Template.py', file=file_script)
+    print('\n# Main job\n# The following part is imported from /pNet/Python/Workflow_Cluster_Template.py', file=file_script)
 
-    file_pnet_workflow_server_template = os.path.join(dir_pnet, 'Python', 'Workflow_Server_Template.py')
-    [print(line.replace('\n', ''), file=file_script) for line in open(file_pnet_workflow_server_template, 'r')]
+    file_pnet_workflow_cluster_template = os.path.join(dir_pnet, 'Python', 'Workflow_Cluster_Template.py')
+    [print(line.replace('\n', ''), file=file_script) for line in open(file_pnet_workflow_cluster_template, 'r')]
 
     # =============== Server
-    setup_server(
+    setup_cluster(
         dir_pnet=dir_pnet,
         dir_env=dir_env,
         dir_pnet_result=dir_pnet_result,
@@ -936,9 +1009,9 @@ def workflow_server(dir_pnet_result: str,
     # submit bash job
     submit_bash_job(dir_pnet_result=dir_pnet_result,
                     python_command=None,
-                    bashFile=os.path.join(dir_script, 'server_job_workflow.sh'),
-                    pythonFile=os.path.join(dir_script, 'server_job_workflow.py'),
-                    logFile=os.path.join(dir_script, 'server_job_workflow.log'),
+                    bashFile=os.path.join(dir_script, 'cluster_job_workflow.sh'),
+                    pythonFile=os.path.join(dir_script, 'cluster_job_workflow.py'),
+                    logFile=os.path.join(dir_script, 'cluster_job_workflow.log'),
                     memory='10G',
                     n_thread=1,
                     create_python_file=False)

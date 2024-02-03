@@ -3,10 +3,6 @@
 
 #########################################
 # Packages
-import numpy as np
-import scipy
-import os
-import time
 import pandas as pd
 import pandas.api.types as pdtypes
 from plotnine import (
@@ -25,8 +21,8 @@ from plotnine import (
 )
 
 # other functions of pNet
-from Data_Input import *
-from FN_Computation import *
+from Module.Data_Input import *
+from Basic.Matrix_Computation import *
 
 
 def print_description_QC(logFile: str):

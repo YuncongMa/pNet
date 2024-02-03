@@ -12,7 +12,7 @@ import re
 import time
 
 # other functions of pNet
-from Data_Input import *
+from Module.Data_Input import *
 
 
 def mat_corr(X, Y=None, dataPrecision='double'):
@@ -1177,10 +1177,10 @@ def bootstrap_scan(dir_output: str, file_scan: str, file_subject_ID: str, file_s
         FID.close()
 
 
-def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=(2000, 500), minIter=200, meanFitRatio=0.1, error=1e-8,
-                      normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='Both'):
+def setup_SR_NMF(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=(2000, 500), minIter=200, meanFitRatio=0.1, error=1e-8,
+                 normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='Both'):
     """
-    Setup the setting for NMF-based method to compute gFNs and pFNs
+    Setup SR-NMF parameters to compute gFNs and pFNs
 
     :param dir_pnet_result: directory of the pNet result folder
     :param K: number of FNs
@@ -1210,7 +1210,7 @@ def setup_NMF_setting(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=N
 
     :return: setting: a structure
 
-    Yuncong Ma, 12/20/2023
+    Yuncong Ma, 2/2/2024
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)

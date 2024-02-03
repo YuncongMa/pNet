@@ -12,7 +12,7 @@
 #########################################
 # Packages
 import os
-from Data_Input import load_json_setting
+
 #########################################
 
 # Get the directory of pNet based the location of this file

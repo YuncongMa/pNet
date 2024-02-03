@@ -4,7 +4,7 @@
 #########################################
 # Packages
 import os
-from Data_Input import load_matlab_single_array
+
 #########################################
 
 # Get the directory of pNet based the location of this file
@@ -15,7 +15,7 @@ dir_pNet = os.path.dirname(dir_python_package)
 #########################################
 # Examples for data and pnet results
 # Preprocessed fMRI data in surface and volume formats for testing
-dir_example = os.path.join(dir_pNet, 'Example')
+dir_example = os.path.join(dir_pNet, '')
 # HCP surface data
 dir_example_hcp_surf = os.path.join(dir_example, 'HCP_Surface')
 dir_example_data_hcp_surf = os.path.join(dir_example_hcp_surf, 'Data')

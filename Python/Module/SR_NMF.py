@@ -1,75 +1,292 @@
-# Yuncong Ma, 1/10/2024
-# FN Computation module of pNet
+# Yuncong Ma, 2/2/2024
+# SR-NMF method in pNet
 # Pytorch version
+# To avoid same function naming, use import SR_NMF
 
 #########################################
 # Packages
-import scipy.io as sio
-import os
-import re
-import time
-import torch
 
 
 # other functions of pNet
-from Data_Input import *
-from FN_Computation import construct_Laplacian_gNb, check_gFN, compute_gNb, bootstrap_scan, setup_pFN_folder
-from Server import submit_bash_job
-from Quality_Control import visualize_quality_control
+from Module.Data_Input import *
+from Basic.Matrix_Computation import *
 
 
-def mat_corr_torch(X, Y=None, dataPrecision='double'):
+def setup_SR_NMF(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=(2000, 500), minIter=200, meanFitRatio=0.1, error=1e-8,
+                 normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='Both'):
     """
-    Perform corr as in MATLAB, pair-wise Pearson correlation between columns in X and Y
+    Setup SR-NMF parameters to compute gFNs and pFNs
 
-    :param X: 1D or 2D matrix, numpy.ndarray or torch.Tensor
-    :param Y: 1D or 2D matrix, or None, numpy.ndarray or torch.Tensor
+    :param dir_pnet_result: directory of the pNet result folder
+    :param K: number of FNs
+    :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
+    :param file_gFN: directory of a precomputed gFN in .mat format
+    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
+    :param sampleSize: 'Automatic' or integer number, number of subjects selected for each bootstrapping run
+    :param nBS: 'Automatic' or integer number, number of runs for bootstrap
+    :param maxIter: maximum iteration number for multiplicative update, which can be one number or two numbers for gFN and pFN separately
+    :param minIter: minimum iteration in case fast convergence, which can be one number or two numbers for gFN and pFN separately
+    :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
+    :param error: difference of cost function for convergence
+    :param normW: 1 or 2, normalization method for W used in Laplacian regularization
+    :param Alpha: hyper parameter for spatial sparsity
+    :param Beta: hyper parameter for Laplacian sparsity
+    :param alphaS: internally determined, the coefficient for spatial sparsity based Alpha, data size, K, and gNb
+    :param alphaL: internally determined, the coefficient for Laplacian sparsity based Beta, data size, K, and gNb
+    :param vxI: flag for using the temporal correlation between nodes (vertex, voxel)
+    :param ard: 0 or 1, flat for combining similar clusters
+    :param eta: a hyper parameter for the ard regularization term
+    :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
+    :param Parallel: False or True, whether to enable parallel computation
+    :param Computation_Mode: 'CPU'
+    :param N_Thread: positive integers, used for parallel computation
     :param dataPrecision: 'double' or 'single'
-    X and Y have the same number of rows
-    :return: Corr
+    :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
 
-    Note: this method will use memory as it concatenates X and Y along column direction.
-    By Yuncong Ma, 12/6/2023
+    :return: setting: a structure
+
+    Yuncong Ma, 2/2/2024
     """
 
-    torch_float, torch_eps = set_data_precision_torch(dataPrecision)
-    if not isinstance(X, torch.Tensor):
-        X = torch.tensor(X, dtype=torch_float)
+    dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
+
+    # Set sampleSize if it is 'Automatic'
+    if sampleSize == 'Automatic':
+        file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
+        list_subject_ID = np.array([line.replace('\n', '') for line in open(file_subject_ID, 'r')])
+        subject_ID_unique = np.unique(list_subject_ID)
+        N_Subject = subject_ID_unique.shape[0]
+        if sampleSize == 'Automatic':
+            sampleSize = np.maximum(100, np.round(N_Subject / 10))
+
+    BootStrap = {'samplingMethod': samplingMethod, 'sampleSize': sampleSize, 'nBS': nBS}
+    Group_FN = {'file_gFN': file_gFN,
+                'BootStrap': BootStrap,
+                'maxIter': maxIter, 'minIter': minIter, 'error': error,
+                'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL, 'vxI': vxI,
+                'ard': ard, 'eta': eta, 'nRepeat': nRepeat}
+    Personalized_FN = {'maxIter': maxIter, 'minIter': minIter, 'meanFitRatio': meanFitRatio, 'error': error,
+                       'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL,
+                       'vxI': vxI, 'ard': ard, 'eta': eta}
+    Computation = {'Parallel': Parallel,
+                   'Model': Computation_Mode,
+                   'N_Thread': N_Thread,
+                   'dataPrecision': dataPrecision}
+
+    setting = {'Method': 'SR-NMF',
+               'K': K,
+               'Combine_Scan': Combine_Scan,
+               'Group_FN': Group_FN,
+               'Personalized_FN': Personalized_FN,
+               'Computation': Computation,
+               'Output_Format': outputFormat}
+
+    write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
+    return setting
+
+
+def construct_Laplacian_gNb(gNb: np.ndarray, dim_space, vxI=0, X=None, alphaL=10, normW=1, dataPrecision='double'):
+    """
+    construct_Laplacian_gNb(gNb: np.ndarray, dim_space, vxI=0, X=None, alphaL=10, normW=1, dataPrecision='double')
+    construct Laplacian matrices for Laplacian spatial regularization term
+
+    :param gNb: graph neighborhood, a 2D matrix [N, 2] storing rows and columns of non-zero elements
+    :param dim_space: dimension of space (number of voxels or vertices)
+    :param vxI: 0 or 1, flag for using the temporal correlation between nodes (vertex, voxel)
+    :param X: fMRI data, a 2D matrix, [dim_time, dim_space]
+    :param alphaL: internal hyper parameter for Laplacian regularization term
+    :param normW: 1 or 2, normalization method for Laplacian matrix W
+    :param dataPrecision: 'double' or 'single'
+    :return: L, W, D: sparse 2D matrices [dim_space, dim_space]
+
+    Yuncong Ma, 9/13/2023
+    """
+
+    np_float, np_eps = set_data_precision(dataPrecision)
+
+    # Construct the spatial affinity graph
+    # gNb uses index starting from 1
+    W = scipy.sparse.coo_matrix((np.ones(gNb.shape[0]), (gNb[:, 0] - 1, gNb[:, 1] - 1)), shape=(dim_space, dim_space), dtype=np_float)
+    if vxI > 0:
+        for i in range(gNb.shape[0]):
+            xi = gNb[i, 0] - 1
+            yi = gNb[i, 1] - 1
+            if xi < yi:
+                corrVal = (1.0 + mat_corr(X[:, xi], X[:, yi], dataPrecision)) / 2
+                W[xi, yi] = corrVal
+                W[yi, xi] = corrVal
+
+    # Defining other matrices
+    DCol = np.array(W.sum(axis=1), dtype=np_float).flatten()
+    D = scipy.sparse.spdiags(DCol, 0, dim_space, dim_space)
+    L = D - W
+    if normW > 0:
+        D_mhalf = scipy.sparse.spdiags(np.power(DCol, -0.5), 0, dim_space, dim_space)
+        L = D_mhalf @ L @ D_mhalf * alphaL
+        W = D_mhalf @ W @ D_mhalf * alphaL
+        D = D_mhalf @ D @ D_mhalf * alphaL
+
+    return L, W, D
+
+
+def compute_gNb(Brain_Template, logFile=None):
+    """
+    Prepare a graph neighborhood variable, using indices as its sparse representation
+
+    :param Brain_Template: a structure variable with keys 'Data_Type', 'Template_Format', 'Shape', 'Brain_Mask'.
+        If Brain_Template.Data_Type is 'Surface', Shape contains L and R, with vertices and faces as sub keys. Brain_Mask contains L and R.
+        If Brain_Template.Data_Type is 'Volume', Shape is None, Brain_Mask is a 3D 0-1 matrix, Overlay_Image is a 3D matrix
+        If Brain_Template.Data_Type is 'Surface-Volume', It includes fields from both 'Surface' and 'Volume', 'Brain_Mask' is renamed to be 'Surface_Mask' and 'Volume_Mask'
+    :param logFile:
+    :return: gNb: a 2D matrix [N, 2], which labels the non-zero elements in a graph. Index starts from 1
+
+    Yuncong Ma, 11/13/2023
+    """
+
+    # Check Brain_Template
+    if 'Data_Type' not in Brain_Template.keys():
+        raise ValueError('Cannot find Data_Type in the Brain_Template')
+    if 'Template_Format' not in Brain_Template.keys():
+        raise ValueError('Cannot find Data_Format in the Brain_Template')
+
+    # Construct gNb
+    if Brain_Template['Data_Type'] == 'Surface':
+        Brain_Surface = Brain_Template
+        # Number of vertices
+        Nv_L = Brain_Surface['Shape']['L']['vertices'].shape[0]  # left hemisphere
+        Nv_R = Brain_Surface['Shape']['R']['vertices'].shape[0]
+        # Number of faces
+        Nf_L = Brain_Surface['Shape']['L']['faces'].shape[0]  # left hemisphere
+        Nf_R = Brain_Surface['Shape']['R']['faces'].shape[0]
+        # Index of useful vertices, starting from 1
+        vL = np.sort(np.where(Brain_Surface['Brain_Mask']['L'] == 1)[0]) + int(1)  # left hemisphere
+        vR = np.sort(np.where(Brain_Surface['Brain_Mask']['R'] == 1)[0]) + int(1)
+        # Create gNb using matrix format
+        # Exclude the medial wall or other vertices outside the mask
+        # Set the maximum size to avoid unnecessary memory allocation
+        gNb_L = np.zeros((3 * Nf_L, 2), dtype=np.int64)
+        gNb_R = np.zeros((3 * Nf_R, 2), dtype=np.int64)
+        Count_L = 0
+        Count_R = 0
+
+        # Get gNb of all useful vertices in the left hemisphere
+        for i in range(0, Nf_L):
+            temp = Brain_Surface['Shape']['L']['faces'][i]
+            temp = np.intersect1d(temp, vL)
+
+            if len(temp) == 2:  # only one line
+                gNb_L[Count_L, :] = temp
+                Count_L += 1
+            elif len(temp) == 3:  # three lines
+                temp = np.tile(temp, (2, 1)).T
+                temp[:, 1] = temp[(1, 2, 0), 1]
+                gNb_L[Count_L:Count_L + 3, :] = temp
+                Count_L += 3
+            else:
+                continue
+        gNb_L = gNb_L[0:Count_L, :]  # Remove unused part
+        # Right hemisphere
+        for i in range(0, Nf_R):
+            temp = Brain_Surface['Shape']['R']['faces'][i]
+            temp = np.intersect1d(temp, vR)
+
+            if len(temp) == 2:  # only one line
+                gNb_R[Count_R, :] = temp
+                Count_R += 1
+            elif len(temp) == 3:  # three lines
+                temp = np.tile(temp, (2, 1)).T
+                temp[:, 1] = temp[(1, 2, 0), 1]
+                gNb_R[Count_R:Count_R + 3, :] = temp
+                Count_R += 3
+            else:
+                continue
+        gNb_R = gNb_R[0:Count_R, :]  # Remove unused part
+
+        # Map the index from all vertices to useful ones
+        mapL = np.zeros(Nv_L, dtype=np.int64)
+        mapL[vL - 1] = range(1, 1+len(vL))  # Python index starts from 0, gNb index starts from 1
+        gNb_L = mapL[(gNb_L.flatten() - 1).astype(int)]
+        gNb_L = np.reshape(gNb_L, (int(np.round(len(gNb_L)/2)), 2))
+        gNb_L = np.append(gNb_L, gNb_L[:, (-1, 0)], axis=0)
+        # right hemisphere
+        mapR = np.zeros(Nv_R, dtype=np.int64)
+        mapR[vR - 1] = range(1, 1+len(vR))
+        gNb_R = mapR[(gNb_R.flatten() - 1).astype(int)]
+        gNb_R = np.reshape(gNb_R, (int(np.round(len(gNb_R)/2)), 2))
+        gNb_R = np.append(gNb_R, gNb_R[:, (-1, 0)], axis=0)
+
+        # Combine two hemispheres
+        gNb = np.concatenate((gNb_L, gNb_R + len(vL)), axis=0)  # Shift index in right hemisphere by the number of useful vertices in left hemisphere
+        gNb = np.unique(gNb, axis=0)  # Remove duplicated
+
+    elif Brain_Template['Data_Type'] == 'Volume':
+        Brain_Mask = Brain_Template['Brain_Mask'] > 0
+        if not (len(Brain_Mask.shape) == 3 or (len(Brain_Mask.shape) == 4 and Brain_Mask.shape[3] == 1)):
+            raise ValueError('Mask in Brain_Template needs to be a 3D matrix when the data type is volume')
+        if len(Brain_Mask.shape) == 4:
+            Brain_Mask = np.squeeze(Brain_Mask, axis=3)
+
+        # Index starts from 1
+        sx = Brain_Mask.shape[0]
+        sy = Brain_Mask.shape[1]
+        sz = Brain_Mask.shape[2]
+        # Label non-zero elements in Brain_Mask
+        Nm = np.sum(Brain_Mask > 0)
+        maskLabel = Brain_Mask.flatten('F')
+        maskLabel = maskLabel.astype(np.int64)  # Brain_Mask might be a 0-1 logic matrix
+        if 'Volume_Order' in Brain_Template.keys():  # customized index order
+            maskLabel[maskLabel > 0] = Brain_Template['Volume_Order']
+        else:  # default index order
+            maskLabel[maskLabel > 0] = range(1, 1 + Nm)
+        maskLabel = np.reshape(maskLabel, Brain_Mask.shape, order='F')  # consistent to MATLAB matrix index order
+        # Enumerate each voxel in Brain_Mask
+        # The following code is optimized for NumPy array
+        # Set the maximum size to avoid unnecessary memory allocation
+        gNb = np.zeros((Nm * 26, 2), dtype=np.int64)
+        Count = 0
+        for xi in range(sx):
+            for yi in range(sy):
+                for zi in range(sz):
+                    if Brain_Mask[xi, yi, zi] > 0:
+                        Brain_Mask[xi, yi, zi] = 0  # Exclude the self point
+                        #  Create a 3x3x3 box, +2 is for Python range
+                        patchBox = (np.maximum((xi - 1, yi - 1, zi - 1), (0, 0, 0)), np.minimum((xi + 2, yi + 2, zi + 2), (sx, sy, sz)))
+                        for xni in range(patchBox[0][0], patchBox[1][0]):
+                            for yni in range(patchBox[0][1], patchBox[1][1]):
+                                for zni in range(patchBox[0][2], patchBox[1][2]):
+                                    if Brain_Mask[xni, yni, zni] > 0:
+                                        gNb[Count, :] = (maskLabel[xi, yi, zi], maskLabel[xni, yni, zni])
+                                        Count += 1
+                        Brain_Mask[xi, yi, zi] = 1  # reset the self value
+
+        gNb = gNb[0:Count, :]  # Remove unused space
+        gNb = np.unique(gNb, axis=0)  # Remove duplicated, and sort the results
+
+    elif Brain_Template['Data_Type'] == 'Surface-Volume':
+        Brain_Template_surf = Brain_Template.copy()
+        Brain_Template_surf['Data_Type'] = 'Surface'
+        Brain_Template_surf['Brain_Mask'] = Brain_Template_surf['Surface_Mask']
+        gNb_surf = compute_gNb(Brain_Template_surf, logFile=logFile)
+        Brain_Template_vol = Brain_Template.copy()
+        Brain_Template_vol['Data_Type'] = 'Volume'
+        Brain_Template_vol['Brain_Mask'] = Brain_Template_surf['Volume_Mask']
+        gNb_vol = compute_gNb(Brain_Template_vol, logFile=logFile)
+        # Concatenate the two gNbs with index adjustment
+        gNb = np.concatenate((gNb_surf, gNb_vol + np.max(gNb_surf)), axis=0)
+
     else:
-        X = X.type(torch_float)
-    if Y is not None:
-        if not isinstance(Y, torch.Tensor):
-            Y = torch.tensor(Y, dtype=torch_float)
-        else:
-            Y = Y.type(torch_float)
+        raise ValueError('Unknown combination of Data_Type and Data_Surface: ' + Brain_Template['Data_Type'] + ' : ' + Brain_Template['Data_Format'])
 
-    # Check size of X and Y
-    if len(X.shape) > 2 or (Y is not None and len(Y.shape) > 2):
-        raise ValueError("X and Y must be 1D or 2D matrices")
-    if Y is not None and X.shape[0] != Y.shape[0]:
-        raise ValueError("X and Y must have the same number of columns")
+    if len(np.unique(gNb[:, 0])) != max(np.unique(gNb[:, 0])):
+        if logFile is not None:
+            if isinstance(logFile, str):
+                logFile = open(logFile, 'a')
+            print('\ngNb contains isolated voxel or vertex which will affect the subsequent analysis', file=logFile, flush=True)
 
-    if Y is not None:
-        # Subtract the mean to calculate the covariance
-        X_centered = X - torch.mean(X, dim=0, keepdim=True)
-        Y_centered = Y - torch.mean(Y, dim=0, keepdim=True)
-        # Compute the standard deviation of the columns
-        std_X = torch.std(X_centered, dim=0, keepdim=True, unbiased=True)
-        std_Y = torch.std(Y_centered, dim=0, keepdim=True, unbiased=True)
-        # Compute the correlation matrix
-        numerator = (X_centered.T @ Y_centered)
-        denominator = (std_X.T @ std_Y) * torch.tensor(X.shape[0] - 1)
-        Corr = numerator / denominator
-    else:
-        if len(X.shape) != 2:
-            raise ValueError("X must be a 2D matrix")
-        X_centered = X - torch.mean(X, dim=0, keepdim=True)
-        std_X = torch.std(X_centered, dim=0, keepdim=True, unbiased=True)
-        numerator = (X_centered.T @ X_centered)
-        denominator = (std_X.T @ std_X) * torch.tensor(X.shape[0] - 1)
-        Corr = numerator / denominator
+    if logFile is not None:
+        print('\ngNb is generated successfully', file=logFile, flush=True)
 
-    return Corr
+    return gNb
 
 
 def normalize_data_torch(data, algorithm='vp', normalization='vmax', dataPrecision='double'):
@@ -391,8 +608,8 @@ def construct_Laplacian_gNb_torch(gNb, dim_space, vxI=0, X=None, alphaL=10, norm
     return L, W, D
 
 
-def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-4, normW=1,
-            Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, initConv=1, ard=0, eta=0, dataPrecision='double', logFile='Log_pFN_NMF.log'):
+def pFN_SR_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, error=1e-4, normW=1,
+                     Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, initConv=1, ard=0, eta=0, dataPrecision='double', logFile='Log_pFN_NMF.log'):
     """
     Compute personalized FNs by spatially-regularized NMF method with group FNs as initialization
 
@@ -621,8 +838,8 @@ def pFN_NMF_torch(Data, gFN, gNb, maxIter=1000, minIter=30, meanFitRatio=0.1, er
     return U, V
 
 
-def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=200, error=1e-8, normW=1,
-            Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, dataPrecision='double', logFile='Log_pFN_NMF.log'):
+def gFN_SR_NMF_torch(Data, K, gNb, maxIter=1000, minIter=200, error=1e-8, normW=1,
+                     Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, dataPrecision='double', logFile='Log_gFN_NMF.log'):
     """
     Compute group-level FNs using NMF method
 
@@ -645,7 +862,7 @@ def gFN_NMF_torch(Data, K, gNb, maxIter=1000, minIter=200, error=1e-8, normW=1,
     :param logFile: str, directory of a txt log file
     :return: gFN, 2D matrix [dim_space, K]
 
-    Yuncong Ma, 12/12/2023
+    Yuncong Ma, 2/2/2024
     """
 
     # setup log file
@@ -946,8 +1163,6 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
 
     if len(set(Best_C)) < K:  # In case even the last trial has empty results
         raise ValueError('  Cannot generate non-empty gFNs\n')
-        Flag = 1
-        Message = "Cannot generate non-empty FN"
 
     print(f'Best NCut value = '+str(Best_NCutValue.numpy())+'\n', file=logFile, flush=True)
 
@@ -969,659 +1184,3 @@ def gFN_fusion_NCut_torch(gFN_BS, K, NCut_MaxTrial=100, dataPrecision='double', 
     print(f'\nFinished at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', file=logFile, flush=True)
 
     return gFN
-
-
-def run_FN_Computation_torch(dir_pnet_result: str):
-    """
-    run the FN Computation module with settings ready in Data_Input and FN_Computation
-
-    :param dir_pnet_result: directory of pNet result folder
-
-    Yuncong Ma, 1/10/2024
-    """
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # log file
-    logFile_FNC = os.path.join(dir_pnet_FNC, 'log.log')
-    logFile_FNC = open(logFile_FNC, 'w')
-    print('\nStart FN computation using PyTorch at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
-          file=logFile_FNC, flush=True)
-
-    # load settings for data input and FN computation
-    if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
-        raise ValueError('Cannot find the setting json file in folder Data_Input')
-    if not os.path.isfile(os.path.join(dir_pnet_FNC, 'Setting.json')):
-        raise ValueError('Cannot find the setting json file in folder FN_Computation')
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
-    print('Settings are loaded from folder Data_Input and FN_Computation', file=logFile_FNC, flush=True)
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-    print('Brain template is loaded from folder Data_Input', file=logFile_FNC, flush=True)
-
-    # Start computation using SP-NMF
-    if setting['FN_Computation']['Method'] == 'SR-NMF':
-        print('FN computation uses spatial-regularized non-negative matrix factorization method', file=logFile_FNC, flush=True)
-
-        # Generate additional parameters
-        gNb = compute_gNb(Brain_Template)
-        scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb}, do_compression=True)
-
-        # ============== gFN Computation ============== #
-        if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
-            # 2 steps
-            # step 1 ============== bootstrap
-            # sub-folder in FNC for storing bootstrapped results
-            print('Start to prepare bootstrap files', file=logFile_FNC, flush=True)
-            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-            if not os.path.exists(dir_pnet_BS):
-                os.makedirs(dir_pnet_BS)
-            # Log
-            logFile = os.path.join(dir_pnet_BS, 'Log.log')
-
-            # Input files
-            file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
-            file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
-            file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
-            file_group_ID = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
-            if not os.path.exists(file_group_ID):
-                file_group = None
-            # Parameters
-            combineScan = setting['FN_Computation']['Combine_Scan']
-            samplingMethod = setting['FN_Computation']['Group_FN']['BootStrap']['samplingMethod']
-            sampleSize = setting['FN_Computation']['Group_FN']['BootStrap']['sampleSize']
-            nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
-
-            # create scan lists for bootstrap
-            bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder,
-                                 file_group_ID=file_group_ID, combineScan=combineScan,
-                                 samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, logFile=logFile)
-
-            # Parameters
-            K = setting['FN_Computation']['K']
-            maxIter = setting['FN_Computation']['Group_FN']['maxIter']
-            minIter = setting['FN_Computation']['Group_FN']['minIter']
-            error = setting['FN_Computation']['Group_FN']['error']
-            normW = setting['FN_Computation']['Group_FN']['normW']
-            Alpha = setting['FN_Computation']['Group_FN']['Alpha']
-            Beta = setting['FN_Computation']['Group_FN']['Beta']
-            alphaS = setting['FN_Computation']['Group_FN']['alphaS']
-            alphaL = setting['FN_Computation']['Group_FN']['alphaL']
-            vxI = setting['FN_Computation']['Group_FN']['vxI']
-            ard = setting['FN_Computation']['Group_FN']['ard']
-            eta = setting['FN_Computation']['Group_FN']['eta']
-            nRepeat = setting['FN_Computation']['Group_FN']['nRepeat']
-            dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
-
-            # separate maxIter and minIter for gFN and pFN
-            if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
-                maxIter_gFN = maxIter
-                maxIter_pFN = maxIter
-            else:
-                maxIter_gFN = maxIter[0]
-                maxIter_pFN = maxIter[1]
-            if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
-                minIter_gFN = minIter
-                minIter_pFN = minIter
-            else:
-                minIter_gFN = minIter[0]
-                minIter_pFN = minIter[1]
-
-            # NMF on bootstrapped subsets
-            print('Start to NMF for each bootstrap at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
-            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-            K = setting['FN_Computation']['K']
-            nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
-            for rep in range(1, 1+nBS):
-                # log file
-                logFile = os.path.join(dir_pnet_BS, str(rep), 'Log.log')
-                # load data
-                file_scan_list = os.path.join(dir_pnet_BS, str(rep), 'Scan_List.txt')
-                Data = load_fmri_scan(file_scan_list, dataType=dataType, dataFormat=dataFormat, Reshape=True, Brain_Mask=Brain_Mask,
-                                      Normalization='vp-vmax', logFile=logFile)
-                # perform NMF
-                FN_BS = gFN_NMF_torch(Data, K, gNb, maxIter=maxIter_gFN, minIter=minIter_gFN, error=error, normW=normW,
-                                      Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
-                                      nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=logFile)
-                # save results
-                FN_BS = reshape_FN(FN_BS.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-                sio.savemat(os.path.join(dir_pnet_BS, str(rep), 'FN.mat'), {"FN": FN_BS}, do_compression=True)
-
-            # step 2 ============== fuse results
-            # Generate gFNs
-            print('Start to fuse bootstrapped results using NCut at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
-            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-            K = setting['FN_Computation']['K']
-            nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
-            FN_BS = np.empty(nBS, dtype=np.ndarray)
-            # load bootstrapped results
-            for rep in range(1, nBS+1):
-                FN_BS[rep-1] = np.array(reshape_FN(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
-            gFN_BS = np.concatenate(FN_BS, axis=1)
-            # log
-            logFile = os.path.join(dir_pnet_gFN, 'Log.log')
-            # Fuse bootstrapped results
-            gFN = gFN_fusion_NCut_torch(gFN_BS, K, logFile=logFile)
-            # output
-            gFN = reshape_FN(gFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
-
-        else:  # use precomputed gFNs
-            file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
-            gFN = load_matlab_single_array(file_gFN)
-            if dataType == 'Volume':
-                Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
-                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            check_gFN(gFN)
-            if dataType == 'Volume':
-                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
-            print('load precomputed gFNs', file=logFile_FNC, flush=True)
-        # ============================================= #
-
-        # ============== pFN Computation ============== #
-        print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
-        # load precomputed gFNs
-        gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
-        # additional parameter
-        gNb = load_matlab_single_array(os.path.join(dir_pnet_FNC, 'gNb.mat'))
-        # reshape to 2D if required
-        gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-        # setup folders in Personalized_FN
-        list_subject_folder = setup_pFN_folder(dir_pnet_result)
-        N_Scan = len(list_subject_folder)
-        for i in range(1, N_Scan+1):
-            print(f'Start to compute pFNs for {i}-th folder: {list_subject_folder[i-1]}', file=logFile_FNC, flush=True)
-            dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder[i-1])
-            # parameter
-            maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
-            minIter = setting['FN_Computation']['Personalized_FN']['minIter']
-            meanFitRatio = setting['FN_Computation']['Personalized_FN']['meanFitRatio']
-            error = setting['FN_Computation']['Personalized_FN']['error']
-            normW = setting['FN_Computation']['Personalized_FN']['normW']
-            Alpha = setting['FN_Computation']['Personalized_FN']['Alpha']
-            Beta = setting['FN_Computation']['Personalized_FN']['Beta']
-            alphaS = setting['FN_Computation']['Personalized_FN']['alphaS']
-            alphaL = setting['FN_Computation']['Personalized_FN']['alphaL']
-            vxI = setting['FN_Computation']['Personalized_FN']['vxI']
-            ard = setting['FN_Computation']['Personalized_FN']['ard']
-            eta = setting['FN_Computation']['Personalized_FN']['eta']
-            dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
-
-            # separate maxIter and minIter for gFN and pFN
-            if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
-                maxIter_gFN = maxIter
-                maxIter_pFN = maxIter
-            else:
-                maxIter_gFN = maxIter[0]
-                maxIter_pFN = maxIter[1]
-            if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
-                minIter_gFN = minIter
-                minIter_pFN = minIter
-            else:
-                minIter_gFN = minIter[0]
-                minIter_pFN = minIter[1]
-
-            # log file
-            logFile = os.path.join(dir_pnet_pFN_indv, 'Log.log')
-            # load data
-            Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'),
-                                  dataType=dataType, dataFormat=dataFormat,
-                                  Reshape=True, Brain_Mask=Brain_Mask, logFile=logFile)
-            # perform NMF
-            TC, pFN = pFN_NMF_torch(Data, gFN, gNb, maxIter=maxIter_pFN, minIter=minIter_pFN, meanFitRatio=meanFitRatio,
-                                    error=error, normW=normW,
-                                    Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
-                                    vxI=vxI,  ard=ard, eta=eta,
-                                    dataPrecision=dataPrecision, logFile=logFile)
-            pFN = pFN.numpy()
-            TC = TC.numpy()
-
-            # output
-            pFN = reshape_FN(pFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN}, do_compression=True)
-            sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC}, do_compression=True)
-        # ============================================= #
-
-        print('Finished FN computation at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
-
-
-def run_FN_Computation_torch_server(dir_pnet_result: str):
-    """
-    run the FN Computation module in the server mode
-
-    :param dir_pnet_result: directory of pNet result folder
-
-    Yuncong Ma, 1/11/2024
-    """
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # log file
-    print('\nStart FN computation using PyTorch at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
-
-    # load settings for data input and FN computation
-    if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')):
-        raise ValueError('Cannot find the setting json file in folder Data_Input')
-    if not os.path.isfile(os.path.join(dir_pnet_FNC, 'Setting.json')):
-        raise ValueError('Cannot find the setting json file in folder FN_Computation')
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingServer = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC, 'Server': settingServer}
-    print('Settings are loaded from folder Data_Input, FN_Computation and Server', flush=True)
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-    print('Brain template is loaded from folder Data_Input', flush=True)
-
-    # Start computation using SP-NMF
-    if setting['FN_Computation']['Method'] == 'SR-NMF':
-        print('FN computation uses spatial-regularized non-negative matrix factorization method', flush=True)
-
-        # Generate additional parameters
-        if not os.path.isfile(os.path.join(dir_pnet_FNC, 'gNb.mat')):
-            gNb = compute_gNb(Brain_Template)
-            scipy.io.savemat(os.path.join(dir_pnet_FNC, 'gNb.mat'), {'gNb': gNb}, do_compression=True)
-
-        # ============== gFN Computation ============== #
-        if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
-            # 2 steps
-            # step 1 ============== bootstrap
-            # sub-folder in FNC for storing bootstrapped results
-            print('Start to prepare bootstrap files', flush=True)
-            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-            if not os.path.exists(dir_pnet_BS):
-                os.makedirs(dir_pnet_BS)
-
-            # Input files
-            file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
-            file_subject_ID = os.path.join(dir_pnet_dataInput, 'Subject_ID.txt')
-            file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
-            file_group_ID = os.path.join(dir_pnet_dataInput, 'Group_ID.txt')
-            if not os.path.exists(file_group_ID):
-                file_group_ID = None
-            # Parameters
-            combineScan = setting['FN_Computation']['Combine_Scan']
-            samplingMethod = setting['FN_Computation']['Group_FN']['BootStrap']['samplingMethod']
-            sampleSize = setting['FN_Computation']['Group_FN']['BootStrap']['sampleSize']
-            nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
-
-            # create scan lists for bootstrap
-            flag_complete = np.zeros(nBS)
-            for i in range(1, 1+nBS):
-                if os.path.exists(os.path.join(dir_pnet_BS, str(i))) and os.path.isfile(os.path.join(dir_pnet_BS, str(i), 'Scan_List.txt')):
-                    flag_complete[i-1] = 1
-            if np.sum(flag_complete) < nBS:
-                bootstrap_scan(dir_pnet_BS, file_scan, file_subject_ID, file_subject_folder,
-                                 file_group_ID=file_group_ID, combineScan=combineScan,
-                                 samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, logFile=None)
-
-            # submit jobs
-            memory = setting['Server']['computation_resource']['memory_bootstrap']
-            n_thread = setting['Server']['computation_resource']['thread_bootstrap']
-            for rep in range(1, 1+nBS):
-                time.sleep(0.1)
-                if os.path.isfile(os.path.join(dir_pnet_BS, str(i), 'FN.mat')):
-                    continue
-                submit_bash_job(dir_pnet_result,
-                                python_command=f'pNet.NMF_boostrapping_server(dir_pnet_result,{rep})',
-                                memory=memory,
-                                n_thread=n_thread,
-                                bashFile=os.path.join(dir_pnet_BS, str(rep), 'server_job_bootstrap.sh'),
-                                pythonFile=os.path.join(dir_pnet_BS, str(rep), 'server_job_bootstrap.py'),
-                                logFile=os.path.join(dir_pnet_BS, str(rep), 'server_job_bootstrap.log')
-                                )
-
-            # check completion
-            wait_time = 300
-            flag_complete = np.zeros(nBS)
-            dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-            report_interval = 12
-            Count = 0
-            while np.sum(flag_complete) < nBS:
-                time.sleep(wait_time)
-                Count += 1
-                if Count % report_interval == 0:
-                    print(f'--> Found {np.sum(flag_complete)} finished jobs out of {nBS} at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-                for rep in range(1, 1+nBS):
-                    if flag_complete[rep-1] == 0 and os.path.isfile(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')):
-                        flag_complete[rep-1] = 1
-
-            # step 2 ============== fuse results
-            # Generate gFNs
-            print('Start to fuse bootstrapped results using NCut at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-            memory = setting['Server']['computation_resource']['memory_fusion']
-            n_thread = setting['Server']['computation_resource']['thread_fusion']
-
-            if not os.path.isfile(os.path.join(dir_pnet_gFN, 'FN.mat')):
-                submit_bash_job(dir_pnet_result,
-                                python_command='pNet.fuse_FN_server(dir_pnet_result)',
-                                memory=memory,
-                                n_thread=n_thread,
-                                bashFile=os.path.join(dir_pnet_BS, 'server_job_fusion.sh'),
-                                pythonFile=os.path.join(dir_pnet_BS, 'server_job_fusion.py'),
-                                logFile=os.path.join(dir_pnet_BS, 'server_job_fusion.log')
-                                )
-
-            # check completion
-            wait_time = 60
-            report_interval = 30
-            flag_complete = 0
-            Count = 0
-            while flag_complete == 0:
-                time.sleep(wait_time)
-                Count += 1
-                if Count % report_interval == 0:
-                    print(f'--> Found {np.sum(flag_complete)} finished jobs out of 1 at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-                if os.path.isfile(os.path.join(dir_pnet_gFN, 'FN.mat')):
-                    flag_complete = 1
-                    break
-
-        else:  # use precomputed gFNs
-            file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
-            gFN = load_matlab_single_array(file_gFN)
-            if dataType == 'Volume':
-                Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
-                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            check_gFN(gFN)
-            if dataType == 'Volume':
-                gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
-            print('load precomputed gFNs', flush=True)
-        # ============================================= #
-
-        # ============== pFN Computation ============== #
-        print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-        # setup folders in Personalized_FN
-        list_subject_folder = setup_pFN_folder(dir_pnet_result)
-        nScan = len(list_subject_folder)
-
-        # submit jobs
-        memory = setting['Server']['computation_resource']['memory_pFN']
-        n_thread = setting['Server']['computation_resource']['thread_pFN']
-        for scan in range(1, 1+nScan):
-            time.sleep(0.1)
-            if os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'FN.mat')):
-                continue
-            submit_bash_job(dir_pnet_result,
-                            python_command=f'pNet.NMF_pFN_server(dir_pnet_result,{scan})',
-                            memory=memory,
-                            n_thread=n_thread,
-                            bashFile=os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'server_job_pFN.sh'),
-                            pythonFile=os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'server_job_pFN.py'),
-                            logFile=os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'server_job_pFN.log')
-                            )
-
-        # check completion
-        wait_time = 30
-        report_interval = 120
-        flag_complete = np.zeros(nScan)
-        Count = 0
-        while np.sum(flag_complete) < nScan:
-            time.sleep(wait_time)
-            Count += 1
-            if Count % report_interval == 0:
-                print(f'--> Found {np.sum(flag_complete)} finished jobs out of {nScan} at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-            for scan in range(1, 1+nScan):
-                if flag_complete[scan-1] == 0 and os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'FN.mat')):
-                    flag_complete[scan-1] = 1
-        # ============================================= #
-
-    print('Finished FN computation at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-
-
-def NMF_boostrapping_server(dir_pnet_result: str, jobID=1):
-    """
-    Run the NMF for bootstraping in server mode
-
-    :param dir_pnet_result: directory of pNet result folder
-    :param jobID: jobID starting from 1
-    :return: None
-
-    Yuncong Ma, 12/20/2023
-    """
-
-    jobID = int(jobID)
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # get settings
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-
-    # Extract parameters
-    K = setting['FN_Computation']['K']
-    maxIter = setting['FN_Computation']['Group_FN']['maxIter']
-    minIter = setting['FN_Computation']['Group_FN']['minIter']
-    error = setting['FN_Computation']['Group_FN']['error']
-    normW = setting['FN_Computation']['Group_FN']['normW']
-    Alpha = setting['FN_Computation']['Group_FN']['Alpha']
-    Beta = setting['FN_Computation']['Group_FN']['Beta']
-    alphaS = setting['FN_Computation']['Group_FN']['alphaS']
-    alphaL = setting['FN_Computation']['Group_FN']['alphaL']
-    vxI = setting['FN_Computation']['Group_FN']['vxI']
-    ard = setting['FN_Computation']['Group_FN']['ard']
-    eta = setting['FN_Computation']['Group_FN']['eta']
-    nRepeat = setting['FN_Computation']['Group_FN']['nRepeat']
-    dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
-
-    # separate maxIter and minIter for gFN and pFN
-    if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
-        maxIter_gFN = maxIter
-        maxIter_pFN = maxIter
-    else:
-        maxIter_gFN = maxIter[0]
-        maxIter_pFN = maxIter[1]
-    if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
-        minIter_gFN = minIter
-        minIter_pFN = minIter
-    else:
-        minIter_gFN = minIter[0]
-        minIter_pFN = minIter[1]
-
-    dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-    if not os.path.exists(dir_pnet_BS):
-        os.makedirs(dir_pnet_BS)
-
-    # NMF on bootstrapped subsets
-    print('Start to NMF for this bootstrap at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-    dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-
-    # load data
-    file_scan_list = os.path.join(dir_pnet_BS, str(jobID), 'Scan_List.txt')
-    Data = load_fmri_scan(file_scan_list, dataType=dataType, dataFormat=dataFormat, Reshape=True, Brain_Mask=Brain_Mask,
-                          Normalization='vp-vmax', logFile=None)
-
-    # additional parameter
-    gNb = load_matlab_single_array(os.path.join(dir_pnet_FNC, 'gNb.mat'))
-
-    # perform NMF
-    FN_BS = gFN_NMF_torch(Data, K, gNb, maxIter=maxIter_gFN, minIter=minIter_gFN, error=error, normW=normW,
-                          Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
-                          nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=None)
-    # save results
-    FN_BS = reshape_FN(FN_BS.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_BS, str(jobID), 'FN.mat'), {"FN": FN_BS}, do_compression=True)
-
-    print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-
-
-def fuse_FN_server(dir_pnet_result: str):
-    """
-    Run the NCut to fuse FNs in server mode
-
-    :param dir_pnet_result: directory of pNet result folder
-    :return: None
-
-    Yuncong Ma, 11/29/2023
-    """
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # get settings
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-    print('Brain template is loaded from folder Data_Input', flush=True)
-
-    print('Start to fuse bootstrapped results using NCut at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-    dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-    K = setting['FN_Computation']['K']
-    nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
-    FN_BS = np.empty(nBS, dtype=np.ndarray)
-    # load bootstrapped results
-    for rep in range(1, nBS+1):
-        FN_BS[rep-1] = np.array(reshape_FN(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
-    gFN_BS = np.concatenate(FN_BS, axis=1)
-
-    # Fuse bootstrapped results
-    gFN = gFN_fusion_NCut_torch(gFN_BS, K, logFile=None)
-    # output
-    gFN = reshape_FN(gFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
-
-    print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-
-
-def NMF_pFN_server(dir_pnet_result: str, jobID=1):
-    """
-    Run the NMF for pFNs in server mode
-
-    :param dir_pnet_result: directory of pNet result folder
-    :param jobID: jobID starting from 1
-    :return: None
-
-    Yuncong Ma, 12/20/2023
-    """
-
-    jobID = int(jobID)
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # get settings
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-
-    print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-    # load precomputed gFNs
-    gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
-    # additional parameter
-    gNb = load_matlab_single_array(os.path.join(dir_pnet_FNC, 'gNb.mat'))
-    # reshape to 2D if required
-    gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-    # get subject folder in Personalized_FN
-    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
-    list_subject_folder = [line.replace('\n', '') for line in open(file_subject_folder, 'r')]
-    list_subject_folder = np.array(list_subject_folder)
-    list_subject_folder_unique = np.unique(list_subject_folder)
-
-    print(f'Start to compute pFNs for {jobID}-th folder: {list_subject_folder_unique[jobID-1]}', flush=True)
-    dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[jobID-1])
-    # parameter
-    maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
-    minIter = setting['FN_Computation']['Personalized_FN']['minIter']
-    meanFitRatio = setting['FN_Computation']['Personalized_FN']['meanFitRatio']
-    error = setting['FN_Computation']['Personalized_FN']['error']
-    normW = setting['FN_Computation']['Personalized_FN']['normW']
-    Alpha = setting['FN_Computation']['Personalized_FN']['Alpha']
-    Beta = setting['FN_Computation']['Personalized_FN']['Beta']
-    alphaS = setting['FN_Computation']['Personalized_FN']['alphaS']
-    alphaL = setting['FN_Computation']['Personalized_FN']['alphaL']
-    vxI = setting['FN_Computation']['Personalized_FN']['vxI']
-    ard = setting['FN_Computation']['Personalized_FN']['ard']
-    eta = setting['FN_Computation']['Personalized_FN']['eta']
-    dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
-
-    # separate maxIter and minIter for gFN and pFN
-    if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
-        maxIter_gFN = maxIter
-        maxIter_pFN = maxIter
-    else:
-        maxIter_gFN = maxIter[0]
-        maxIter_pFN = maxIter[1]
-    if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
-        minIter_gFN = minIter
-        minIter_pFN = minIter
-    else:
-        minIter_gFN = minIter[0]
-        minIter_pFN = minIter[1]
-
-    # load data
-    Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'),
-                          dataType=dataType, dataFormat=dataFormat,
-                          Reshape=True, Brain_Mask=Brain_Mask, logFile=None)
-    # perform NMF
-    TC, pFN = pFN_NMF_torch(Data, gFN, gNb, maxIter=maxIter_pFN, minIter=minIter_pFN, meanFitRatio=meanFitRatio,
-                            error=error, normW=normW,
-                            Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
-                            vxI=vxI,  ard=ard, eta=eta,
-                            dataPrecision=dataPrecision, logFile=None)
-    pFN = pFN.numpy()
-    TC = TC.numpy()
-
-    # output
-    pFN = reshape_FN(pFN, dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN}, do_compression=True)
-    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC}, do_compression=True)
-
-    print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)

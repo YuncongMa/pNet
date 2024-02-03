@@ -797,7 +797,7 @@ def save_brain_template(dir_pnet_dataInput: str,
     :param Brain_Template: a structure created by function compute_brain_template
     :param logFile: 'Automatic', None, or a file directory
 
-    Yuncong Ma, 12/4/2023
+    Yuncong Ma, 1/10/2024
     """
 
     # only save a few digits for vertex location
@@ -810,7 +810,7 @@ def save_brain_template(dir_pnet_dataInput: str,
         return round(x, n_digit)
 
     # Use both matlab and json files for convenience
-    scipy.io.savemat(os.path.join(dir_pnet_dataInput, 'Brain_Template.mat'), {'Brain_Template': Brain_Template})
+    scipy.io.savemat(os.path.join(dir_pnet_dataInput, 'Brain_Template.mat'), {'Brain_Template': Brain_Template}, do_compression=True)
     if Brain_Template['Data_Type'] == 'Volume':
         Brain_Template['Brain_Mask'] = Brain_Template['Brain_Mask'].tolist()
         Brain_Template['Overlay_Image'] = Brain_Template['Overlay_Image'].tolist()

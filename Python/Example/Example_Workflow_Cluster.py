@@ -1,10 +1,10 @@
-# Yuncong Ma, 12/5/2023
+# Yuncong Ma, 2/2/2024
 # Test server mode with generated bash and python scripts
 
 # ======= Terminal command ======= #
 # Activate a conda env with required packages for running pNet
 # $ source activate /cbica/home/mayun/.conda/envs/pnet
-# Run the customized python script for a pNet workflow in server mode
+# Run the customized python script for a pNet workflow for cluster computation
 # $ python /cbica/home/mayun/Projects/NiChart/Script/Workflow_OASIS_server.py
 
 # basic python packages
@@ -13,20 +13,19 @@ import sys
 
 # ======= Server mode ======= #
 # setup the directory of the pNet toolbox folder
-# User specify the following definition
 dir_pnet = '/cbica/home/mayun/Projects/NiChart/pNet'
 sys.path.append(os.path.join(dir_pnet, 'Python'))
 import pNet
+
+# Setup the directory of the Conda Python environment
+dir_env = '/Users/yuncongma/anaconda3/envs/pnet'
+dir_python = '/Users/yuncongma/anaconda3/envs/pnet/bin/python'
 
 # Setup server commands
 submit_command = 'qsub -terse -j y'
 thread_command = '-pe threaded '
 memory_command = '-l h_vmem='
 log_command = '-o '
-
-# Setup the directory of the Conda Python environment
-dir_env = '/Users/yuncongma/anaconda3/envs/pnet'
-dir_python = '/Users/yuncongma/anaconda3/envs/pnet/bin/python'
 
 # ======= Parameters for pNet ======= #
 # Setup the result folder
@@ -68,7 +67,7 @@ computation_resource = \
          memory_visualization='10G', thread_visualization=1)
 
 # ======= Run pNet workflow ======= #
-pNet.workflow_server(
+pNet.workflow_cluster(
     dir_pnet_result=dir_pnet_result,
     dataType=dataType,
     dataFormat=dataFormat,

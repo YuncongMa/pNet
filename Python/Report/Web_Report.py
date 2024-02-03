@@ -1,10 +1,7 @@
 # Yuncong Ma, 12/18/2023
 # Make a web page based report for fast visual examination
 
-import os
-from Data_Input import *
-from PIL import Image
-from Visualization import *
+from Module.Visualization import *
 
 
 dir_python = os.path.dirname(os.path.abspath(__file__))
@@ -120,10 +117,12 @@ def run_web_report(dir_pnet_result: str):
     n_missmatch = np.sum(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)
     ps_missmatch = np.where(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)
     if n_missmatch == 0:
-        text_qc = 'pFNs of all scans passed the QC'
+        text_qc = 'pFNs of all scans passed QC. <br />'
     else:
-        text_qc = 'There are ' + str(n_missmatch) + ' scans failed the QC, meaning that they have at least one pFN miss matched'
-    print(list_subject_folder_unique[ps_missmatch])
+        text_qc = 'There are ' + str(n_missmatch) + ' scans failed the QC, meaning that they have at least one pFN miss matched. <br />'
+        text_qc = ''
+        for i in range(n_missmatch):
+            text_qc = text_qc + list_subject_folder_unique[ps_missmatch[i]] + ' <br />'
     html_as_string = html_as_string.replace('{$text_qc$}', str(text_qc))
 
     file_summary = open(file_summary, 'w')

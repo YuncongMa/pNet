@@ -49,7 +49,7 @@ else:
     pNet.setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
 
 # ============== FN Computation
-pNet.setup_NMF_setting(
+pNet.setup_SR_NMF(
     dir_pnet_result=dir_pnet_result,
     K=K,
     Combine_Scan=Combine_Scan,
@@ -72,7 +72,7 @@ pNet.setup_Visualization(
 )
 
 # =============== Server
-pNet.setup_server(
+pNet.setup_cluster(
     dir_env=dir_env,
     dir_pnet=dir_pnet,
     dir_pnet_result=dir_pnet_result,
@@ -89,13 +89,13 @@ print('All setups are finished\n', flush=True)
 # ============== Run ============== #
 print('Start to run\n', flush=True)
 # FN Computation
-pNet.run_FN_Computation_torch_server(dir_pnet_result)
+pNet.run_FN_computation_torch_cluster(dir_pnet_result)
 
 # Quality Control
-pNet.run_quality_control_torch_server(dir_pnet_result)
+pNet.run_quality_control_torch_cluster(dir_pnet_result)
 
 # Visualization
-pNet.run_Visualization_server(dir_pnet_result)
+pNet.run_Visualization_cluster(dir_pnet_result)
 
 # Web Report
 pNet.run_web_report(dir_pnet_result)

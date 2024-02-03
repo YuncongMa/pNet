@@ -1,20 +1,12 @@
-# Yuncong Ma, 12/20/2023
+# Yuncong Ma, 1/10/2024
 # Quality control module of pNet using PyTorch
 
 #########################################
 # Packages
-import numpy as np
-import scipy
-import os
-import re
-import time
-import torch
 
 # other functions of pNet
-from Data_Input import *
-from FN_Computation_torch import *
-from Quality_Control import *
-from Server import submit_bash_job
+from Module.Quality_Control import *
+from Basic.Cluster_Computation import submit_bash_job
 
 
 def run_quality_control_torch(dir_pnet_result: str):
@@ -131,7 +123,7 @@ def run_quality_control_torch(dir_pnet_result: str):
         dir_pFN_indv_QC = os.path.join(dir_pnet_QC, list_subject_folder[i])
         if not os.path.exists(dir_pFN_indv_QC):
             os.makedirs(dir_pFN_indv_QC)
-        scipy.io.savemat(os.path.join(dir_pFN_indv_QC, 'Result.mat'), {'Result': Result})
+        scipy.io.savemat(os.path.join(dir_pFN_indv_QC, 'Result.mat'), {'Result': Result}, do_compression=True)
 
     # Finish the final report
     if flag_QC == 0:
@@ -196,7 +188,7 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
     QC_Spatial_Correspondence = torch.clone(torch.diag(temp))
     temp -= torch.diag(2 * torch.ones(K))  # set diagonal values to lower than -1
     QC_Spatial_Correspondence_Control = torch.max(temp, dim=0)[0]
-    QC_Delta_Sim = torch.min(QC_Spatial_Correspondence - QC_Spatial_Correspondence_Control)
+    QC_Delta_Sim = QC_Spatial_Correspondence - QC_Spatial_Correspondence_Control
 
     # Convert back to Numpy array
     Spatial_Correspondence = QC_Spatial_Correspondence.cpu().numpy()
@@ -236,7 +228,7 @@ def run_quality_control_torch_server(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 12/5/2023
+    Yuncong Ma, 12/20/2023
     """
 
     # Setup sub-folders in pNet result
@@ -301,9 +293,9 @@ def run_quality_control_torch_server(dir_pnet_result: str):
     flag_QC = 0
     for i in range(1, 1+nFolder):
         Result = load_matlab_single_variable(os.path.join(dir_pnet_QC, list_subject_folder_unique[i-1], 'Result.mat'))
-        if Result['Miss_Match'].shape[0] > 0:
+        if Result['Miss_Match'][0, 0].shape[0] > 0:
             flag_QC += 1
-            print(' ' + str(Result['Miss_Match'].shape[0]) + ' miss matched FNs in sub folder: ' + list_subject_folder_unique[i-1],
+            print(' ' + str(Result['Miss_Match'][0, 0].shape[0]) + ' miss matched FNs in sub folder: ' + list_subject_folder_unique[i-1],
                   file=file_Final_Report, flush=True)
     # Finish the final report
     if flag_QC == 0:
@@ -398,6 +390,6 @@ def compute_quality_control_torch_server(dir_pnet_result: str, jobID=1):
     # Save results
     dir_pFN_indv_QC = os.path.join(dir_pnet_QC, list_subject_folder_unique[jobID-1])
     os.makedirs(dir_pFN_indv_QC, exist_ok=True)
-    scipy.io.savemat(os.path.join(dir_pFN_indv_QC, 'Result.mat'), {'Result': Result})
+    scipy.io.savemat(os.path.join(dir_pFN_indv_QC, 'Result.mat'), {'Result': Result}, do_compression=True)
 
 

@@ -1,28 +1,22 @@
-# Yuncong Ma, 12/18/2023
+# Yuncong Ma, 2/2/2024
 # Visualization module of pNet
 
 #########################################
 # Packages
-import numpy as np
 import os
-import re
-import time
 import gc
 
-import pandas as pd
 import matplotlib
 import surfplot
 from brainspace.mesh.mesh_creation import build_polydata
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
-import scipy
 
 # other functions of pNet
 dir_python = os.path.dirname(os.path.abspath(__file__))
-from Data_Input import *
-from FN_Computation import *
-from Cropping import *
-from Server import submit_bash_job
+from Module.FN_Computation import *
+from Basic.Cropping import *
+from Basic.Cluster_Computation import submit_bash_job
 
 # reduce the memory leakage issue in macOS
 from sys import platform
@@ -169,7 +163,7 @@ def color_theme(theme: str,
             (max_CC,1,1,0)), dtype=np.float32)
 
     elif theme == 'Atlas':
-        Color_Table = load_matlab_single_array(os.path.join(dir_python, 'Color_Table.mat'))
+        Color_Table = load_matlab_single_array(os.path.join(dir_python, '../Color/Color_Table.mat'))
         Max_Index = parameter[0]
         color_function = np.zeros((2*Max_Index+1, 4), dtype=np.float32)
         color_function[0, 0] = 0
