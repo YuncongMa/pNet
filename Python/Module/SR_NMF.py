@@ -1,4 +1,4 @@
-# Yuncong Ma, 2/2/2024
+# Yuncong Ma, 2/5/2024
 # SR-NMF method in pNet
 # Pytorch version
 # To avoid same function naming, use import SR_NMF
@@ -12,8 +12,11 @@ from Module.Data_Input import *
 from Basic.Matrix_Computation import *
 
 
-def setup_SR_NMF(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50, maxIter=(2000, 500), minIter=200, meanFitRatio=0.1, error=1e-8,
-                 normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5, Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='Both'):
+def setup_SR_NMF(dir_pnet_result: str or None, K=17, Combine_Scan=False,
+                 file_gFN=None, samplingMethod='Subject', sampleSize='Automatic', nBS=50,
+                 maxIter=(2000, 500), minIter=200, meanFitRatio=0.1, error=1e-8,
+                 normW=1, Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
+                 Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='Both'):
     """
     Setup SR-NMF parameters to compute gFNs and pFNs
 
@@ -21,6 +24,8 @@ def setup_SR_NMF(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, 
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param file_gFN: directory of a precomputed gFN in .mat format
+
+    # model parameters
     :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
     :param sampleSize: 'Automatic' or integer number, number of subjects selected for each bootstrapping run
     :param nBS: 'Automatic' or integer number, number of runs for bootstrap
@@ -37,6 +42,8 @@ def setup_SR_NMF(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, 
     :param ard: 0 or 1, flat for combining similar clusters
     :param eta: a hyper parameter for the ard regularization term
     :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
+
+    # computation resource settings
     :param Parallel: False or True, whether to enable parallel computation
     :param Computation_Mode: 'CPU'
     :param N_Thread: positive integers, used for parallel computation
@@ -45,7 +52,7 @@ def setup_SR_NMF(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, 
 
     :return: setting: a structure
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/5/2024
     """
 
     dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
@@ -60,12 +67,24 @@ def setup_SR_NMF(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, 
             sampleSize = np.maximum(100, np.round(N_Subject / 10))
 
     BootStrap = {'samplingMethod': samplingMethod, 'sampleSize': sampleSize, 'nBS': nBS}
+    if len(maxIter) > 1:
+        gFN_maxIter = maxIter[0]
+        pFN_maxIter = maxIter[1]
+    else:
+        gFN_maxIter = maxIter
+        pFN_maxIter = maxIter
+    if len(minIter) > 1:
+        gFN_minIter = minIter[0]
+        pFN_minIter = minIter[1]
+    else:
+        gFN_minIter = minIter
+        pFN_minIter = minIter
     Group_FN = {'file_gFN': file_gFN,
                 'BootStrap': BootStrap,
-                'maxIter': maxIter, 'minIter': minIter, 'error': error,
+                'maxIter': gFN_maxIter, 'minIter': gFN_minIter, 'error': error,
                 'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL, 'vxI': vxI,
                 'ard': ard, 'eta': eta, 'nRepeat': nRepeat}
-    Personalized_FN = {'maxIter': maxIter, 'minIter': minIter, 'meanFitRatio': meanFitRatio, 'error': error,
+    Personalized_FN = {'maxIter': pFN_maxIter, 'minIter': pFN_minIter, 'meanFitRatio': meanFitRatio, 'error': error,
                        'normW': normW, 'Alpha': Alpha, 'Beta': Beta, 'alphaS': alphaS, 'alphaL': alphaL,
                        'vxI': vxI, 'ard': ard, 'eta': eta}
     Computation = {'Parallel': Parallel,
@@ -80,6 +99,86 @@ def setup_SR_NMF(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None, 
                'Personalized_FN': Personalized_FN,
                'Computation': Computation,
                'Output_Format': outputFormat}
+
+    write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
+    return setting
+
+
+def update_model_parameter(dir_pnet_result: str or None, FN_model_parameter):
+    """
+    Update the model parameters in setup_SR_NMF for SR-NMF
+
+    :param dir_pnet_result:
+    :param setting: obtained from setup_SR_NMF
+    :param FN_model_parameter: None or a dict containing model parameters listed in setup_SR_NMF
+    :return:
+
+    Yuncong Ma, 2/5/2024
+    """
+
+    dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
+    setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+
+    # check
+    if FN_model_parameter is None:
+        return setting
+    elif not isinstance(FN_model_parameter, dict):
+        raise ValueError('FN_model_parameter needs to be either None or a dict')
+
+    # default model parameters
+    FN_Model = dict(
+        samplingMethod='Subject',
+        sampleSize='Automatic',
+        nBS=50,
+        maxIter=(2000, 500),
+        minIter=200,
+        meanFitRatio=0.1,
+        error=1e-8,
+        normW=1,
+        Alpha=2,
+        Beta=30,
+        alphaS=0,
+        alphaL=0,
+        vxI=0,
+        ard=0,
+        eta=0,
+        nRepeat=5
+    )
+
+    # changes
+    for i in FN_model_parameter.keys():
+        FN_Model[i] = FN_model_parameter[i]
+
+    BootStrap = {'samplingMethod': FN_Model['samplingMethod'], 'sampleSize': FN_Model['sampleSize'], 'nBS': FN_Model['nBS']}
+    maxIter = FN_Model['maxIter']
+    if len(maxIter) > 1:
+        gFN_maxIter = maxIter[0]
+        pFN_maxIter = maxIter[1]
+    else:
+        gFN_maxIter = maxIter
+        pFN_maxIter = maxIter
+    minIter = FN_Model['minIter']
+    if len(minIter) > 1:
+        gFN_minIter = minIter[0]
+        pFN_minIter = minIter[1]
+    else:
+        gFN_minIter = minIter
+        pFN_minIter = minIter
+    file_gFN = setting['Group_FN']['file_gFN']
+
+    Group_FN = {'file_gFN': FN_Model['file_gFN'],
+                'BootStrap': FN_Model['BootStrap'],
+                'maxIter': gFN_maxIter, 'minIter': gFN_minIter, 'error': FN_Model['error'],
+                'normW': FN_Model['normW'], 'Alpha': FN_Model['Alpha'], 'Beta': FN_Model['Beta'],
+                'alphaS': FN_Model['alphaS'], 'alphaL': FN_Model['alphaL'], 'vxI': FN_Model['vxI'],
+                'ard': FN_Model['ard'], 'eta': FN_Model['eta'], 'nRepeat': FN_Model['nRepeat']}
+    Personalized_FN = {'maxIter': pFN_maxIter, 'minIter': pFN_minIter,
+                       'meanFitRatio': FN_Model['meanFitRatio'], 'error': FN_Model['error'],
+                       'normW': FN_Model['normW'], 'Alpha': FN_Model['Alpha'], 'Beta': FN_Model['Beta'],
+                       'alphaS': FN_Model['alphaS'], 'alphaL': FN_Model['alphaL'],
+                       'vxI': FN_Model['vxI'], 'ard': FN_Model['ard'], 'eta': FN_Model['eta']}
+    setting['Group_FN'] = Group_FN
+    setting['Personalized_FN'] = Personalized_FN
 
     write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
     return setting

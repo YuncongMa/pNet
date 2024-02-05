@@ -28,10 +28,7 @@ def workflow(dir_pnet_result: str,
              method='SR-NMF',
              K=17, Combine_Scan=False,
              file_gFN=None,
-             samplingMethod='Subject', sampleSize='Automatic', nBS=50,
-             maxIter=(2000, 500), minIter=30, meanFitRatio=0.1, error=1e-8, normW=1,
-             Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
-             a=0.5, b=0.5, Nemda=1, ftol=0.02,
+             FN_model_parameter=None or dict,
              Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
              dataPrecision='double',
              outputFormat='Both',
@@ -62,36 +59,12 @@ def workflow(dir_pnet_result: str,
     :param file_overlayImage: file of a background image for visualizing volume-based results
     :param maskValue: 0 or 1, 0 means 0s in mask files are useful vertices, otherwise vice versa. maskValue=0 for medial wall in HCP data, and maskValue=1 for brain masks
 
+    :param method: 'SR-NMF' or 'GIG-ICA'
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
-
     :param file_gFN: None or a directory of a precomputed gFN in .mat format
 
-    :param method: 'SR-NMF' or 'GIG-ICA'
-    # parameters for SR-NMF
-    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
-    :param sampleSize: Automatic, number of subjects selected for each bootstrapping run
-    :param nBS: number of runs for bootstrap
-    :param maxIter: maximum iteration number for multiplicative update
-    :param minIter: minimum iteration in case fast convergence
-    :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
-    :param error: difference of cost function for convergence
-    :param normW: 1 or 2, normalization method for W used in Laplacian regularization
-    :param Alpha: hyper parameter for spatial sparsity
-    :param Beta: hyper parameter for Laplacian sparsity
-    :param alphaS: internally determined, the coefficient for spatial sparsity based Alpha, data size, K, and gNb
-    :param alphaL: internally determined, the coefficient for Laplacian sparsity based Beta, data size, K, and gNb
-    :param vxI: flag for using the temporal correlation between nodes (vertex, voxel)
-    :param ard: 0 or 1, flat for combining similar clusters
-    :param eta: a hyper parameter for the ard regularization term
-    :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
-    # parameters for GIG-ICA
-    :param maxIter: maximum iteration number for multiplicative update
-    :param a: weighting to the own pFN
-    :param b: weighting to the gFN
-    :param Nemda: step size for iteration
-    :param ftol: tolerance for the objective function
-    :param error: error tolerance for w to obtain pFN
+    :param FN_model_parameter: advanced parameters for FN models 'SR-NMF', 'GIG-ICA'. Default is set to None, otherwise a dict. Details are in setup_SR_NMF and setup_GIG_ICA
 
     :param Parallel: False or True, whether to enable parallel computation
     :param Computation_Mode: 'CPU_Numpy', 'CPU_Torch'
@@ -104,7 +77,7 @@ def workflow(dir_pnet_result: str,
     :param synchronized_view: True or False, whether to synchronize view centers for volume data between gFNs and pFNs
     :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/5/2024
     """
 
     # Check setting
@@ -169,31 +142,30 @@ def workflow(dir_pnet_result: str,
     # ============== FN Computation ============== #
     # setup parameters for FN computation
     if method == 'SR-NMF':
-        SR_NMF.setup_SR_NMF(
-            dir_pnet_result,
-            K=K,
-            Combine_Scan=Combine_Scan,
-            file_gFN=file_gFN,
-            samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
-            maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
-            Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
-            vxI=vxI, ard=ard, eta=eta,
-            nRepeat=nRepeat,
-            Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
-            dataPrecision=dataPrecision,
-            outputFormat=outputFormat
+        setting = SR_NMF.setup_SR_NMF(
+                        dir_pnet_result,
+                        K=K,
+                        Combine_Scan=Combine_Scan,
+                        file_gFN=file_gFN,
+                        Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
+                        dataPrecision=dataPrecision,
+                        outputFormat=outputFormat
         )
+        if FN_model_parameter is not None:
+            SR_NMF.update_model_parameter(dir_pnet_FNC, FN_model_parameter=FN_model_parameter)
+
     elif method == 'GIG-ICA':
-        GIG_ICA.setup_GIG_ICA(
+        setting = GIG_ICA.setup_GIG_ICA(
             dir_pnet_result,
             K=K,
             Combine_Scan=Combine_Scan,
             file_gFN=file_gFN,
-            maxIter=maxIter, a=a, b=b, Nemda=Nemda, ftol=ftol, error=error,
             Parallel=Parallel, Computation_Mode=Computation_Mode, N_Thread=N_Thread,
             dataPrecision=dataPrecision,
             outputFormat=outputFormat
         )
+        if FN_model_parameter is not None:
+            GIG_ICA.update_model_parameter(dir_pnet_FNC, FN_model_parameter=FN_model_parameter)
     # perform FN computation
     if Computation_Mode == 'CPU_Numpy':
         run_FN_Computation(dir_pnet_result)  # does not support GIG-ICA yet
@@ -516,7 +488,7 @@ def workflow_guide():
     """
     This is a step-by-step guidance for configuring a workflow of pNet in command line
     It will generate a Python script to run the desired workflow with comments
-    Yuncong Ma, 11/7/2023
+    Yuncong Ma, 2/5/2024
     """
 
     print('This is a step-by-step guidance for setting up a workflow of pNet')
@@ -628,33 +600,18 @@ def workflow_guide():
 
     # ============== FN Computation ============== #
     print('# ============== FN Computation ============== # ')
+    method = guide_choice("Choose the FN model method:", ('SR-NMF', 'GIG-ICA'), default_value='SR-NMF')
     # setup parameters for FN computation
     K = guide_number("How many functional networks (default 17)?", 'Int', (2, 1000), skip=True, default_value=17)
-    Choice = guide_YN("Do you want to load a precomputed group-level functional networks?", skip=True, default_value='N')
+    if method == 'SR-NMF':
+        Choice = guide_YN("Do you want to load a precomputed group-level functional networks?", skip=True, default_value='N')
+    else:
+        Choice = 'Y'
     if Choice == 'Y':
-        Compute_gFN = True
         file_gFN = guide_file('Set up the file directory of the precomputed group-level functional networks in matlab format?', existed=True, extension='.mat')
     else:
-        Compute_gFN = False
         file_gFN = None
-    Choice_simple = guide_YN("Would you like to customize the model parameters for computing personalized functional networks?", skip=True, default_value='N')
-    if Choice_simple == 'Y':
-        if Compute_gFN is True and file_group_ID is not None:
-            samplingMethod = guide_choice("Choose an option for the bootstrap sampling method:", ('Subject', 'Group_Subject'), skip=True)
-        else:
-            samplingMethod = 'Subject'
-        sampleSize = guide_number("Set up the sample size for each bootstrap (ex. 10)?", 'Int', (1, 10000), skip=True, default_value='Automatic')
-        nBS = guide_number("Set up the number of bootstrap runs (default 50)?", 'Int', (1, 10000), skip=True, default_value=50)
-        maxIter = guide_number("Set up the max iteration number (default 1000)?", 'Int', (1, 1000000), skip=True, default_value=1000)
-        minIter = guide_number("Set up the minimum iteration number (default 30)?", 'Int', (1, 1000000), skip=True, default_value=30)
-        meanFitRatio = guide_number("Set up the meanFitRatio (default 0.1)?", 'Float', (0.0001, 0.9999), skip=True, default_value=0.1)
-        error = guide_number("Set up the error for iteration convergence (default 0.00000001)?", 'Float', (0.0000000000001, 0.1), skip=True, default_value=0.00000001)
-        Alpha = guide_number("Set up the Alpha (default 2)?", 'Float', (0.0001, 100000), skip=True, default_value=2)
-        Beta = guide_number("Set up the Beta (default 30)?", 'Float', (0.0001, 100000), skip=True, default_value=30)
-        nRepeat = guide_number("Set up the number of repeat (default 5)?", 'int', (1, 1000), skip=True, default_value=5)
-        Computation_Mode = guide_choice("Choose an option for the computation mode (default CPU_Torch):", ('CPU_Numpy', 'CPU_Torch'), skip=True, default_value='CPU_Torch')
-        dataPrecision = guide_choice("Choose an option for data precision (default double):", ('single', 'double'), skip=True, default_value='double')
-    outputFormat = guide_YN("Output pFN results matching to the fMRI data format?", skip=True)
+
     # ============================================= #
 
     # Generate a python script for the workflow
@@ -670,13 +627,14 @@ def workflow_guide():
     print('import pNet\n', file=file_script)
 
     print('# setup and run a customized workflow', file=file_script)
-    if Choice_simple == 'N' and file_Brain_Template is not None:
+    if file_Brain_Template is not None:
         print(f"pNet.workflow_simple(", file=file_script)
         print(f"    dir_pnet_result='{dir_pnet_result}',", file=file_script)
         print(f"    dataType='{dataType}',", file=file_script)
         print(f"    file_scan='{file_scan}',", file=file_script)
         print(f"    dataFormat='{dataFormat}',", file=file_script)
         print(f"    file_Brain_Template='{file_Brain_Template}',", file=file_script)
+        print(f"    method={method},", file=file_script)
         print(f"    K={K},", file=file_script)
         print(f"    Combine_Scan={Combine_Scan}", file=file_script)  # True or False
         print(")\n", file=file_script)
@@ -717,24 +675,11 @@ def workflow_guide():
                 print(f"    file_mask_vol='{file_mask_vol}',", file=file_script)
                 print(f"    file_overlayImage='{file_overlayImage}',", file=file_script)
             print(f"    maskValue={maskValue},", file=file_script)
+        print(f"    method={method},", file=file_script)
         print(f"    K={K},", file=file_script)
         print(f"    Combine_Scan={Combine_Scan},", file=file_script)  # True or False
         if file_gFN is not None:
             print(f"    file_gFN='{file_gFN}',", file=file_script)
-        if Choice_simple == 'Y':
-            print(f"    samplingMethod='{samplingMethod}',", file=file_script)
-            print(f"    sampleSize={sampleSize},", file=file_script)
-            print(f"    nBS={nBS},", file=file_script)
-            print(f"    maxIter={maxIter},", file=file_script)
-            print(f"    minIter={minIter},", file=file_script)
-            print(f"    meanFitRatio={meanFitRatio},", file=file_script)
-            print(f"    error={error},", file=file_script)
-            print(f"    Alpha={Alpha},", file=file_script)
-            print(f"    Beta={Beta},", file=file_script)
-            print(f"    nRepeat={nRepeat},", file=file_script)
-            print(f"    Computation_Mode='{Computation_Mode}',", file=file_script)
-            print(f"    dataPrecision='{dataPrecision}'", file=file_script)
-        print(f"    outputFormat='{outputFormat}'", file=file_script)
         print(")\n", file=file_script)
 
     file_script.close()
@@ -756,10 +701,7 @@ def workflow_cluster(dir_pnet_result: str,
                      method='SR-NMF',
                      K=17, Combine_Scan=False,
                      file_gFN=None,
-                     samplingMethod='Subject', sampleSize='Automatic', nBS=50,
-                     maxIter=(2000, 500), minIter=30, meanFitRatio=0.1, error=1e-8, normW=1,
-                     Alpha=2, Beta=30, alphaS=0, alphaL=0, vxI=0, ard=0, eta=0, nRepeat=5,
-                     a=0.5, b=0.5, Nemda=1, ftol=0.02,
+                     FN_model_parameter=None or dict,
                      outputFormat='Both',
                      Computation_Mode='CPU_Torch',
                      dataPrecision='double',
@@ -811,30 +753,8 @@ def workflow_cluster(dir_pnet_result: str,
 
     :param file_gFN: None or a directory of a precomputed gFN in .mat format
     :param method: 'SR-NMF' or 'GIG-ICA'
-    # parameters for SR-NMF
-    :param samplingMethod: 'Subject' or 'Group_Subject'. Uniform sampling based subject ID, or group and then subject ID
-    :param sampleSize: Automatic, number of subjects selected for each bootstrapping run
-    :param nBS: number of runs for bootstrap
-    :param maxIter: maximum iteration number for multiplicative update
-    :param minIter: minimum iteration in case fast convergence
-    :param meanFitRatio: a 0-1 scaler, exponential moving average coefficient, used for the initialization of U when using group initialized V
-    :param error: difference of cost function for convergence
-    :param normW: 1 or 2, normalization method for W used in Laplacian regularization
-    :param Alpha: hyper parameter for spatial sparsity
-    :param Beta: hyper parameter for Laplacian sparsity
-    :param alphaS: internally determined, the coefficient for spatial sparsity based Alpha, data size, K, and gNb
-    :param alphaL: internally determined, the coefficient for Laplacian sparsity based Beta, data size, K, and gNb
-    :param vxI: flag for using the temporal correlation between nodes (vertex, voxel)
-    :param ard: 0 or 1, flat for combining similar clusters
-    :param eta: a hyper parameter for the ard regularization term
-    :param nRepeat: Any positive integer, the number of repetition to avoid poor initialization
-    # parameters for GIG-ICA
-    :param maxIter: maximum iteration number for multiplicative update
-    :param a: weighting to the own pFN
-    :param b: weighting to the gFN
-    :param Nemda: step size for iteration
-    :param ftol: tolerance for the objective function
-    :param error: error tolerance for w to obtain pFN
+
+    :param FN_model_parameter: advanced parameters for FN models 'SR-NMF', 'GIG-ICA'. Default is set to None, otherwise a dict. Details are in setup_SR_NMF and setup_GIG_ICA
 
     :param outputFormat: 'MAT', 'Both', 'MAT' is to save results in FN.mat and TC.mat for functional networks and time courses respectively. 'Both' is for both matlab format and fMRI input file format
 
@@ -945,31 +865,56 @@ def workflow_cluster(dir_pnet_result: str,
     else:
         print(f"file_gFN = '{file_gFN}'", file=file_script)
 
+    # setup FN models
+    if method == 'SR-NMF':
+        setting = SR_NMF.setup_SR_NMF(
+                        None,
+                        K=K,
+                        Combine_Scan=Combine_Scan,
+                        file_gFN=file_gFN,
+                        Computation_Mode=Computation_Mode,
+                        dataPrecision=dataPrecision,
+                        outputFormat=outputFormat
+        )
+        if FN_model_parameter is not None:
+            SR_NMF.update_model_parameter(None, FN_model_parameter=FN_model_parameter)
+
+    elif method == 'GIG-ICA':
+        setting = GIG_ICA.setup_GIG_ICA(
+            None,
+            K=K,
+            Combine_Scan=Combine_Scan,
+            file_gFN=file_gFN,
+            Computation_Mode=Computation_Mode,
+            dataPrecision=dataPrecision,
+            outputFormat=outputFormat
+        )
+        if FN_model_parameter is not None:
+            GIG_ICA.update_model_parameter(None, FN_model_parameter=FN_model_parameter)
     if method == 'SR-NMF':
         if file_gFN is not None:
-            print(f"samplingMethod = '{samplingMethod}'", file=file_script)
-            print(f"sampleSize = {sampleSize}", file=file_script)
-            print(f"nBS = {nBS}", file=file_script)
-        print(f"maxIter = {maxIter}", file=file_script)
-        print(f"minIter = {minIter}", file=file_script)
-        print(f"meanFitRatio = {meanFitRatio}", file=file_script)
-        print(f"error = {error}", file=file_script)
-        print(f"normW = {normW}", file=file_script)
-        print(f"Alpha = {Alpha}", file=file_script)
-        print(f"Beta = {Beta}", file=file_script)
-        print(f"alphaS = {alphaS}", file=file_script)
-        print(f"alphaL = {alphaL}", file=file_script)
-        print(f"vxI = {vxI}", file=file_script)
-        print(f"eta = {eta}", file=file_script)
-        print(f"ard = {ard}", file=file_script)
-        print(f"nRepeat = {nRepeat}", file=file_script)
+            print(f"samplingMethod = '{setting['Group_FN']['BootStrap']['samplingMethod']}'", file=file_script)
+            print(f"sampleSize = {setting['Group_FN']['BootStrap']['sampleSize']}", file=file_script)
+            print(f"nBS = {setting['Group_FN']['BootStrap']['nBS']}", file=file_script)
+        print(f"maxIter = {(setting['Group_FN']['maxIter'], setting['Personalized_FN']['maxIter'])}", file=file_script)
+        print(f"minIter = {(setting['Group_FN']['minIter'], setting['Personalized_FN']['minIter'])}", file=file_script)
+        print(f"meanFitRatio = {setting['Personalized_FN']['meanFitRatio']}", file=file_script)
+        print(f"error = {setting['Group_FN']['error']}", file=file_script)
+        print(f"normW = {setting['Group_FN']['normW']}", file=file_script)
+        print(f"Alpha = {setting['Group_FN']['Alpha']}", file=file_script)
+        print(f"Beta = {setting['Group_FN']['Beta']}", file=file_script)
+        print(f"alphaS = {setting['Group_FN']['alphaS']}", file=file_script)
+        print(f"alphaL = {setting['Group_FN']['alphaL']}", file=file_script)
+        print(f"vxI = {setting['Group_FN']['vxI']}", file=file_script)
+        print(f"eta = {setting['Group_FN']['eta']}", file=file_script)
+        print(f"ard = {setting['Group_FN']['ard']}", file=file_script)
+        print(f"nRepeat = {setting['Group_FN']['nRepeat']}", file=file_script)
     elif method == 'GIG-ICA':
-        print(f"maxIter = {maxIter}", file=file_script)
-        print(f"a = {a}", file=file_script)
-        print(f"b = {b}", file=file_script)
-        print(f"ftol = {ftol}", file=file_script)
-        print(f"error = {error}", file=file_script)
-        print(f"Nemda = {Nemda}", file=file_script)
+        print(f"maxIter = {setting['Personalized_FN']['maxIter']}", file=file_script)
+        print(f"a = {setting['Personalized_FN']['a']}", file=file_script)
+        print(f"ftol = {setting['Personalized_FN']['ftol']}", file=file_script)
+        print(f"error = {setting['Personalized_FN']['error']}", file=file_script)
+        print(f"Nemda = {setting['Personalized_FN']['Nemda']}", file=file_script)
 
     print(f"Computation_Mode = '{Computation_Mode}'", file=file_script)
     print(f"dataPrecision = '{dataPrecision}'", file=file_script)

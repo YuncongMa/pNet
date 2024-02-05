@@ -12,7 +12,7 @@ from Module.Data_Input import *
 from Basic.Matrix_Computation import *
 
 
-def setup_GIG_ICA(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None,
+def setup_GIG_ICA(dir_pnet_result: str or None, K=17, Combine_Scan=False, file_gFN=None,
                   maxIter=100, a=0.5, Nemda=1, ftol=0.02, error=1e-5,
                   EGv=0.3745672075, ErChuPai=0.6366197723,
                   Parallel=False, Computation_Mode='CPU', N_Thread=1, dataPrecision='double', outputFormat='MAT'):
@@ -23,6 +23,8 @@ def setup_GIG_ICA(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None,
     :param K: number of FNs
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param file_gFN: directory of a precomputed gFN in .mat format
+
+    # model parameters
     :param maxIter: maximum iteration number for multiplicative update
     :param a: weighting to the own pFN
     :param Nemda: step size for iteration
@@ -30,6 +32,8 @@ def setup_GIG_ICA(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None,
     :param error: error tolerance for w to obtain pFN
     :param EGv: constant
     :param ErChuPai: constant
+
+    # computation resource settings
     :param Parallel: False or True, whether to enable parallel computation
     :param Computation_Mode: 'CPU'
     :param N_Thread: positive integers, used for parallel computation
@@ -40,8 +44,8 @@ def setup_GIG_ICA(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None,
 
     Yuncong Ma, 2/2/2024
     """
-
-    dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
+    if dir_pnet_result is not None:
+        dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
 
     Group_FN = {'file_gFN': file_gFN}
     Personalized_FN = {'maxIter': maxIter, 'a': a, 'Nemda': Nemda, 'ftol': ftol, 'error': error,
@@ -59,7 +63,56 @@ def setup_GIG_ICA(dir_pnet_result: str, K=17, Combine_Scan=False, file_gFN=None,
                'Computation': Computation,
                'Output_Format': outputFormat}
 
-    write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
+    if dir_pnet_FNC is not None:
+        write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
+    return setting
+
+
+def update_model_parameter(dir_pnet_result: str or None, FN_model_parameter):
+    """
+    Update the model parameters in setup_SR_NMF for GIG-ICA
+
+    :param dir_pnet_result:
+    :param setting: obtained from setup_GIG_ICA
+    :param FN_model_parameter: None or a dict containing model parameters listed in setup_GIG_ICA
+    :return:
+
+    Yuncong Ma, 2/5/2024
+    """
+
+    dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
+    setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+
+    # check
+    if FN_model_parameter is None:
+        return setting
+    elif not isinstance(FN_model_parameter, dict):
+        raise ValueError('FN_model_parameter needs to be either None or a dict')
+
+    # default model parameters
+    FN_Model = dict(
+        maxIter=100,
+        a=0.5,
+        Nemda=1,
+        ftol=0.02,
+        error=1e-5,
+        EGv=0.3745672075,
+        ErChuPai=0.6366197723
+        )
+
+    # changes to model parameters
+    for i in FN_model_parameter.keys():
+        FN_Model[i] = FN_model_parameter[i]
+
+    # update setting
+    Personalized_FN = {'maxIter': FN_Model['maxIter'], 'a': FN_Model['a'], 'Nemda': FN_Model['Nemda'],
+                       'ftol': FN_Model['ftol'], 'error': FN_Model['error'],
+                       'EGv': FN_Model['EGv'], 'ErChuPai': FN_Model['ErChuPai']}
+
+    setting['Personalized_FN'] = Personalized_FN
+
+    if dir_pnet_FNC is not None:
+        write_json_setting(setting, os.path.join(dir_pnet_FNC, 'Setting.json'))
     return setting
 
 
