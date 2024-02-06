@@ -34,7 +34,14 @@ Change <User's directory> to a desired directory
 git clone https://github.com/YuncongMa/pNet <User's directory>
 ```
 
-## Step-by-step guidance
+## User Interfaces
+pNet offers several user interfaces in its Python version for users with different coding skill levels.
+
+<p align="center">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/e829161c-6a65-4442-8b02-b1292d722cc1" width="800">
+</p>
+
+### Step-by-step guidance
 This Python version of pNet provides a step-by-step guidance to customize a Python script for running a desired workflow <br />
 **Terminal code**
 ```
