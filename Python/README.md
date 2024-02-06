@@ -38,7 +38,7 @@ git clone https://github.com/YuncongMa/pNet <User's directory>
 The Python version offers different user interfaces for users with distinct coding skills. Two code examples are shown on the right. pNet offers minimal setup options for fast deployment as shown in ‘pNet.workflow_simple’. pNet also provides cluster computing with additional setups in the ‘pNet.setup_cluster’ for the cluster environment.
 
 <p align="center">
-<img src="https://github.com/YuncongMa/pNet/assets/20191790/d90bfe48-7982-4a0b-a4d3-5537aedd4c9b" width="800">
+<img src="https://github.com/YuncongMa/pNet/assets/20191790/1cbb0908-3a40-4903-b8c3-a2d4e3d729b4" width="800">
 </p>
 
 ### Step-by-step guidance
