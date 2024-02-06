@@ -111,7 +111,7 @@ It only requires additional setups for a few server commands to submit bash jobs
 6. log_command = '-o '
 
 Example Python script
-https://github.com/YuncongMa/pNet/blob/main/Python/Example_Workflow_Server.py
+https://github.com/YuncongMa/pNet/blob/main/Python/Example/Example_Workflow_Server.py
 
 ## Module
 1. **Data Input** <br />
