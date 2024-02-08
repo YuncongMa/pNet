@@ -27,7 +27,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/8/2024
     """
 
     # get directories of sub-folders
@@ -177,7 +177,7 @@ def run_FN_Computation_torch(dir_pnet_result: str):
             if dataType == 'Volume':
                 Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
                 gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            check_gFN(gFN)
+            check_gFN(gFN, method=FN_Method, logFile=logFile_FNC)
             if dataType == 'Volume':
                 gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
@@ -253,6 +253,16 @@ def run_FN_Computation_torch(dir_pnet_result: str):
         if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
             print(f'\nError: \nCannot find the group-level FNs for GIG-ICA ', file=logFile_FNC, flush=True)
             raise ValueError('Require gFNs for GIG-ICA')
+        file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
+        gFN = load_matlab_single_array(file_gFN)
+        if dataType == 'Volume':
+            Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
+            gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+        check_gFN(gFN, method=FN_Method, logFile=logFile_FNC)
+        if dataType == 'Volume':
+            gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+        sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
+        print('load precomputed gFNs', file=logFile_FNC, flush=True)
 
         # ============== pFN Computation ============== #
         print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=logFile_FNC, flush=True)
@@ -311,7 +321,7 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/8/2024
     """
 
     # get directories of sub-folders
@@ -455,7 +465,7 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
             if dataType == 'Volume':
                 Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
                 gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-            check_gFN(gFN)
+            check_gFN(gFN, method=FN_Method)
             if dataType == 'Volume':
                 gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
             sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
@@ -505,6 +515,16 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
         if setting['FN_Computation']['Group_FN']['file_gFN'] is None:
             print(f'\nError: \nCannot find the group-level FNs for GIG-ICA ', flush=True)
             raise ValueError('Require gFNs for GIG-ICA')
+        file_gFN = setting['FN_Computation']['Group_FN']['file_gFN']
+        gFN = load_matlab_single_array(file_gFN)
+        if dataType == 'Volume':
+            Brain_Mask = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))['Brain_Mask']
+            gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+        check_gFN(gFN, method=FN_Method)
+        if dataType == 'Volume':
+            gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+        sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
+        print('load precomputed gFNs', flush=True)
 
         # ============== pFN Computation ============== #
         print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),

@@ -67,13 +67,13 @@ def setup_SR_NMF(dir_pnet_result: str or None, K=17, Combine_Scan=False,
             sampleSize = np.maximum(100, np.round(N_Subject / 10))
 
     BootStrap = {'samplingMethod': samplingMethod, 'sampleSize': sampleSize, 'nBS': nBS}
-    if len(maxIter) > 1:
+    if isinstance(maxIter, tuple):
         gFN_maxIter = maxIter[0]
         pFN_maxIter = maxIter[1]
     else:
         gFN_maxIter = maxIter
         pFN_maxIter = maxIter
-    if len(minIter) > 1:
+    if isinstance(minIter, tuple):
         gFN_minIter = minIter[0]
         pFN_minIter = minIter[1]
     else:
@@ -151,14 +151,14 @@ def update_model_parameter(dir_pnet_result: str or None, FN_model_parameter):
 
     BootStrap = {'samplingMethod': FN_Model['samplingMethod'], 'sampleSize': FN_Model['sampleSize'], 'nBS': FN_Model['nBS']}
     maxIter = FN_Model['maxIter']
-    if len(maxIter) > 1:
+    if isinstance(maxIter, tuple):
         gFN_maxIter = maxIter[0]
         pFN_maxIter = maxIter[1]
     else:
         gFN_maxIter = maxIter
         pFN_maxIter = maxIter
     minIter = FN_Model['minIter']
-    if len(minIter) > 1:
+    if isinstance(minIter, tuple):
         gFN_minIter = minIter[0]
         pFN_minIter = minIter[1]
     else:

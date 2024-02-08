@@ -355,7 +355,7 @@ def load_fmri_scan(file_scan_list: str,
     :param logFile: a log file to save the output
     :return: Data: a 2D or 4D NumPy array [dim_time dim_space]
 
-    By Yuncong Ma, 12/4/2023
+    By Yuncong Ma, 2/8/2024
     """
 
     # Check setting
@@ -365,7 +365,7 @@ def load_fmri_scan(file_scan_list: str,
     nib.imageglobals.logger.setLevel(40)
 
     # setup log file
-    print_log(f'\nStart loading fMRI data at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', logFile=logFile)
+    print_log(f'\nStart loading fMRI/MRI data at '+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))+'\n', logFile=logFile)
 
     if os.path.isfile(file_scan_list) and file_scan_list.endswith('.txt'):
         scan_list = [line.replace('\n', '') for line in open(file_scan_list, "r")]

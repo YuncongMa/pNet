@@ -28,7 +28,7 @@ def workflow(dir_pnet_result: str,
              method='SR-NMF',
              K=17, Combine_Scan=False,
              file_gFN=None,
-             FN_model_parameter=None or dict,
+             FN_model_parameter=None,
              Parallel=False, Computation_Mode='CPU_Torch', N_Thread=1,
              dataPrecision='double',
              outputFormat='Both',
@@ -77,12 +77,12 @@ def workflow(dir_pnet_result: str,
     :param synchronized_view: True or False, whether to synchronize view centers for volume data between gFNs and pFNs
     :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
 
-    Yuncong Ma, 2/5/2024
+    Yuncong Ma, 2/8/2024
     """
 
     # Check setting
     check_data_type_format(dataType, dataFormat)
-    if not method not in {'SR-NMF', 'GIG-ICA'}:
+    if method not in {'SR-NMF', 'GIG-ICA'}:
         print_log("Method needs to be either 'SR-NMF' or 'GIG-ICA'", logFile=None, stop=True)
         return
     if file_gFN is None and method == 'GIG-ICA':
@@ -108,7 +108,7 @@ def workflow(dir_pnet_result: str,
         if dataType == 'Volume':
             setup_brain_template(
                 dir_pnet_dataInput,
-                dataType=dataType, dataFormat=dataFormat,
+                dataType=dataType,
                 templateFormat=templateFormat,
                 file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
                 maskValue=maskValue
@@ -116,7 +116,7 @@ def workflow(dir_pnet_result: str,
         elif dataType == 'Surface':
             setup_brain_template(
                 dir_pnet_dataInput,
-                dataType=dataType, dataFormat=dataFormat,
+                dataType=dataType,
                 templateFormat=templateFormat,
                 file_surfL=file_surfL, file_surfR=file_surfR,
                 file_maskL=file_maskL, file_maskR=file_maskR,
@@ -126,7 +126,7 @@ def workflow(dir_pnet_result: str,
         elif dataType == 'Surface-Volume':
             setup_brain_template(
                 dir_pnet_dataInput,
-                dataType=dataType, dataFormat=dataFormat,
+                dataType=dataType,
                 templateFormat=templateFormat,
                 file_surfL=file_surfL, file_surfR=file_surfR,
                 file_maskL=file_maskL, file_maskR=file_maskR,
@@ -152,7 +152,7 @@ def workflow(dir_pnet_result: str,
                         outputFormat=outputFormat
         )
         if FN_model_parameter is not None:
-            SR_NMF.update_model_parameter(dir_pnet_FNC, FN_model_parameter=FN_model_parameter)
+            SR_NMF.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
 
     elif method == 'GIG-ICA':
         setting = GIG_ICA.setup_GIG_ICA(
@@ -165,12 +165,20 @@ def workflow(dir_pnet_result: str,
             outputFormat=outputFormat
         )
         if FN_model_parameter is not None:
-            GIG_ICA.update_model_parameter(dir_pnet_FNC, FN_model_parameter=FN_model_parameter)
+            GIG_ICA.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
     # perform FN computation
     if Computation_Mode == 'CPU_Numpy':
         run_FN_Computation(dir_pnet_result)  # does not support GIG-ICA yet
     elif Computation_Mode == 'CPU_Torch':
         run_FN_Computation_torch(dir_pnet_result)
+    # ============================================= #
+
+    # ============== Visualization ============== #
+    setup_Visualization(
+        dir_pnet_result=dir_pnet_result,
+        synchronized_view=synchronized_view,
+        synchronized_colorbar=synchronized_colorbar
+    )
     # ============================================= #
 
     # ============== Quality Control ============== #
@@ -213,12 +221,12 @@ def workflow_simple(dir_pnet_result: str,
     :param Combine_Scan: False or True, whether to combine multiple scans for the same subject
     :param file_gFN: directory of a precomputed gFN in .mat format
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/8/2024
     """
 
     # Check setting
     check_data_type_format(dataType, dataFormat)
-    if not method not in {'SR-NMF', 'GIG-ICA'}:
+    if method not in {'SR-NMF', 'GIG-ICA'}:
         print_log("Method needs to be either 'SR-NMF' or 'GIG-ICA'", logFile=None, stop=True)
         return
     if file_gFN is None and method == 'GIG-ICA':
@@ -780,7 +788,7 @@ def workflow_cluster(dir_pnet_result: str,
 
     # Check setting
     check_data_type_format(dataType, dataFormat)
-    if not method not in {'SR-NMF', 'GIG-ICA'}:
+    if method not in {'SR-NMF', 'GIG-ICA'}:
         print_log("Method needs to be either 'SR-NMF' or 'GIG-ICA'", logFile=None, stop=True)
         return
     if file_gFN is None and method == 'GIG-ICA':

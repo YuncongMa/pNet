@@ -1,4 +1,4 @@
-# Yuncong Ma, 2/5/2024
+# Yuncong Ma, 2/8/2024
 # Visualization module of pNet
 
 #########################################
@@ -7,6 +7,7 @@ import os
 import gc
 
 import matplotlib
+import numpy as np
 import surfplot
 from brainspace.mesh.mesh_creation import build_polydata
 from PIL import Image
@@ -24,6 +25,97 @@ if platform == "darwin":
     matplotlib.use('TkAgg')  # Use the Tkinter backend
 
 # =============== basic functions =============== #
+
+
+def brainmap_colorfunction(brain_map: np.ndarray,
+                           colorbar_range_style='Positive_Only', colorbar_range_round=1, threshold=0):
+    """
+    Prepare a colorfunction based a brain_map and other settings
+
+    :param brain_map: 1D numpy array
+    :param colorbar_range_style: 'Positive_Only', 'All_Range'
+    :param colorbar_range_round: 1, 0, 0.1, 0.01, 10, etc.
+    :param threshold: 0 for automatic setting, or a number
+    :return: color_function, color_range, threshold_value
+
+    Yuncong Ma, 2/8/2024
+    """
+
+    # set color function
+    if colorbar_range_style == 'Positive_Only':
+        if threshold == 0 or threshold is None:
+            threshold = 99.5
+        threshold_value = np.percentile(brain_map, threshold, interpolation='midpoint')
+        threshold_value = np.round(threshold_value)
+        if threshold_value == 0:
+            threshold_value = 1.0
+        color_range = np.array((threshold_value/2, threshold_value))
+        if colorbar_range_round > 0:
+            color_range = np.round(color_range/colorbar_range_round)*colorbar_range_round
+        else:
+            if threshold_value > 10:
+                color_range = np.round(color_range)
+            elif threshold_value > 1:
+                color_range = np.array(np.round(10*color_range)/10)
+            elif threshold_value > 0.01:
+                color_range = np.array(np.round(100*color_range)/100)
+            else:
+                color_range = np.array((threshold_value/2, threshold_value))
+
+        threshold_value = color_range[1]
+
+        color_function = color_theme('Seed_Map_3_Positive', color_range)
+
+    elif colorbar_range_style == 'All_Range':
+        if threshold == 0 or threshold is None:
+            threshold = 99.8
+        threshold_value = np.percentile(np.abs(brain_map), threshold, interpolation='midpoint')
+        color_range_positive = np.array((threshold_value/2, threshold_value))
+        if colorbar_range_round > 0:
+            color_range_positive = np.round(color_range_positive/colorbar_range_round)*colorbar_range_round
+        else:
+            if threshold_value > 10:
+                color_range_positive = np.round(color_range_positive)
+            elif threshold_value > 1:
+                color_range_positive = np.round(10*color_range_positive)/10
+            elif threshold_value > 0.01:
+                color_range_positive = np.round(100*color_range_positive)/100
+
+        color_function = color_theme('Seed_Map_3', color_range_positive)
+        color_range = (-color_range_positive[1], color_range_positive[1])
+        threshold_value = color_range_positive[1]
+
+    else:
+        raise ValueError('Unknown colorbar_range_style = '+colorbar_range_style)
+
+    # color_function and color_range should be numpy array
+    if not isinstance(color_range, np.ndarray):
+        color_range = np.array(color_range)
+
+    return color_function, color_range, threshold_value
+
+
+def setup_colorbar_style(FN_Method: str):
+
+    # colorbar setting for visualization
+    if FN_Method in {'SR-NMF'}:
+        colorbar_range_style = 'Positive_Only'
+        colorbar_scale = 100
+        colorbar_range_round = 1
+        colorbar_label = 'Loading (%)'
+        threshold = 99.5
+
+    elif FN_Method in {'GIG-ICA'}:
+        colorbar_range_style = 'All_Range'
+        # colorbar_range_style = 'Positive_Only'
+        colorbar_scale = 1
+        colorbar_range_round = 0
+        colorbar_label = 'Z'
+        threshold = 99.8
+    else:
+        raise ValueError('Has no color bar settings for FN method: ' + FN_Method)
+
+    return colorbar_range_style, colorbar_scale, colorbar_range_round, colorbar_label, threshold
 
 
 def compress_image(file_compressed_image: str, image_rgb, image_size=(2000, 10000)):
@@ -472,42 +564,31 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
                                 hemisphere_offset=90,
                                 figure_title=None,
                                 title_font_dic=dict(fontsize=20, fontweight='bold'),
-                                color_range_style='SR-NMR',
+                                colorbar_range_style='Positive_Only',
+                                colorbar_scale=100,
+                                colorbar_range_round=1,
+                                colorbar_label='Loading (%)',
                                 figure_size=(10, 50),
                                 dpi=50):
 
     # check NaN in brain_map
     brain_map[np.isnan(brain_map)] = 0
+    # check data scale
+    brain_map *= colorbar_scale
 
     # settings for subplot
     fig, axs = matplotlib.pyplot.subplots(nrows=8, ncols=1, figsize=figure_size)
 
     # set color function
-    if color_range_style == 'SR-NMF':
-        colorbar_label = 'Loading (%)'
-        colorbar_scale = 100
-        brain_map *= colorbar_scale
-        if threshold == 0 or threshold is None:
-            threshold = 99.5
-        threshold_value = np.percentile(np.abs(brain_map), threshold)
-        threshold_value = np.round(threshold_value)
-        if threshold_value == 0:
-            threshold_value = 1.0
-        color_range = np.array((threshold_value/2, threshold_value))
-        color_function = color_theme('Seed_Map_3_Positive', color_range)
-    elif color_range_style == 'GIG-ICA':
-        colorbar_label = 'Z'
-        if threshold == 0 or threshold is None:
-            threshold = 99.8
-        threshold_value = np.percentile(np.abs(brain_map), threshold)
-        if threshold_value > 1:
-            color_range = np.array(np.round(10*(threshold_value/2, threshold_value))/10)
-            threshold = color_range[1]
-        elif threshold_value > 0.01:
-            color_range = np.array(np.round(100*(threshold_value/2, threshold_value))/100)
-            threshold = color_range[1]
-        else:
-            color_range = np.array((threshold_value/2, threshold_value))
+    if color_function is None:
+        color_function, color_range, threshold = \
+            brainmap_colorfunction(brain_map,
+                                   colorbar_range_style=colorbar_range_style,
+                                   colorbar_range_round=colorbar_range_round,
+                                   threshold=threshold)
+    else:
+        color_range = (color_function[0, 0], color_function[-1, 0])
+        threshold = color_range[1]
 
     # sub figure organization
     H = 4*figure_organization[2]+figure_organization[1]+figure_organization[0] + figure_organization[3]
@@ -583,19 +664,15 @@ def plot_FN_brain_surface_5view(brain_map: np.ndarray,
     colorbar_pad = 0.7
     colorbar_step = 100
     colorbar_ratio = 10
-    colorbar_scale = 100
     axs[6].set_position(((1-colorbar_width)/2, H_C*colorbar_pad, colorbar_width, H_C*colorbar_height))
     X = np.tile(np.arange(color_range[0], color_range[1], (color_range[1] - color_range[0])/colorbar_step), (colorbar_ratio, 1))
     axs[6].imshow(X, cmap=prepare_color_map(color_function=color_function))
     axs[6].axis('off')
     cb_tick_pad = 25
-    cb_value_round = True
     cb_name_pad = 45
-    if cb_value_round is True:
-        color_range = np.round(color_range * colorbar_scale)
+    if colorbar_range_round == 1:
         cb_tick = (str(int(color_range[0])), str(int(color_range[1])))
     else:
-        color_range = color_range * colorbar_scale
         cb_tick = (str(color_range[0]), str(color_range[1]))
 
     # add label
@@ -737,7 +814,7 @@ def large_3view_center(weight_map: np.ndarray):
 def plot_FN_brain_volume_3view(brain_map: np.ndarray,
                                brain_template,
                                file_output=None or str,
-                               threshold=99,
+                               threshold=99.8,
                                color_function=None,
                                view_center='max_value',
                                figure_organization=(0.4, 3, 0.6),
@@ -745,7 +822,10 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
                                figure_title=None,
                                title_font_dic=dict(fontsize=20, fontweight='bold'),
                                interpolation='nearest',
-                               color_range_style='SR-NMR',
+                               colorbar_range_style='Positive_Only',
+                               colorbar_scale=100,
+                               colorbar_range_round=1,
+                               colorbar_label='Loading (%)',
                                figure_size=(10, 40),
                                dpi=250,
                                file_setting=None
@@ -753,40 +833,21 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
 
     # check NaN in brain_map
     brain_map[np.isnan(brain_map)] = 0
+    brain_map *= colorbar_scale
 
     # set color function
     if color_function is None:
-        if color_range_style == 'SR-NMF':
-            colorbar_label = 'Loading (%)'
-            colorbar_scale = 100
-            brain_map *= colorbar_scale
-            if threshold == 0 or threshold is None:
-                threshold = 99.5
-            threshold_value = np.percentile(np.abs(reshape_FN(brain_map, dataType='Volume', Brain_Mask=brain_template['Brain_Mask'])), threshold)
-            threshold_value = np.round(threshold_value)
-            if threshold_value == 0:
-                threshold_value = 1.0
-            color_range = np.array((threshold_value/2, threshold_value))
-            color_function = color_theme('Seed_Map_3_Positive', color_range)
-        elif color_range_style == 'GIG-ICA':
-            colorbar_label = 'Z'
-            if threshold == 0 or threshold is None:
-                threshold = 99.8
-            threshold_value = np.percentile(np.abs(reshape_FN(brain_map, dataType='Volume', Brain_Mask=brain_template['Brain_Mask'])), threshold)
-            if threshold_value > 1:
-                color_range = np.array(np.round(10*(threshold_value/2, threshold_value))/10)
-                threshold = color_range[1]
-            elif threshold_value > 0.01:
-                color_range = np.array(np.round(100*(threshold_value/2, threshold_value))/100)
-                threshold = color_range[1]
-            else:
-                color_range = np.array((threshold_value/2, threshold_value))
-
+        color_function, color_range, threshold = \
+            brainmap_colorfunction(brain_map,
+                                   colorbar_range_style=colorbar_range_style,
+                                   colorbar_range_round=colorbar_range_round,
+                                   threshold=threshold)
     else:
-        color_range = np.array((color_function[0, 0], color_function[-1, 0]))
+        color_range = (color_function[0, 0], color_function[-1, 0])
+        threshold = color_range[1]
 
-    if not brain_map.shape == brain_template['Brain_Mask'].shape:
-        raise ValueError('the brain_map must have the same image size as the Brain_Mask in brain_template')
+        if not brain_map.shape == brain_template['Brain_Mask'].shape:
+            raise ValueError('the brain_map must have the same image size as the Brain_Mask in brain_template')
 
     # upsampling
     upsampling = np.round(brain_template['Overlay_Image'].shape[0] / brain_map.shape[0])
@@ -869,13 +930,10 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
     axs[2].imshow(X, cmap=prepare_color_map(color_function=color_function))
     axs[2].axis('off')
     cb_tick_pad = 25
-    cb_value_round = True
     cb_name_pad = 45
-    if cb_value_round is True:
-        color_range = np.round(color_range * colorbar_scale)
+    if colorbar_range_round == 1:
         cb_tick = (str(int(color_range[0])), str(int(color_range[1])))
     else:
-        color_range = color_range * colorbar_scale
         cb_tick = (str(color_range[0]), str(color_range[1]))
 
     axs[2].text(0, cb_tick_pad, cb_tick[0],
@@ -910,60 +968,45 @@ def plot_FN_brain_volume_3view(brain_map: np.ndarray,
 # =========== Surface-volume data type =========== #
 
 def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
-                                brain_template,
-                                file_output=None or str,
-                                threshold=99,
-                                color_function=None,
-                                background=(0, 0, 0),
-                                figure_organization=(0.6, 1.2, 1.5, 0.6),
-                                view_angle=1.4,
-                                hemisphere_offset=90,
-                                view_center='max_value',
-                                interpolation='nearest',
-                                figure_title=None,
-                                title_font_dic=dict(fontsize=20, fontweight='bold'),
-                                color_range_style='SR-NMR',
-                                figure_size=(10, 50),
-                                dpi=50,
-                                file_setting=None
+                                        brain_template,
+                                        file_output=None or str,
+                                        threshold=99,
+                                        color_function=None,
+                                        background=(0, 0, 0),
+                                        figure_organization=(0.6, 1.2, 1.5, 0.6),
+                                        view_angle=1.4,
+                                        hemisphere_offset=90,
+                                        view_center='max_value',
+                                        interpolation='nearest',
+                                        figure_title=None,
+                                        title_font_dic=dict(fontsize=20, fontweight='bold'),
+                                        colorbar_range_style='Positive_Only',
+                                       colorbar_scale=100,
+                                       colorbar_range_round=1,
+                                       colorbar_label='Loading (%)',
+                                        figure_size=(10, 50),
+                                        dpi=50,
+                                        file_setting=None
                                        ):
 
     # check NaN in brain_map
     brain_map[np.isnan(brain_map)] = 0
+    # rescale
+    brain_map *= colorbar_scale
 
     # settings for subplot
     fig, axs = matplotlib.pyplot.subplots(nrows=8, ncols=1, figsize=figure_size)
 
     # set color function
     if color_function is None:
-        if color_range_style == 'SR-NMF':
-            colorbar_label = 'Loading (%)'
-            colorbar_scale = 100
-            brain_map *= colorbar_scale
-            if threshold == 0 or threshold is None:
-                threshold = 99.5
-            threshold_value = np.percentile(np.abs(brain_map), threshold)
-            threshold_value = np.round(threshold_value)
-            if threshold_value == 0:
-                threshold_value = 1.0
-            color_range = np.array((threshold_value/2, threshold_value))
-            color_function = color_theme('Seed_Map_3_Positive', color_range)
-        elif color_range_style == 'GIG-ICA':
-            colorbar_label = 'Z'
-            if threshold == 0 or threshold is None:
-                threshold = 99.8
-            threshold_value = np.percentile(brain_map, threshold)
-            if threshold_value > 1:
-                color_range = np.array(np.round(10*(threshold_value/2, threshold_value))/10)
-                threshold = color_range[1]
-            elif threshold_value > 0.01:
-                color_range = np.array(np.round(100*(threshold_value/2, threshold_value))/100)
-                threshold = color_range[1]
-            else:
-                color_range = np.array((threshold_value/2, threshold_value))
-
+        color_function, color_range, threshold = \
+            brainmap_colorfunction(brain_map,
+                                   colorbar_range_style=colorbar_range_style,
+                                   colorbar_range_round=colorbar_range_round,
+                                   threshold=threshold)
     else:
         color_range = (color_function[0, 0], color_function[-1, 0])
+        threshold = color_range[1]
 
     # sub figure organization
     H = figure_organization[0] + 4*figure_organization[1] + figure_organization[2] + figure_organization[3]
@@ -1075,19 +1118,15 @@ def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
     colorbar_pad = 0.7
     colorbar_step = 100
     colorbar_ratio = 10
-    colorbar_scale = 100
     axs[6].set_position(((1-colorbar_width)/2, H_C*colorbar_pad, colorbar_width, H_C*colorbar_height))
     X = np.tile(np.arange(color_range[0], color_range[1], (color_range[1] - color_range[0])/colorbar_step), (colorbar_ratio, 1))
     axs[6].imshow(X, cmap=prepare_color_map(color_function=color_function))
     axs[6].axis('off')
     cb_tick_pad = 25
-    cb_value_round = True
     cb_name_pad = 45
-    if cb_value_round is True:
-        color_range = np.round(color_range * colorbar_scale)
+    if colorbar_range_round == 1:
         cb_tick = (str(int(color_range[0])), str(int(color_range[1])))
     else:
-        color_range = color_range * colorbar_scale
         cb_tick = (str(color_range[0]), str(color_range[1]))
 
     # add label
@@ -1124,7 +1163,7 @@ def plot_FN_brain_surface_volume_7view(brain_map: np.ndarray,
 # =========== Module =========== #
 
 
-def setup_Visualization(dir_pnet_result: str, synchronized_view=True or bool, synchronized_colorbar=False or bool):
+def setup_Visualization(dir_pnet_result: str, synchronized_view=True, synchronized_colorbar=False):
     """
     Setup visualization styles, including synchronized display
 
@@ -1133,7 +1172,7 @@ def setup_Visualization(dir_pnet_result: str, synchronized_view=True or bool, sy
     :param synchronized_colorbar: True or False, whether to synchronize color bar between gFNs and pFNs
     :return: None
 
-    Yuncong Ma, 11/15/2023
+    Yuncong Ma, 2/8/2024
     """
 
     setting = {'Synchronized_View': synchronized_view, 'Synchronized_Colorbar': synchronized_colorbar}
@@ -1151,7 +1190,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 2/5/2024
+    Yuncong Ma, 2/8/2024
     """
 
     # get directories of sub-folders
@@ -1172,12 +1211,7 @@ def run_gFN_Visualization(dir_pnet_result: str):
     FN_Method = setting['FN_Computation']['Method']
 
     # colorbar setting for visualization
-    if FN_Method in {'SR-NMF'}:
-        color_range_style = 'SR-NMR'
-    elif FN_Method in {'GIG-ICA'}:
-        color_range_style = 'GIG-ICA'
-    else:
-        raise ValueError('Has no color bar settings for FN method: ' + FN_Method)
+    colorbar_range_style, colorbar_scale, colorbar_range_round, colorbar_label, threshold = setup_colorbar_style(FN_Method)
 
     gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
     brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
@@ -1188,8 +1222,12 @@ def run_gFN_Visualization(dir_pnet_result: str):
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
             brain_map = gFN[:, i]
-            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None,
-                                        file_output=file_output[i], figure_title=figure_title, color_range_style=color_range_style)
+            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, threshold=threshold,
+                                        file_output=file_output[i], figure_title=figure_title,
+                                        colorbar_range_style=colorbar_range_style,
+                                            colorbar_scale=colorbar_scale,
+                                            colorbar_range_round=colorbar_range_round,
+                                            colorbar_label=colorbar_label)
 
     elif dataType == 'Surface' and dataFormat in ('MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'):
         K = gFN.shape[1]
@@ -1197,8 +1235,13 @@ def run_gFN_Visualization(dir_pnet_result: str):
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
             brain_map = gFN[:, i]
-            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, hemisphere_offset=100,
-                                        file_output=file_output[i], figure_title=figure_title, color_range_style=color_range_style)
+            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, threshold=threshold,
+                                        hemisphere_offset=100,
+                                        file_output=file_output[i], figure_title=figure_title,
+                                        colorbar_range_style=colorbar_range_style,
+                                            colorbar_scale=colorbar_scale,
+                                            colorbar_range_round=colorbar_range_round,
+                                            colorbar_label=colorbar_label)
 
     elif dataType == 'Volume':
         K = gFN.shape[3]
@@ -1209,9 +1252,12 @@ def run_gFN_Visualization(dir_pnet_result: str):
             figure_title = 'FN '+str(int(i+1))
             file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i+1}.json')
             brain_map = gFN[:, :, :, i]
-            plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None,
+            plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None, threshold=threshold,
                                        file_output=file_output[i], figure_title=figure_title, file_setting=file_setting,
-                                       color_range_style=color_range_style)
+                                       colorbar_range_style=colorbar_range_style,
+                                        colorbar_scale=colorbar_scale,
+                                        colorbar_range_round=colorbar_range_round,
+                                        colorbar_label=colorbar_label)
 
     elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
         K = gFN.shape[1]
@@ -1222,9 +1268,12 @@ def run_gFN_Visualization(dir_pnet_result: str):
             figure_title = 'FN '+str(int(i+1))
             brain_map = gFN[:, i]
             file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i + 1}.json')
-            plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None,
+            plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None, threshold=threshold,
                                                file_output=file_output[i], figure_title=figure_title, file_setting=file_setting,
-                                               color_range_style=color_range_style)
+                                               colorbar_range_style=colorbar_range_style,
+                                                colorbar_scale=colorbar_scale,
+                                                colorbar_range_round=colorbar_range_round,
+                                                colorbar_label=colorbar_label)
 
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_gFN, 'All.jpg')
@@ -1245,7 +1294,7 @@ def run_pFN_Visualization(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 2/5/2024
+    Yuncong Ma, 2/8/2024
     """
 
     # get directories of sub-folders
@@ -1255,9 +1304,11 @@ def run_pFN_Visualization(dir_pnet_result: str):
     if not os.path.isfile(os.path.join(dir_pnet_dataInput, 'Setting.json')) or not os.path.isfile(os.path.join(dir_pnet_FNC, 'Setting.json')):
         raise ValueError('Cannot find the setting json file in folder Data_Input or FN_Computation')
     settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNComputation = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+    # load figure settings
+    settingVisualization = load_json_setting(os.path.join(dir_pnet_pFN, 'Setting.json'))
 
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNComputation}
+    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC, 'Visualization': settingVisualization}
 
     # load basic settings
     dataType = setting['Data_Input']['Data_Type']
@@ -1266,12 +1317,7 @@ def run_pFN_Visualization(dir_pnet_result: str):
     FN_Method = setting['FN_Computation']['Method']
 
     # colorbar setting for visualization
-    if FN_Method in {'SR-NMF'}:
-        color_range_style = 'SR-NMR'
-    elif FN_Method in {'GIG-ICA'}:
-        color_range_style = 'GIG-ICA'
-    else:
-        raise ValueError('Has no color bar settings for FN method: ' + FN_Method)
+    colorbar_range_style, colorbar_scale, colorbar_range_round, colorbar_label, threshold = setup_colorbar_style(FN_Method)
 
     brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
@@ -1289,8 +1335,13 @@ def run_pFN_Visualization(dir_pnet_result: str):
             for i in range(K):
                 figure_title = 'FN '+str(int(i+1))
                 brain_map = pFN[:, i]
-                plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None,
-                                            file_output=file_output[i], figure_title=figure_title, color_range_style=color_range_style)
+                plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, threshold=threshold,
+                                            file_output=file_output[i], figure_title=figure_title,
+                                            colorbar_range_style=colorbar_range_style,
+                                            colorbar_scale=colorbar_scale,
+                                            colorbar_range_round=colorbar_range_round,
+                                            colorbar_label=colorbar_label
+                                            )
 
         elif dataType == 'Surface' and dataFormat in ('MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'):
             K = pFN.shape[1]
@@ -1298,9 +1349,14 @@ def run_pFN_Visualization(dir_pnet_result: str):
             for i in range(K):
                 figure_title = 'FN '+str(int(i+1))
                 brain_map = pFN[:, i]
-                plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, hemisphere_offset=100,
+                plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, threshold=threshold,
+                                            hemisphere_offset=100,
                                             file_output=file_output[i], figure_title=figure_title,
-                                            color_range_style=color_range_style)
+                                            colorbar_range_style=colorbar_range_style,
+                                            colorbar_scale=colorbar_scale,
+                                            colorbar_range_round=colorbar_range_round,
+                                            colorbar_label=colorbar_label
+                                            )
 
         elif dataType == 'Volume':
             K = pFN.shape[3]
@@ -1309,25 +1365,24 @@ def run_pFN_Visualization(dir_pnet_result: str):
                 figure_title = 'FN '+str(int(i+1))
                 brain_map = pFN[:, :, :, i]
                 file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i+1}.json')
+
+                view_center = 'max_value'
+                color_function = None
                 if os.path.exists(file_setting):
                     dict_setting = load_json_setting(file_setting)
                     if setting['Visualization']['Synchronized_View']:
                         view_center = np.array(dict_setting['Center'])
-                    else:
-                        view_center = 'max_value'
                     if setting['Visualization']['Synchronized_Colorbar']:
                         color_function = np.array(dict_setting['Color_Function'])
-                    else:
-                        color_function = None
 
-                    plot_FN_brain_volume_3view(brain_map, brain_template,
-                                               color_function=color_function, view_center=view_center,
-                                               figure_title=figure_title,  file_output=file_output[i],
-                                               color_range_style=color_range_style)
-                else:
-                    plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None,
-                                               file_output=file_output[i], figure_title=figure_title,
-                                               color_range_style=color_range_style)
+                plot_FN_brain_volume_3view(brain_map, brain_template,
+                                           color_function=color_function, threshold=threshold,
+                                           view_center=view_center,
+                                           figure_title=figure_title,  file_output=file_output[i],
+                                           colorbar_range_style=colorbar_range_style,
+                                            colorbar_scale=colorbar_scale,
+                                            colorbar_range_round=colorbar_range_round,
+                                            colorbar_label=colorbar_label)
 
         elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
             K = pFN.shape[1]
@@ -1336,22 +1391,24 @@ def run_pFN_Visualization(dir_pnet_result: str):
                 figure_title = 'FN ' + str(int(i + 1))
                 brain_map = pFN[:, :, :, i]
                 file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i + 1}.json')
+
+                view_center = 'max_value'
+                color_function = None
                 if os.path.exists(file_setting):
                     dict_setting = load_json_setting(file_setting)
                     if setting['Visualization']['Synchronized_View']:
                         view_center = np.array(dict_setting['Center'])
-                    else:
-                        view_center = 'max_value'
                     if setting['Visualization']['Synchronized_Colorbar']:
                         color_function = np.array(dict_setting['Color_Function'])
-                    else:
-                        color_function = None
 
-                    plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=color_function, view_center=view_center,
-                                                       file_output=file_output[i], figure_title=figure_title, color_range_style=color_range_style)
-                else:
-                    plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None,
-                                                       file_output=file_output[i], figure_title=figure_title, color_range_style=color_range_style)
+                plot_FN_brain_surface_volume_7view(brain_map, brain_template,
+                                                   color_function=color_function, threshold=threshold,
+                                                   view_center=view_center,
+                                                   file_output=file_output[i], figure_title=figure_title,
+                                                   colorbar_range_style=colorbar_range_style,
+                                                    colorbar_scale=colorbar_scale,
+                                                    colorbar_range_round=colorbar_range_round,
+                                                    colorbar_label=colorbar_label)
 
         # output an assembled image
         file_output_assembled = os.path.join(dir_pnet_pFN_indv, 'All.jpg')
@@ -1499,12 +1556,7 @@ def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
     FN_Method = setting['FN_Computation']['Method']
 
     # colorbar setting for visualization
-    if FN_Method in {'SR-NMF'}:
-        color_range_style = 'SR-NMR'
-    elif FN_Method in {'GIG-ICA'}:
-        color_range_style = 'GIG-ICA'
-    else:
-        raise ValueError('Has no color bar settings for FN method: ' + FN_Method)
+    colorbar_range_style, colorbar_scale, colorbar_range_round, colorbar_label, threshold = setup_colorbar_style(FN_Method)
 
     brain_template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
 
@@ -1522,8 +1574,12 @@ def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
             brain_map = pFN[:, i]
-            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None,
-                                        file_output=file_output[i], figure_title=figure_title, color_range_style=color_range_style)
+            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, threshold=threshold,
+                                        file_output=file_output[i], figure_title=figure_title,
+                                        colorbar_range_style=colorbar_range_style,
+                                            colorbar_scale=colorbar_scale,
+                                            colorbar_range_round=colorbar_range_round,
+                                            colorbar_label=colorbar_label)
 
     elif dataType == 'Surface' and dataFormat in ('MGH Surface (*.mgh)', 'MGZ Surface (*.mgz)'):
         K = pFN.shape[1]
@@ -1531,9 +1587,13 @@ def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
         for i in range(K):
             figure_title = 'FN '+str(int(i+1))
             brain_map = pFN[:, i]
-            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, hemisphere_offset=100,
+            plot_FN_brain_surface_5view(brain_map, brain_template, color_function=None, threshold=threshold,
+                                        hemisphere_offset=100,
                                         file_output=file_output[i], figure_title=figure_title,
-                                        color_range_style=color_range_style)
+                                        colorbar_range_style=colorbar_range_style,
+                                            colorbar_scale=colorbar_scale,
+                                            colorbar_range_round=colorbar_range_round,
+                                            colorbar_label=colorbar_label)
 
     elif dataType == 'Volume':
         K = pFN.shape[3]
@@ -1542,25 +1602,23 @@ def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
             figure_title = 'FN '+str(int(i+1))
             brain_map = pFN[:, :, :, i]
             file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i+1}.json')
+            view_center = 'max_value'
+            color_function = None
             if os.path.exists(file_setting):
                 dict_setting = load_json_setting(file_setting)
                 if setting['Visualization']['Synchronized_View']:
                     view_center = np.array(dict_setting['Center'])
-                else:
-                    view_center = 'max_value'
                 if setting['Visualization']['Synchronized_Colorbar']:
                     color_function = np.array(dict_setting['Color_Function'])
-                else:
-                    color_function = None
 
-                plot_FN_brain_volume_3view(brain_map, brain_template,
-                                           color_function=color_function, view_center=view_center,
-                                           figure_title=figure_title,  file_output=file_output[i],
-                                           color_range_style=color_range_style)
-            else:
-                plot_FN_brain_volume_3view(brain_map, brain_template, color_function=None,
-                                           file_output=file_output[i], figure_title=figure_title,
-                                           color_range_style=color_range_style)
+            plot_FN_brain_volume_3view(brain_map, brain_template,
+                                       color_function=color_function, threshold=threshold,
+                                       view_center=view_center,
+                                       figure_title=figure_title,  file_output=file_output[i],
+                                       colorbar_range_style=colorbar_range_style,
+                                        colorbar_scale=colorbar_scale,
+                                        colorbar_range_round=colorbar_range_round,
+                                        colorbar_label=colorbar_label)
 
     elif dataType == 'Surface-Volume' and dataFormat == 'HCP Surface-Volume (*.cifti)':
         K = pFN.shape[1]
@@ -1569,24 +1627,23 @@ def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
             figure_title = 'FN ' + str(int(i + 1))
             brain_map = pFN[:, :, :, i]
             file_setting = os.path.join(dir_pnet_gFN, 'Figure_Setting', f'FN_{i + 1}.json')
+            view_center = 'max_value'
+            color_function = None
             if os.path.exists(file_setting):
                 dict_setting = load_json_setting(file_setting)
                 if setting['Visualization']['Synchronized_View']:
                     view_center = np.array(dict_setting['Center'])
-                else:
-                    view_center = 'max_value'
                 if setting['Visualization']['Synchronized_Colorbar']:
                     color_function = np.array(dict_setting['Color_Function'])
-                else:
-                    color_function = None
 
-                plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=color_function, view_center=view_center,
-                                                   file_output=file_output[i], figure_title=figure_title,
-                                                   color_range_style=color_range_style)
-            else:
-                plot_FN_brain_surface_volume_7view(brain_map, brain_template, color_function=None,
-                                                   file_output=file_output[i], figure_title=figure_title,
-                                                   color_range_style=color_range_style)
+            plot_FN_brain_surface_volume_7view(brain_map, brain_template,
+                                               color_function=color_function, threshold=threshold,
+                                               view_center=view_center,
+                                               file_output=file_output[i], figure_title=figure_title,
+                                               colorbar_range_style=colorbar_range_style,
+                                                colorbar_scale=colorbar_scale,
+                                                colorbar_range_round=colorbar_range_round,
+                                                colorbar_label=colorbar_label)
 
     # output an assembled image
     file_output_assembled = os.path.join(dir_pnet_pFN_indv, 'All.jpg')
