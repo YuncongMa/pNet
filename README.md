@@ -10,7 +10,7 @@
 
 * This toolbox is designed to extract personalized functional networks from fMRI data.  <br />
 * It is implemented with our spatial-regularized non-negative matrix factorization (**SR-NMF**) (https://doi.org/10.1016/j.neuroimage.2017.05.004) and Group-Information-Guided Independent Component Analysis (**GIG-ICA**) (https://dx.doi.org/10.1016/j.neuroimage.2012.11.008) to compute personalized FNs. <br />
-* It works with both MATLAB (https://github.com/YuncongMa/pNet/tree/main/MATLAB_Old) and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow script in Python.<br />
+* It works with both MATLAB (https://github.com/YuncongMa/pNet/tree/main/MATLAB) and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow script in Python.<br />
 * It supports both surface and volume based fMRI data, and multiple fMRI formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
 * It allows input of precomputed group-level FN definition. <br />
 * It outputs results of both group-level and personalized FNs, and their visualization graphs, as well as quality control and web-based report.
@@ -18,7 +18,6 @@
 
 # GUI
 The MATLAB version features an intuitive user interface (/MATLAB/GUI/pNet.mlapp) to configure the workflow, carry out the computation and check the results. <br />
-Video tutorial is availabel at https://github.com/YuncongMa/pNet/blob/main/MATLAB_Old/Video_Tutorial/Demo_Video.gif
 
 <p align="center">
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/f5168794-63d2-4076-92c9-8ca3d78e478f" width="800">
