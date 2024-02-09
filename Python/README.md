@@ -18,6 +18,7 @@ pip install -r requirements.txt
 ```
 **Or install required tools directly**
 ```
+conda env create --name pnet python=3.8
 pip install numpy scipy scikit-learn pandas h5py
 conda install -c conda-forge nibabel
 conda install pytorch::pytorch torchvision torchaudio -c pytorch
