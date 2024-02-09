@@ -80,6 +80,7 @@ pNet organizes data structure with respect to the six panels of its GUI version:
 
 
 # Brain Template
+The brain template is to get the brain mask and overlay image (T1/T2) for volume data, 3D coordination for brain surface data.
 Five built-in brain templates are available in the subfolder "Brain_Template".
 1. HCP surface: subfolder "HCP_Surface". It contains 3D mesh shapes (vertices and faces) and brain masks for two hemishperes.
 2. FreeSurfer fsaverage5: "FreeSurfer_fsaverage5". It is similar to HCP surface .
@@ -88,8 +89,8 @@ Five built-in brain templates are available in the subfolder "Brain_Template".
 5. HCP volume: It is similar to MNI volume space.
 
 
-# Precomputed gFNs
-pNet can load precomputed gFNs as reference to obtain personalized FNs for individual fMRI data. <br />
+# Existing group-level FNs
+pNet can load existing group-level FNs as reference to obtain personalized FNs for individual fMRI data. <br />
 Here we provided 17 FN results (/Group_FN/HCP_Surface/gFN_17_HCP_Surface.mat) for HCP S1200. <br />
 And several sets of FN results (k=17, 25, 50, 75, 100, 125, 150) for iSTAGING (/Group_FN/iSTAGING_Volume/gFN_17_iSTAGING_Volume.mat). <br />
 More precomputed gFNs will come in future release.
@@ -104,8 +105,8 @@ pNet generates a file report for the examination about the one-to-one match betw
 </p>
 
 
-# Web-bsed report
-pNet generates a web based web report (HTML format) to check gFNs, all pFNs with hyperlinks, and quality control.
+# Report
+pNet generates a HTML-based report to check gFNs, all pFNs with hyperlinks, and quality control.
 <p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/7996c5a0-971d-4e0b-9cab-4b85f15a3682"  width="600">
 </p>
