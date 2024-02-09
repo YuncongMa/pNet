@@ -5,6 +5,8 @@
 # Packages
 
 # other functions of pNet
+import numpy as np
+
 from Module.Quality_Control import *
 from Basic.Cluster_Computation import submit_bash_job
 
@@ -135,13 +137,13 @@ def run_quality_control_torch(dir_pnet_result: str):
               f' This means those scans have at least one pFN show higher spatial similarity to a different group-level FN\n',
               file=file_Final_Report, flush=True)
 
-    file_Final_Report.close()
-
     # Generate visualization
     visualize_quality_control(dir_pnet_result)
 
     print('\nFinished QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n',
           file=file_Final_Report, flush=True)
+
+    file_Final_Report.close()
 
 
 def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', logFile=None):
@@ -163,7 +165,7 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
     Functional_Coherence is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of pFNs
     Functional_Coherence_Control is a vector [K, ], which measures the weighted average correlation between node-wise fMRI signal in scan_data and time series of gFNs
 
-    Yuncong Ma, 12/20/2023
+    Yuncong Ma, 2/9/2024
     """
 
     # data precision
@@ -200,19 +202,20 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
         Miss_Match = np.empty((0,))
     else:
         ps = np.where(Delta_Spatial_Correspondence < 0)[0]
-        ps2 = np.argmax(Spatial_Correspondence, axis=0)
-        Miss_Match = np.concatenate((ps[:, np.newaxis] + 1, ps2[ps, np.newaxis] + 1), axis=1)
+        ps2 = np.asarray(np.argmax(Spatial_Correspondence, axis=0)).reshape(1, -1)[:, 0]
+        Miss_Match = np.concatenate((ps[:, np.newaxis] + 1, ps2[:, np.newaxis] + 1), axis=1)
 
     # Functional coherence
-    pFN_signal = scan_data @ pFN / torch.sum(pFN, dim=0, keepdims=True)
+    # in case of negative spatial weightings, use np.abs
+    pFN_signal = scan_data @ pFN / torch.sum(np.abs(pFN), dim=0, keepdims=True)
     Corr_FH = mat_corr_torch(pFN_signal, scan_data, dataPrecision=dataPrecision)
     Corr_FH[torch.isnan(Corr_FH)] = 0  # in case of zero signals
-    Functional_Coherence = torch.sum(Corr_FH.T * pFN, dim=0) / torch.sum(pFN, dim=0)
+    Functional_Coherence = torch.sum(Corr_FH.T * pFN, dim=0) / torch.sum(np.abs(pFN), dim=0)
     # Use gFN as control
-    gFN_signal = scan_data @ gFN / torch.sum(pFN, dim=0, keepdims=True)
+    gFN_signal = scan_data @ gFN / torch.sum(np.abs(pFN), dim=0, keepdims=True)
     Corr_FH = mat_corr_torch(gFN_signal, scan_data, dataPrecision=dataPrecision)
     Corr_FH[torch.isnan(Corr_FH)] = 0  # in case of zero signals
-    Functional_Coherence_Control = torch.sum(Corr_FH.T * gFN, dim=0) / torch.sum(gFN, dim=0)
+    Functional_Coherence_Control = torch.sum(Corr_FH.T * gFN, dim=0) / torch.sum(np.abs(gFN), dim=0)
 
     # Convert back to Numpy array
     Functional_Coherence = Functional_Coherence.numpy()

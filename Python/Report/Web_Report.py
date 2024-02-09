@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/18/2023
+# Yuncong Ma, 2/9/2024
 # Make a web page based report for fast visual examination
 
 from Module.Visualization import *
@@ -14,7 +14,7 @@ def run_web_report(dir_pnet_result: str):
     :param dir_pnet_result:
     :return:
 
-    Yuncong Ma, 12/20/2023
+    Yuncong Ma, 2/9/2024
     """
 
     # get directories of sub-folders
@@ -115,14 +115,16 @@ def run_web_report(dir_pnet_result: str):
     # QC
     Result = load_matlab_single_variable(os.path.join(dir_pnet_QC, 'Result.mat'))
     n_missmatch = np.sum(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)
-    ps_missmatch = np.where(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)
+    ps_missmatch = np.where(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)[0]
     if n_missmatch == 0:
         text_qc = 'pFNs of all scans passed QC. <br />'
     else:
         text_qc = 'There are ' + str(n_missmatch) + ' scans failed the QC, meaning that they have at least one pFN miss matched. <br />'
-        text_qc = ''
-        for i in range(n_missmatch):
-            text_qc = text_qc + list_subject_folder_unique[ps_missmatch[i]] + ' <br />'
+        for i, ps in enumerate(ps_missmatch):
+            file_pFN_indv = './' + os.path.join('Personalized_FN', list_subject_folder_unique[ps], 'All(Compressed).jpg')
+            text_qc = text_qc + f" <a href='{file_pFN_indv}' target='_blank' title='{list_subject_folder_unique[ps]}'>({list_subject_folder_unique[ps]})</a>\n"
+            if (i+1) % 10 == 0:
+                text_qc = text_qc + " <br />"
     html_as_string = html_as_string.replace('{$text_qc$}', str(text_qc))
 
     file_summary = open(file_summary, 'w')
