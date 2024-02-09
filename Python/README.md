@@ -244,8 +244,8 @@ The Python version also generate figure for QC report to investigate the benefit
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/22f08f1f-a085-4df8-907b-1f7ae0e23c13"  width="600">
 </p>
 
-### Web report
-pNet generates a HTML based web report to check gFNs, all pFNs with hyperlinks, and quality control.
+### Report
+pNet generates a HTML-based report to check gFNs, all pFNs with hyperlinks, and quality control.
 <p align="center">
 <img src= "https://github.com/YuncongMa/pNet/assets/20191790/9ee50680-15c9-4106-a2ff-1814904219ce"  width="600">
 </p>
