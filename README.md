@@ -46,8 +46,9 @@ The MATLAB version uses bash scripts (/MATLAN/Bash_Script) to perform customized
 The Python version uses a Python script to generate bash scripts and submit bash jobs to the cluster.
 
 # Manual
-A PDF manual can be accessed below and from the MATLAB GUI <br />
-https://github.com/YuncongMa/pNet/blob/main/Help_Document.pdf
+Two manuals are provided for MATLAB and Python version respectively <br />
+https://github.com/YuncongMa/pNet/blob/main/MATLAB/Manual_MATLAB.pdf
+https://github.com/YuncongMa/pNet/blob/main/Python/Manual_Python.pdf
 
 
 # Modules and workflow
