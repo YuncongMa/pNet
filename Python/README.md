@@ -42,6 +42,9 @@ The Python version offers different user interfaces for users with distinct codi
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/1cbb0908-3a40-4903-b8c3-a2d4e3d729b4" width="800">
 </p>
 
+## Manual
+The Python version provides an additional manual document https://github.com/YuncongMa/pNet/blob/main/Python/Manual_Python.pdf
+
 ### Step-by-step guidance
 This Python version of pNet provides a step-by-step guidance to customize a Python script for running a desired workflow <br />
 **Terminal code**
