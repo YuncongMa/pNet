@@ -42,10 +42,12 @@ def setup_GIG_ICA(dir_pnet_result: str or None, K=17, Combine_Scan=False, file_g
 
     :return: setting: a structure
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/12/2024
     """
     if dir_pnet_result is not None:
-        dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
+        _, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
+    else:
+        dir_pnet_FNC = None
 
     Group_FN = {'file_gFN': file_gFN}
     Personalized_FN = {'maxIter': maxIter, 'a': a, 'Nemda': Nemda, 'ftol': ftol, 'error': error,
@@ -68,7 +70,7 @@ def setup_GIG_ICA(dir_pnet_result: str or None, K=17, Combine_Scan=False, file_g
     return setting
 
 
-def update_model_parameter(dir_pnet_result: str or None, FN_model_parameter):
+def update_model_parameter(dir_pnet_result: str is None, FN_model_parameter, setting=None):
     """
     Update the model parameters in setup_SR_NMF for GIG-ICA
 
@@ -77,11 +79,14 @@ def update_model_parameter(dir_pnet_result: str or None, FN_model_parameter):
     :param FN_model_parameter: None or a dict containing model parameters listed in setup_GIG_ICA
     :return:
 
-    Yuncong Ma, 2/5/2024
+    Yuncong Ma, 2/12/2024
     """
 
-    dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
-    setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+    if setting is None and dir_pnet_result is None:
+        raise ValueError('One of dir_pnet_result and setting need to be set with values')
+    if setting is None:
+        dir_pnet_dataInput, dir_pnet_FNC, _, _, _, _ = setup_result_folder(dir_pnet_result)
+        setting = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
 
     # check
     if FN_model_parameter is None:
@@ -324,4 +329,85 @@ def GIG_ICA_neg_entropy(x):
     return negentropy
 
 
+def pFN_GIG_ICA_cluster(dir_pnet_result: str, jobID=1):
+    """
+    Run the GIG-ICA for pFNs in cluster computation
 
+    :param dir_pnet_result: directory of pNet result folder
+    :param jobID: jobID starting from 1
+    :return: None
+
+    Yuncong Ma, 2/2/2024
+    """
+
+    jobID = int(jobID)
+
+    # get directories of sub-folders
+    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
+
+    # get settings
+    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
+    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
+    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
+
+    # load basic settings
+    dataType = setting['Data_Input']['Data_Type']
+    dataFormat = setting['Data_Input']['Data_Format']
+
+    # load Brain Template
+    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
+    if dataType == 'Volume':
+        Brain_Mask = Brain_Template['Brain_Mask']
+    else:
+        Brain_Mask = None
+
+    print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
+    # load precomputed gFNs
+    gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
+    # reshape to 2D if required
+    gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
+
+    # get subject folder in Personalized_FN
+    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
+    list_subject_folder = [line.replace('\n', '') for line in open(file_subject_folder, 'r')]
+    list_subject_folder = np.array(list_subject_folder)
+    list_subject_folder_unique = np.unique(list_subject_folder)
+
+    print(f'Start to compute pFNs for {jobID}-th folder: {list_subject_folder_unique[jobID-1]}', flush=True)
+    dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[jobID-1])
+
+    # parameter
+    maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
+    a = setting['FN_Computation']['Personalized_FN']['a']
+    Nemda = setting['FN_Computation']['Personalized_FN']['Nemda']
+    ftol = setting['FN_Computation']['Personalized_FN']['ftol']
+    error = setting['FN_Computation']['Personalized_FN']['error']
+
+    dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
+
+    # separate maxIter and minIter for gFN and pFN
+    if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
+        maxIter_gFN = maxIter
+        maxIter_pFN = maxIter
+    else:
+        maxIter_gFN = maxIter[0]
+        maxIter_pFN = maxIter[1]
+
+    # load data
+    Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'),
+                          dataType=dataType, dataFormat=dataFormat,
+                          Reshape=True, Brain_Mask=Brain_Mask, logFile=None)
+    # perform NMF
+    TC, pFN = pFN_GIG_ICA_torch(Data, gFN, maxIter=maxIter_pFN, a=a, Nemda=Nemda, ftol=ftol, error=error,
+                                        dataPrecision=dataPrecision, logFile=None)
+
+    if not isinstance(pFN, np.ndarray):
+        pFN = pFN.numpy()
+        TC = TC.numpy()
+
+    # output
+    pFN = reshape_FN(pFN, dataType=dataType, Brain_Mask=Brain_Mask)
+    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN}, do_compression=True)
+    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC}, do_compression=True)
+
+    print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)

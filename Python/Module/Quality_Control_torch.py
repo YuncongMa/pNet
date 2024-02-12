@@ -1,4 +1,4 @@
-# Yuncong Ma, 1/10/2024
+# Yuncong Ma, 2/12/2024
 # Quality control module of pNet using PyTorch
 
 #########################################
@@ -7,6 +7,8 @@
 # other functions of pNet
 import numpy as np
 
+from Module.Data_Input import *
+from Basic.Matrix_Computation import *
 from Module.Quality_Control import *
 from Basic.Cluster_Computation import submit_bash_job
 
@@ -224,28 +226,28 @@ def compute_quality_control_torch(scan_data, gFN, pFN, dataPrecision='double', l
     return Spatial_Correspondence, Delta_Spatial_Correspondence, Miss_Match, Functional_Coherence, Functional_Coherence_Control
 
 
-def run_quality_control_torch_server(dir_pnet_result: str):
+def run_quality_control_torch_cluster(dir_pnet_result: str):
     """
-    Run the quality control module in server mode
+    Run the quality control module in cluster computation
 
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 12/20/2023
+    Yuncong Ma, 2/12/2024
     """
 
     # Setup sub-folders in pNet result
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
 
     # load setting
-    settingServer = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
-    setting = {'Server': settingServer}
+    settingCluster = load_json_setting(os.path.join(dir_pnet_dataInput, 'Cluster_Setting.json'))
+    setting = {'Cluster': settingCluster}
 
     # Log file
     print('\nStart QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
 
-    settingServer = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
-    setting = {'Server': settingServer}
+    settingCluster = load_json_setting(os.path.join(dir_pnet_dataInput, 'Cluster_Setting.json'))
+    setting = {'Cluster': settingCluster}
 
     # Information about scan list
     file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
@@ -255,8 +257,8 @@ def run_quality_control_torch_server(dir_pnet_result: str):
     nFolder = list_subject_folder_unique.shape[0]
 
     # submit jobs
-    memory = setting['Server']['computation_resource']['memory_qc']
-    n_thread = setting['Server']['computation_resource']['thread_qc']
+    memory = setting['Cluster']['computation_resource']['memory_qc']
+    n_thread = setting['Cluster']['computation_resource']['thread_qc']
     for rep in range(1, 1+nFolder):
         time.sleep(0.1)
         dir_indv = os.path.join(dir_pnet_QC, list_subject_folder_unique[rep-1])
@@ -264,12 +266,12 @@ def run_quality_control_torch_server(dir_pnet_result: str):
         if os.path.isfile(os.path.join(dir_indv, 'Result.mat')):
             continue
         submit_bash_job(dir_pnet_result,
-                        python_command=f'pNet.compute_quality_control_torch_server(dir_pnet_result,{rep})',
+                        python_command=f'pNet.compute_quality_control_torch_cluster(dir_pnet_result,{rep})',
                         memory=memory,
                         n_thread=n_thread,
-                        bashFile=os.path.join(dir_indv, 'server_job_bootstrap.sh'),
-                        pythonFile=os.path.join(dir_indv, 'server_job_bootstrap.py'),
-                        logFile=os.path.join(dir_indv, 'server_job_bootstrap.log')
+                        bashFile=os.path.join(dir_indv, 'Cluster_job_bootstrap.sh'),
+                        pythonFile=os.path.join(dir_indv, 'Cluster_job_bootstrap.py'),
+                        logFile=os.path.join(dir_indv, 'Cluster_job_bootstrap.log')
                         )
 
     # check completion
@@ -318,9 +320,9 @@ def run_quality_control_torch_server(dir_pnet_result: str):
     print('\nFinished QC at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
 
 
-def compute_quality_control_torch_server(dir_pnet_result: str, jobID=1):
+def compute_quality_control_torch_cluster(dir_pnet_result: str, jobID=1):
     """
-    Run the QC in server mode
+    Run the QC in cluster computation
 
     :param dir_pnet_result: directory of pNet result folder
     :param jobID: jobID starting from 1

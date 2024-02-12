@@ -1,4 +1,4 @@
-# Yuncong Ma, 1/17/2024
+# Yuncong Ma, 2/12/2024
 # pNet
 # Provide examples of running the whole workflow of pNet
 
@@ -142,7 +142,7 @@ def workflow(dir_pnet_result: str,
     # ============== FN Computation ============== #
     # setup parameters for FN computation
     if method == 'SR-NMF':
-        setting = SR_NMF.setup_SR_NMF(
+        SR_NMF.setup_SR_NMF(
                         dir_pnet_result,
                         K=K,
                         Combine_Scan=Combine_Scan,
@@ -155,7 +155,7 @@ def workflow(dir_pnet_result: str,
             SR_NMF.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
 
     elif method == 'GIG-ICA':
-        setting = GIG_ICA.setup_GIG_ICA(
+        GIG_ICA.setup_GIG_ICA(
             dir_pnet_result,
             K=K,
             Combine_Scan=Combine_Scan,
@@ -709,14 +709,14 @@ def workflow_cluster(dir_pnet_result: str,
                      method='SR-NMF',
                      K=17, Combine_Scan=False,
                      file_gFN=None,
-                     FN_model_parameter=None or dict,
+                     FN_model_parameter=None,
                      outputFormat='Both',
                      Computation_Mode='CPU_Torch',
                      dataPrecision='double',
                      # visualization
                      synchronized_view=True,
                      synchronized_colorbar=False,
-                     # server
+                     # Cluster
                      dir_pnet=None,
                      dir_env=None,
                      dir_python=None,
@@ -775,13 +775,13 @@ def workflow_cluster(dir_pnet_result: str,
     :param dir_pnet: directory of the pNet toolbox
     :param dir_env: directory of the desired virtual environment
     :param dir_python: absolute directory to the python folder, ex. /Users/YuncongMa/.conda/envs/pnet/bin/python
-    :param submit_command: command to submit a server job
+    :param submit_command: command to submit a cluster job
     :param thread_command: command to setup number of threads for each job
     :param memory_command: command to setup memory allowance for each job
     :param log_command: command to specify the logfile
     :param computation_resource: a dict to specify the number of threads and memory allowance for jobs in each predefined step
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/12/2024
     """
 
     print('Start to run pNet workflow for cluster computation', flush=True)
@@ -809,7 +809,7 @@ def workflow_cluster(dir_pnet_result: str,
     dir_script = os.path.join(dir_pnet_dataInput, 'Script')
     os.makedirs(dir_script, exist_ok=True)
     file_script = open(os.path.join(dir_pnet_dataInput, 'Script', 'cluster_job_workflow.py'), 'w')
-    print('# Customized Python script for pNet workflow in server mode\n# Use corresponding bash script to submit the job\n# Created on ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=file_script)
+    print('# Customized Python script for pNet workflow in cluster computation\n# Use corresponding bash script to submit the job\n# Created on ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=file_script)
     print('# This Python script can be re-run to restart the workflow from where it stops', file=file_script)
     print('\n# Load packages', file=file_script)
     print('# setup and run a customized workflow\n', file=file_script)
@@ -839,6 +839,7 @@ def workflow_cluster(dir_pnet_result: str,
     if file_Brain_Template is not None:
         print(f"file_Brain_Template = '{file_Brain_Template}'", file=file_script)
     else:
+        print(f"file_Brain_Template = None", file=file_script)
         if dataType == 'Surface':
             print(f"templateFormat = '{templateFormat}'", file=file_script)
             print(f"file_surfL = '{file_surfL}'", file=file_script)
@@ -865,18 +866,19 @@ def workflow_cluster(dir_pnet_result: str,
             print(f"file_overlayImage = '{file_overlayImage}'", file=file_script)
         print(f"maskValue = {maskValue}", file=file_script)
     print('\n# FN computation', file=file_script)
-    print(f"method = {method}", file=file_script)
+    print(f"method = '{method}'", file=file_script)
     print(f"K = {K}", file=file_script)
     print(f"Combine_Scan = {Combine_Scan}", file=file_script)  # True or False
     if file_gFN is None:
         print(f"file_gFN = None", file=file_script)
     else:
         print(f"file_gFN = '{file_gFN}'", file=file_script)
+    print(f"FN_model_parameter = {FN_model_parameter}", file=file_script)
 
     # setup FN models
     if method == 'SR-NMF':
         setting = SR_NMF.setup_SR_NMF(
-                        None,
+                        dir_pnet_result,
                         K=K,
                         Combine_Scan=Combine_Scan,
                         file_gFN=file_gFN,
@@ -885,11 +887,11 @@ def workflow_cluster(dir_pnet_result: str,
                         outputFormat=outputFormat
         )
         if FN_model_parameter is not None:
-            SR_NMF.update_model_parameter(None, FN_model_parameter=FN_model_parameter)
+            setting = SR_NMF.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
 
     elif method == 'GIG-ICA':
         setting = GIG_ICA.setup_GIG_ICA(
-            None,
+            dir_pnet_result=None,
             K=K,
             Combine_Scan=Combine_Scan,
             file_gFN=file_gFN,
@@ -898,7 +900,7 @@ def workflow_cluster(dir_pnet_result: str,
             outputFormat=outputFormat
         )
         if FN_model_parameter is not None:
-            GIG_ICA.update_model_parameter(None, FN_model_parameter=FN_model_parameter)
+            setting = GIG_ICA.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
     if method == 'SR-NMF':
         if file_gFN is not None:
             print(f"samplingMethod = '{setting['Group_FN']['BootStrap']['samplingMethod']}'", file=file_script)
@@ -930,7 +932,7 @@ def workflow_cluster(dir_pnet_result: str,
     print('# visualization', file=file_script)
     print(f"synchronized_view = {synchronized_view}", file=file_script)
     print(f"synchronized_colorbar = {synchronized_colorbar}", file=file_script)
-    print('\n# server', file=file_script)
+    print('\n# cluster', file=file_script)
     print(f"dir_env = '{dir_env}'", file=file_script)
     print(f"dir_python = '{dir_python}'", file=file_script)
     print(f"submit_command = '{submit_command}'", file=file_script)
@@ -943,10 +945,10 @@ def workflow_cluster(dir_pnet_result: str,
     # main job
     print('\n# Main job\n# The following part is imported from /pNet/Python/Workflow_Cluster_Template.py', file=file_script)
 
-    file_pnet_workflow_cluster_template = os.path.join(dir_pnet, 'Python', 'Workflow_Cluster_Template.py')
+    file_pnet_workflow_cluster_template = os.path.join(dir_pnet, 'Python', 'Workflow', 'Workflow_Cluster_Template.py')
     [print(line.replace('\n', ''), file=file_script) for line in open(file_pnet_workflow_cluster_template, 'r')]
 
-    # =============== Server
+    # =============== Cluster
     setup_cluster(
         dir_pnet=dir_pnet,
         dir_env=dir_env,

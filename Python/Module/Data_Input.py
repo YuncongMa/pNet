@@ -1,4 +1,4 @@
-# Yuncong Ma, 12/12/2023
+# Yuncong Ma, 2/12/2024
 # Data Input module of pNet
 # It includes:
 # 1. loading and writing of fMRI files
@@ -979,13 +979,13 @@ def load_brain_template(file_Brain_Template: str,
 
 def setup_brain_template(dir_pnet_dataInput: str,
                          file_Brain_Template=None,
-                         dataType=None,
-                         templateFormat=None,
+                         dataType='Surface',
+                         templateFormat='HCP',
                          file_surfL=None, file_surfR=None,
                          file_maskL=None, file_maskR=None,
                          file_mask_vol=None,
                          file_overlayImage=None,
-                         maskValue=1,
+                         maskValue=0,
                          file_surfL_inflated=None, file_surfR_inflated=None,
                          logFile='Automatic'):
     """
@@ -1010,7 +1010,7 @@ def setup_brain_template(dir_pnet_dataInput: str,
 
     :param logFile: 'Automatic', None, or a txt formatted file directory
 
-    Yuncong Ma, 11/14/2023
+    Yuncong Ma, 2/12/2024
     """
 
     # log file

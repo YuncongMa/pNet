@@ -18,7 +18,7 @@ if file_Brain_Template is None:
     if dataType == 'Volume':
         pNet.setup_brain_template(
             dir_pnet_dataInput=dir_pnet_dataInput,
-            dataType=dataType, dataFormat=dataFormat,
+            dataType=dataType,
             templateFormat=templateFormat,
             file_mask_vol=file_mask_vol, file_overlayImage=file_overlayImage,
             maskValue=maskValue
@@ -26,7 +26,7 @@ if file_Brain_Template is None:
     elif dataType == 'Surface':
         pNet.setup_brain_template(
             dir_pnet_dataInput=dir_pnet_dataInput,
-            dataType=dataType, dataFormat=dataFormat,
+            dataType=dataType,
             templateFormat=templateFormat,
             file_surfL=file_surfL, file_surfR=file_surfR,
             file_maskL=file_maskL, file_maskR=file_maskR,
@@ -49,20 +49,31 @@ else:
     pNet.setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
 
 # ============== FN Computation
-pNet.setup_SR_NMF(
-    dir_pnet_result=dir_pnet_result,
-    K=K,
-    Combine_Scan=Combine_Scan,
-    file_gFN=file_gFN,
-    samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS,
-    maxIter=maxIter, minIter=minIter, meanFitRatio=meanFitRatio, error=error, normW=normW,
-    Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
-    vxI=vxI, ard=ard, eta=eta,
-    nRepeat=nRepeat,
-    Computation_Mode=Computation_Mode,
-    dataPrecision=dataPrecision,
-    outputFormat=outputFormat
-)
+if method == 'SR-NMF':
+    pNet.SR_NMF.setup_SR_NMF(
+        dir_pnet_result=dir_pnet_result,
+        K=K,
+        Combine_Scan=Combine_Scan,
+        file_gFN=file_gFN,
+        Computation_Mode=Computation_Mode,
+        dataPrecision=dataPrecision,
+        outputFormat=outputFormat
+    )
+    if FN_model_parameter is not None:
+        pNet.SR_NMF.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
+
+elif method == 'GIG-ICA':
+    pNet.GIG_ICA.setup_GIG_ICA(
+        dir_pnet_result=dir_pnet_result,
+        K=K,
+        Combine_Scan=Combine_Scan,
+        file_gFN=file_gFN,
+        Computation_Mode=Computation_Mode,
+        dataPrecision=dataPrecision,
+        outputFormat=outputFormat
+    )
+    if FN_model_parameter is not None:
+        pNet.GIG_ICA.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
 
 # =============== Visualization
 pNet.setup_Visualization(
@@ -71,7 +82,7 @@ pNet.setup_Visualization(
     synchronized_colorbar=synchronized_colorbar
 )
 
-# =============== Server
+# =============== Cluster
 pNet.setup_cluster(
     dir_env=dir_env,
     dir_pnet=dir_pnet,

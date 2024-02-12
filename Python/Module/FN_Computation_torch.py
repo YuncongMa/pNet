@@ -1,4 +1,4 @@
-# Yuncong Ma, 1/17/2024
+# Yuncong Ma, 2/12/2024
 # FN Computation module of pNet
 # Pytorch version
 
@@ -321,7 +321,7 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 2/8/2024
+    Yuncong Ma, 2/12/2024
     """
 
     # get directories of sub-folders
@@ -336,10 +336,10 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
     if not os.path.isfile(os.path.join(dir_pnet_FNC, 'Setting.json')):
         raise ValueError('Cannot find the setting json file in folder FN_Computation')
     settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingServer = load_json_setting(os.path.join(dir_pnet_dataInput, 'cluster_Setting.json'))
+    settingCluster = load_json_setting(os.path.join(dir_pnet_dataInput, 'Cluster_Setting.json'))
     settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC, 'Server': settingServer}
-    print('Settings are loaded from folder Data_Input, FN_Computation and Server', flush=True)
+    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC, 'Cluster': settingCluster}
+    print('Settings are loaded from folder Data_Input, FN_Computation and Cluster', flush=True)
 
     # load basic settings
     dataType = setting['Data_Input']['Data_Type']
@@ -399,8 +399,8 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
                                  samplingMethod=samplingMethod, sampleSize=sampleSize, nBS=nBS, logFile=None)
 
             # submit jobs
-            memory = setting['Server']['computation_resource']['memory_bootstrap']
-            n_thread = setting['Server']['computation_resource']['thread_bootstrap']
+            memory = setting['Cluster']['computation_resource']['memory_bootstrap']
+            n_thread = setting['Cluster']['computation_resource']['thread_bootstrap']
             for rep in range(1, 1+nBS):
                 time.sleep(0.1)
                 if os.path.isfile(os.path.join(dir_pnet_BS, str(i), 'FN.mat')):
@@ -432,8 +432,8 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
             # step 2 ============== fuse results
             # Generate gFNs
             print('Start to fuse bootstrapped results using NCut at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-            memory = setting['Server']['computation_resource']['memory_fusion']
-            n_thread = setting['Server']['computation_resource']['thread_fusion']
+            memory = setting['Cluster']['computation_resource']['memory_fusion']
+            n_thread = setting['Cluster']['computation_resource']['thread_fusion']
 
             if not os.path.isfile(os.path.join(dir_pnet_gFN, 'FN.mat')):
                 submit_bash_job(dir_pnet_result,
@@ -479,8 +479,8 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
         nScan = len(list_subject_folder)
 
         # submit jobs
-        memory = setting['Server']['computation_resource']['memory_pFN']
-        n_thread = setting['Server']['computation_resource']['thread_pFN']
+        memory = setting['Cluster']['computation_resource']['memory_pFN']
+        n_thread = setting['Cluster']['computation_resource']['thread_pFN']
         for scan in range(1, 1+nScan):
             time.sleep(0.1)
             if os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'FN.mat')):
@@ -534,8 +534,8 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
         nScan = len(list_subject_folder)
 
         # submit jobs
-        memory = setting['Server']['computation_resource']['memory_pFN']
-        n_thread = setting['Server']['computation_resource']['thread_pFN']
+        memory = setting['Cluster']['computation_resource']['memory_pFN']
+        n_thread = setting['Cluster']['computation_resource']['thread_pFN']
         for scan in range(1, 1 + nScan):
             time.sleep(0.1)
             if os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder[scan - 1], 'FN.mat')):
@@ -570,320 +570,3 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
     print('Finished FN computation at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
 
 
-def gFN_SR_NMF_boostrapping_cluster(dir_pnet_result: str, jobID=1):
-    """
-    Run the NMF for bootstraping in cluster computation
-
-    :param dir_pnet_result: directory of pNet result folder
-    :param jobID: jobID starting from 1
-    :return: None
-
-    Yuncong Ma, 2/2/2024
-    """
-
-    jobID = int(jobID)
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # get settings
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-
-    # Extract parameters
-    K = setting['FN_Computation']['K']
-    maxIter = setting['FN_Computation']['Group_FN']['maxIter']
-    minIter = setting['FN_Computation']['Group_FN']['minIter']
-    error = setting['FN_Computation']['Group_FN']['error']
-    normW = setting['FN_Computation']['Group_FN']['normW']
-    Alpha = setting['FN_Computation']['Group_FN']['Alpha']
-    Beta = setting['FN_Computation']['Group_FN']['Beta']
-    alphaS = setting['FN_Computation']['Group_FN']['alphaS']
-    alphaL = setting['FN_Computation']['Group_FN']['alphaL']
-    vxI = setting['FN_Computation']['Group_FN']['vxI']
-    ard = setting['FN_Computation']['Group_FN']['ard']
-    eta = setting['FN_Computation']['Group_FN']['eta']
-    nRepeat = setting['FN_Computation']['Group_FN']['nRepeat']
-    dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
-
-    # separate maxIter and minIter for gFN and pFN
-    if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
-        maxIter_gFN = maxIter
-        maxIter_pFN = maxIter
-    else:
-        maxIter_gFN = maxIter[0]
-        maxIter_pFN = maxIter[1]
-    if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
-        minIter_gFN = minIter
-        minIter_pFN = minIter
-    else:
-        minIter_gFN = minIter[0]
-        minIter_pFN = minIter[1]
-
-    dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-    if not os.path.exists(dir_pnet_BS):
-        os.makedirs(dir_pnet_BS)
-
-    # NMF on bootstrapped subsets
-    print('Start to SR-NMF for this bootstrap at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-    dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-
-    # load data
-    file_scan_list = os.path.join(dir_pnet_BS, str(jobID), 'Scan_List.txt')
-    Data = load_fmri_scan(file_scan_list, dataType=dataType, dataFormat=dataFormat, Reshape=True, Brain_Mask=Brain_Mask,
-                          Normalization='vp-vmax', logFile=None)
-
-    # additional parameter
-    gNb = load_matlab_single_array(os.path.join(dir_pnet_FNC, 'gNb.mat'))
-
-    # perform NMF
-    FN_BS = SR_NMF.gFN_SR_NMF_torch(Data, K, gNb, maxIter=maxIter_gFN, minIter=minIter_gFN, error=error, normW=normW,
-                                    Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL, vxI=vxI, ard=ard, eta=eta,
-                                    nRepeat=nRepeat, dataPrecision=dataPrecision, logFile=None)
-    # save results
-    FN_BS = reshape_FN(FN_BS.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_BS, str(jobID), 'FN.mat'), {"FN": FN_BS}, do_compression=True)
-
-    print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-
-
-def fuse_FN_cluster(dir_pnet_result: str):
-    """
-    Run the NCut to fuse FNs in cluster computation
-
-    :param dir_pnet_result: directory of pNet result folder
-    :return: None
-
-    Yuncong Ma, 2/2/2024
-    """
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # get settings
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-    print('Brain template is loaded from folder Data_Input', flush=True)
-
-    print('Start to fuse bootstrapped results using NCut at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-    dir_pnet_BS = os.path.join(dir_pnet_FNC, 'BootStrapping')
-    K = setting['FN_Computation']['K']
-    nBS = setting['FN_Computation']['Group_FN']['BootStrap']['nBS']
-    FN_BS = np.empty(nBS, dtype=np.ndarray)
-    # load bootstrapped results
-    for rep in range(1, nBS+1):
-        FN_BS[rep-1] = np.array(reshape_FN(load_matlab_single_array(os.path.join(dir_pnet_BS, str(rep), 'FN.mat')), dataType=dataType, Brain_Mask=Brain_Mask))
-    gFN_BS = np.concatenate(FN_BS, axis=1)
-
-    # Fuse bootstrapped results
-    gFN = SR_NMF.gFN_fusion_NCut_torch(gFN_BS, K, logFile=None)
-    # output
-    gFN = reshape_FN(gFN.numpy(), dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_gFN, 'FN.mat'), {"FN": gFN}, do_compression=True)
-
-    print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-
-
-def pFN_SR_NMF_cluster(dir_pnet_result: str, jobID=1):
-    """
-    Run the SR-NMF for pFNs in cluster computation
-
-    :param dir_pnet_result: directory of pNet result folder
-    :param jobID: jobID starting from 1
-    :return: None
-
-    Yuncong Ma, 2/2/2024
-    """
-
-    jobID = int(jobID)
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # get settings
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-
-    print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-    # load precomputed gFNs
-    gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
-    # additional parameter
-    gNb = load_matlab_single_array(os.path.join(dir_pnet_FNC, 'gNb.mat'))
-    # reshape to 2D if required
-    gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-    # get subject folder in Personalized_FN
-    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
-    list_subject_folder = [line.replace('\n', '') for line in open(file_subject_folder, 'r')]
-    list_subject_folder = np.array(list_subject_folder)
-    list_subject_folder_unique = np.unique(list_subject_folder)
-
-    print(f'Start to compute pFNs for {jobID}-th folder: {list_subject_folder_unique[jobID-1]}', flush=True)
-    dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[jobID-1])
-    # parameter
-    maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
-    minIter = setting['FN_Computation']['Personalized_FN']['minIter']
-    meanFitRatio = setting['FN_Computation']['Personalized_FN']['meanFitRatio']
-    error = setting['FN_Computation']['Personalized_FN']['error']
-    normW = setting['FN_Computation']['Personalized_FN']['normW']
-    Alpha = setting['FN_Computation']['Personalized_FN']['Alpha']
-    Beta = setting['FN_Computation']['Personalized_FN']['Beta']
-    alphaS = setting['FN_Computation']['Personalized_FN']['alphaS']
-    alphaL = setting['FN_Computation']['Personalized_FN']['alphaL']
-    vxI = setting['FN_Computation']['Personalized_FN']['vxI']
-    ard = setting['FN_Computation']['Personalized_FN']['ard']
-    eta = setting['FN_Computation']['Personalized_FN']['eta']
-    dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
-
-    # separate maxIter and minIter for gFN and pFN
-    if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
-        maxIter_gFN = maxIter
-        maxIter_pFN = maxIter
-    else:
-        maxIter_gFN = maxIter[0]
-        maxIter_pFN = maxIter[1]
-    if isinstance(minIter, int) or (isinstance(minIter, np.ndarray) and minIter.shape == 1):
-        minIter_gFN = minIter
-        minIter_pFN = minIter
-    else:
-        minIter_gFN = minIter[0]
-        minIter_pFN = minIter[1]
-
-    # load data
-    Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'),
-                          dataType=dataType, dataFormat=dataFormat,
-                          Reshape=True, Brain_Mask=Brain_Mask, logFile=None)
-    # perform NMF
-    TC, pFN = SR_NMF.pFN_SR_NMF_torch(Data, gFN, gNb, maxIter=maxIter_pFN, minIter=minIter_pFN, meanFitRatio=meanFitRatio,
-                                      error=error, normW=normW,
-                                      Alpha=Alpha, Beta=Beta, alphaS=alphaS, alphaL=alphaL,
-                                      vxI=vxI, ard=ard, eta=eta,
-                                      dataPrecision=dataPrecision, logFile=None)
-    pFN = pFN.numpy()
-    TC = TC.numpy()
-
-    # output
-    pFN = reshape_FN(pFN, dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN}, do_compression=True)
-    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC}, do_compression=True)
-
-    print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-
-
-def pFN_GIG_ICA_cluster(dir_pnet_result: str, jobID=1):
-    """
-    Run the GIG-ICA for pFNs in cluster computation
-
-    :param dir_pnet_result: directory of pNet result folder
-    :param jobID: jobID starting from 1
-    :return: None
-
-    Yuncong Ma, 2/2/2024
-    """
-
-    jobID = int(jobID)
-
-    # get directories of sub-folders
-    dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, _, _ = setup_result_folder(dir_pnet_result)
-
-    # get settings
-    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
-    settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
-    setting = {'Data_Input': settingDataInput, 'FN_Computation': settingFNC}
-
-    # load basic settings
-    dataType = setting['Data_Input']['Data_Type']
-    dataFormat = setting['Data_Input']['Data_Format']
-
-    # load Brain Template
-    Brain_Template = load_brain_template(os.path.join(dir_pnet_dataInput, 'Brain_Template.json.zip'))
-    if dataType == 'Volume':
-        Brain_Mask = Brain_Template['Brain_Mask']
-    else:
-        Brain_Mask = None
-
-    print('Start to compute pFNs at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-    # load precomputed gFNs
-    gFN = load_matlab_single_array(os.path.join(dir_pnet_gFN, 'FN.mat'))
-    # reshape to 2D if required
-    gFN = reshape_FN(gFN, dataType=dataType, Brain_Mask=Brain_Mask)
-
-    # get subject folder in Personalized_FN
-    file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
-    list_subject_folder = [line.replace('\n', '') for line in open(file_subject_folder, 'r')]
-    list_subject_folder = np.array(list_subject_folder)
-    list_subject_folder_unique = np.unique(list_subject_folder)
-
-    print(f'Start to compute pFNs for {jobID}-th folder: {list_subject_folder_unique[jobID-1]}', flush=True)
-    dir_pnet_pFN_indv = os.path.join(dir_pnet_pFN, list_subject_folder_unique[jobID-1])
-
-    # parameter
-    maxIter = setting['FN_Computation']['Personalized_FN']['maxIter']
-    a = setting['FN_Computation']['Personalized_FN']['a']
-    Nemda = setting['FN_Computation']['Personalized_FN']['Nemda']
-    ftol = setting['FN_Computation']['Personalized_FN']['ftol']
-    error = setting['FN_Computation']['Personalized_FN']['error']
-
-    dataPrecision = setting['FN_Computation']['Computation']['dataPrecision']
-
-    # separate maxIter and minIter for gFN and pFN
-    if isinstance(maxIter, int) or (isinstance(maxIter, np.ndarray) and maxIter.shape == 1):
-        maxIter_gFN = maxIter
-        maxIter_pFN = maxIter
-    else:
-        maxIter_gFN = maxIter[0]
-        maxIter_pFN = maxIter[1]
-
-    # load data
-    Data = load_fmri_scan(os.path.join(dir_pnet_pFN_indv, 'Scan_List.txt'),
-                          dataType=dataType, dataFormat=dataFormat,
-                          Reshape=True, Brain_Mask=Brain_Mask, logFile=None)
-    # perform NMF
-    TC, pFN = GIG_ICA.pFN_GIG_ICA_torch(Data, gFN, maxIter=maxIter_pFN, a=a, Nemda=Nemda, ftol=ftol, error=error,
-                                        dataPrecision=dataPrecision, logFile=None)
-
-    if not isinstance(pFN, np.ndarray):
-        pFN = pFN.numpy()
-        TC = TC.numpy()
-
-    # output
-    pFN = reshape_FN(pFN, dataType=dataType, Brain_Mask=Brain_Mask)
-    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'FN.mat'), {"FN": pFN}, do_compression=True)
-    sio.savemat(os.path.join(dir_pnet_pFN_indv, 'TC.mat'), {"TC": TC}, do_compression=True)
-
-    print('Finished at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)

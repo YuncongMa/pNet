@@ -1,6 +1,6 @@
-# Yuncong Ma, 11/30/2023
+# Yuncong Ma, 2/12/2024
 # pNet
-# Provide functions to submit jobs to server environment
+# Provide functions to submit jobs to cluster environment
 
 
 #########################################
@@ -31,21 +31,21 @@ def setup_cluster(dir_pnet_result: str,
     :param dir_env: directory of the desired virtual environment
     :param dir_pnet: directory of the pNet toolbox
     :param dir_python: absolute directory to the python folder, ex. /Users/YuncongMa/.conda/envs/pnet/bin/python
-    :param submit_command: command to submit a server job
+    :param submit_command: command to submit a cluster job
     :param thread_command: command to setup number of threads for each job
     :param memory_command: command to setup memory allowance for each job
     :param log_command: command to specify the logfile
     :param computation_resource: None or a dict which specifies the number of threads and memory for different processes
     :return: None
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/12/2024
     """
 
     dir_pnet_dataInput, _, _, _, _, _ = setup_result_folder(dir_pnet_result)
     setting = {'dir_env': dir_env, 'dir_pnet': dir_pnet, 'dir_python': dir_python, 'submit_command': submit_command, 'thread_command': thread_command, 'memory_command': memory_command, 'log_command': log_command,
                'computation_resource': computation_resource}
 
-    write_json_setting(setting, os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
+    write_json_setting(setting, os.path.join(dir_pnet_dataInput, 'Cluster_Setting.json'))
 
 
 def submit_bash_job(dir_pnet_result: str,
@@ -69,12 +69,12 @@ def submit_bash_job(dir_pnet_result: str,
     :param create_python_file: bool, create a new Python file or not
     :return: None
 
-    Yuncong Ma, 2/2/2024
+    Yuncong Ma, 2/12/2024
     """
 
-    # load server setting
+    # load cluster setting
     dir_pnet_dataInput, _, _, _, _, _ = setup_result_folder(dir_pnet_result)
-    setting = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
+    setting = load_json_setting(os.path.join(dir_pnet_dataInput, 'Cluster_Setting.json'))
     dir_env = setting['dir_env']
     dir_pnet = setting['dir_pnet']
     dir_python = setting['dir_python']
@@ -123,7 +123,7 @@ def submit_bash_job(dir_pnet_result: str,
 
         pythonFile.close()
 
-    # execute a shell command to submit a server job, only for linux based systems
+    # execute a shell command to submit a cluster job, only for linux based systems
     if platform == "linux":
         os.system(f'{submit_command} {thread_command}{n_thread} {memory_command}{memory} {log_command}{logFile} {bashFile}')
 

@@ -1439,14 +1439,14 @@ def run_Visualization(dir_pnet_result: str):
     return
 
 
-def run_Visualization_server(dir_pnet_result: str):
+def run_Visualization_cluster(dir_pnet_result: str):
     """
-    Run preconfigured visualizations for gFNs and pFNs in server mode
+    Run preconfigured visualizations for gFNs and pFNs in cluster computation
 
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 2/5/2024
+    Yuncong Ma, 2/12/2024
     """
 
     print('\nStart Visualization at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
@@ -1455,20 +1455,20 @@ def run_Visualization_server(dir_pnet_result: str):
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
 
     # load setting
-    settingServer = load_json_setting(os.path.join(dir_pnet_dataInput, 'Server_Setting.json'))
-    setting = {'Server': settingServer}
+    settingCluster = load_json_setting(os.path.join(dir_pnet_dataInput, 'Cluster_Setting.json'))
+    setting = {'Cluster': settingCluster}
 
     # Run gFN and pFN visualization
-    memory = setting['Server']['computation_resource']['memory_visualization']
-    n_thread = setting['Server']['computation_resource']['thread_visualization']
+    memory = setting['Cluster']['computation_resource']['memory_visualization']
+    n_thread = setting['Cluster']['computation_resource']['thread_visualization']
     if not os.path.isfile(os.path.join(dir_pnet_gFN, 'All.jpg')):
         submit_bash_job(dir_pnet_result,
                     python_command=f'pNet.run_gFN_Visualization(dir_pnet_result)',
                     memory=memory,
                     n_thread=n_thread,
-                    bashFile=os.path.join(dir_pnet_gFN, 'server_job_visualization.sh'),
-                    pythonFile=os.path.join(dir_pnet_gFN, 'server_job_visualization.py'),
-                    logFile=os.path.join(dir_pnet_gFN, 'server_job_visualization.log')
+                    bashFile=os.path.join(dir_pnet_gFN, 'cluster_job_visualization.sh'),
+                    pythonFile=os.path.join(dir_pnet_gFN, 'cluster_job_visualization.py'),
+                    logFile=os.path.join(dir_pnet_gFN, 'cluster_job_visualization.log')
                     )
 
     # Information about scan list
@@ -1485,12 +1485,12 @@ def run_Visualization_server(dir_pnet_result: str):
         if os.path.isfile(os.path.join(dir_indv, 'All.jpg')):
             continue
         submit_bash_job(dir_pnet_result,
-                        python_command=f'pNet.run_pFN_Visualization_server(dir_pnet_result,{rep})',
+                        python_command=f'pNet.run_pFN_Visualization_cluster(dir_pnet_result,{rep})',
                         memory=memory,
                         n_thread=n_thread,
-                        bashFile=os.path.join(dir_indv, 'server_job_visualization.sh'),
-                        pythonFile=os.path.join(dir_indv, 'server_job_visualization.py'),
-                        logFile=os.path.join(dir_indv, 'server_job_visualization.log')
+                        bashFile=os.path.join(dir_indv, 'cluster_job_visualization.sh'),
+                        pythonFile=os.path.join(dir_indv, 'cluster_job_visualization.py'),
+                        logFile=os.path.join(dir_indv, 'cluster_job_visualization.log')
                         )
 
     # check completion
@@ -1525,9 +1525,9 @@ def run_Visualization_server(dir_pnet_result: str):
     return
 
 
-def run_pFN_Visualization_server(dir_pnet_result: str, jobID=1):
+def run_pFN_Visualization_cluster(dir_pnet_result: str, jobID=1):
     """
-    Run preconfigured visualizations for pFNs in server mode
+    Run preconfigured visualizations for pFNs in cluster computation
 
     :param dir_pnet_result: directory of the pnet result folder
     :param jobID: jobID starting from 1
