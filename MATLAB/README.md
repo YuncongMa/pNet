@@ -2,8 +2,7 @@
 The MATLAB version offers both GUI and scripts.
 
 ## GUI
-The MATLAB version features an intuitive user interface (/MATLAB/GUI/pNet.mlapp) to configure the workflow, carry out the computation and check the results. <br />
-Video tutorial is availabel at https://github.com/YuncongMa/pNet/blob/main/MATLAB_Old/Video_Tutorial/Demo_Video.gif
+The MATLAB version features an intuitive user interface (/MATLAB/pNet.mlapp) to configure the workflow, carry out the computation and check the results. <br />
 
 <p align="center">
 <img src="https://github.com/YuncongMa/pNet/assets/20191790/f5168794-63d2-4076-92c9-8ca3d78e478f" width="800">
@@ -18,7 +17,7 @@ Video tutorial is availabel at https://github.com/YuncongMa/pNet/blob/main/MATLA
 (G) A module for quality control, showing one scan with two FNs mismatched to their group-level counterparts. <br />
 
 ## Manual
-A comprehensive manual about the GUI can be found at https://github.com/YuncongMa/pNet/blob/main/MATLAB/MATLAB_Manual.pdf
+A comprehensive manual about the GUI can be found at https://github.com/YuncongMa/pNet/blob/main/MATLAB/Manual_MATLAB.pdf
 
 # Installation
 1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall into MATLAB APPS. Compiled pNet is located in folder Compiled_Runtime. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
