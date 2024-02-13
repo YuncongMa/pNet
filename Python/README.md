@@ -6,7 +6,12 @@
 * It provides both Numpy and PyTorch versions for easy code development and fast computation.
 
 ## Deployment
+**Download pNet**
 
+Change <User's directory> to a desired directory
+```
+git clone https://github.com/YuncongMa/pNet <User's directory>
+```
 This Python version is tested in Anaconda (https://www.anaconda.com) to create an environment. <br />
 **Create a new conda environment for pNet**
 ```
@@ -34,12 +39,6 @@ Navigate to the Python version folder /pNet/Python, and run the following comman
 docker build -t pnet .
 ```
 
-**Download pNet**
-
-Change <User's directory> to a desired directory
-```
-git clone https://github.com/YuncongMa/pNet <User's directory>
-```
 
 ## User Interfaces
 The Python version offers different user interfaces for users with distinct coding skills. Two code examples are shown on the right. pNet offers minimal setup options for fast deployment as shown in ‘pNet.workflow_simple’. pNet also provides cluster computing with additional setups in the ‘pNet.setup_cluster’ for the cluster environment.
