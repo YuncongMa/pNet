@@ -28,6 +28,12 @@ pip install matplotlib surfplot ggplot
 python -m pip install -U scikit-image
 ```
 
+**Docker image**
+Navigate to the Python version folder /pNet/Python, and run the following command to build a docker image
+```
+docker build -t pnet .
+```
+
 **Download pNet**
 
 Change <User's directory> to a desired directory
