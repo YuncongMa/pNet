@@ -1,0 +1,54 @@
+backports.zoneinfo==0.2.1
+brainspace==0.1.10
+certifi==2023.11.17
+charset-normalizer==3.3.2
+contourpy==1.1.1
+cycler==0.12.1
+docker==7.0.0
+filelock @ file:///home/conda/feedstock_root/build_artifacts/filelock_1698714947081/work
+fonttools==4.47.2
+fsspec @ file:///home/conda/feedstock_root/build_artifacts/fsspec_1702335961905/work
+gmpy2 @ file:///Users/runner/miniforge3/conda-bld/gmpy2_1666808645076/work
+h5py==3.10.0
+idna==3.6
+imageio==2.33.1
+importlib-resources @ file:///home/conda/feedstock_root/build_artifacts/importlib_resources_1699364556997/work
+Jinja2 @ file:///home/conda/feedstock_root/build_artifacts/jinja2_1704966972576/work
+joblib==1.3.2
+kiwisolver==1.4.5
+lazy_loader==0.3
+loguru @ file:///Users/runner/miniforge3/conda-bld/loguru_1695547463757/work
+lxml==5.1.0
+MarkupSafe @ file:///Users/runner/miniforge3/conda-bld/markupsafe_1695367606033/work
+matplotlib==3.7.4
+mizani==0.9.3
+mpmath @ file:///home/conda/feedstock_root/build_artifacts/mpmath_1678228039184/work
+networkx @ file:///home/conda/feedstock_root/build_artifacts/networkx_1667391556261/work
+nibabel @ file:///home/conda/feedstock_root/build_artifacts/nibabel_1702339005637/work
+nilearn==0.10.2
+numpy @ file:///Users/runner/miniforge3/conda-bld/numpy_1687808486671/work
+packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1696202382185/work
+pandas==2.0.3
+patsy==0.5.6
+pillow==10.2.0
+plotnine==0.12.4
+pyparsing==3.1.1
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyWavelets==1.4.1
+requests==2.31.0
+scikit-image==0.21.0
+scikit-learn==1.3.2
+scipy==1.10.1
+six==1.16.0
+statsmodels==0.14.1
+surfplot==0.2.0
+sympy @ file:///home/conda/feedstock_root/build_artifacts/sympy_1684180540116/work
+threadpoolctl==3.2.0
+tifffile==2023.7.10
+torch @ file:///Users/runner/miniforge3/conda-bld/libtorch_1705359372046/work/torch-2.1.0.post102-cp38-cp38-macosx_10_13_x86_64.whl#sha256=6fe0bd4bd5b29a36528c3cd94174214a67354df46a668cf636da72036550a4b9
+typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1702176139754/work
+tzdata==2023.4
+urllib3==2.1.0
+vtk==9.0.3
+zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1695255097490/work
