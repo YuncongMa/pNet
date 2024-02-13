@@ -1,6 +1,6 @@
 # Yuncong Ma, 10/2/2023
 
-import pNet
+import pnet
 
 # This is to run a step-by-step workflow setup in terminal
-pNet.workflow_guide()
+pnet.workflow_guide()

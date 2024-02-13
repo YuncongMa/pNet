@@ -28,7 +28,7 @@ def load_matlab_array(file_matlab: str,
 
     :param file_matlab: string
     :param variable_name: string
-    :return: data as nparray\
+    :return: data as nparray
 
     By Yuncong Ma, 9/6/2023
     """

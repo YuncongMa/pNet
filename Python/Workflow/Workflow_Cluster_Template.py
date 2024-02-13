@@ -1,11 +1,11 @@
 
-# setup all sub-folders in the pNet result folder
-dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT = pNet.setup_result_folder(dir_pnet_result)
+# setup all sub-folders in the pnet result folder
+dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, dir_pnet_STAT = pnet.setup_result_folder(dir_pnet_result)
 
 # ============== Setup ============== #
 # ============== Data Input
 # setup dataInput
-pNet.setup_scan_info(
+pnet.setup_scan_info(
     dir_pnet_dataInput=dir_pnet_dataInput,
     dataType=dataType, dataFormat=dataFormat,
     file_scan=file_scan, file_subject_ID=file_subject_ID,
@@ -16,7 +16,7 @@ pNet.setup_scan_info(
 # Volume and surface data types require different inputs to compute the brain template
 if file_Brain_Template is None:
     if dataType == 'Volume':
-        pNet.setup_brain_template(
+        pnet.setup_brain_template(
             dir_pnet_dataInput=dir_pnet_dataInput,
             dataType=dataType,
             templateFormat=templateFormat,
@@ -24,7 +24,7 @@ if file_Brain_Template is None:
             maskValue=maskValue
         )
     elif dataType == 'Surface':
-        pNet.setup_brain_template(
+        pnet.setup_brain_template(
             dir_pnet_dataInput=dir_pnet_dataInput,
             dataType=dataType,
             templateFormat=templateFormat,
@@ -34,7 +34,7 @@ if file_Brain_Template is None:
             file_surfL_inflated=file_surfL_inflated, file_surfR_inflated=file_surfR_inflated
         )
     elif dataType == 'Surface-Volume':
-        pNet.setup_brain_template(
+        pnet.setup_brain_template(
             dir_pnet_dataInput=dir_pnet_dataInput,
             dataType=dataType, dataFormat=dataFormat,
             templateFormat=templateFormat,
@@ -46,11 +46,11 @@ if file_Brain_Template is None:
         )
 
 else:
-    pNet.setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
+    pnet.setup_brain_template(dir_pnet_dataInput, file_Brain_Template)
 
 # ============== FN Computation
 if method == 'SR-NMF':
-    pNet.SR_NMF.setup_SR_NMF(
+    pnet.SR_NMF.setup_SR_NMF(
         dir_pnet_result=dir_pnet_result,
         K=K,
         Combine_Scan=Combine_Scan,
@@ -60,10 +60,10 @@ if method == 'SR-NMF':
         outputFormat=outputFormat
     )
     if FN_model_parameter is not None:
-        pNet.SR_NMF.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
+        pnet.SR_NMF.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
 
 elif method == 'GIG-ICA':
-    pNet.GIG_ICA.setup_GIG_ICA(
+    pnet.GIG_ICA.setup_GIG_ICA(
         dir_pnet_result=dir_pnet_result,
         K=K,
         Combine_Scan=Combine_Scan,
@@ -73,17 +73,17 @@ elif method == 'GIG-ICA':
         outputFormat=outputFormat
     )
     if FN_model_parameter is not None:
-        pNet.GIG_ICA.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
+        pnet.GIG_ICA.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
 
 # =============== Visualization
-pNet.setup_Visualization(
+pnet.setup_Visualization(
     dir_pnet_result=dir_pnet_result,
     synchronized_view=synchronized_view,
     synchronized_colorbar=synchronized_colorbar
 )
 
 # =============== Cluster
-pNet.setup_cluster(
+pnet.setup_cluster(
     dir_env=dir_env,
     dir_pnet=dir_pnet,
     dir_pnet_result=dir_pnet_result,
@@ -100,15 +100,15 @@ print('All setups are finished\n', flush=True)
 # ============== Run ============== #
 print('Start to run\n', flush=True)
 # FN Computation
-pNet.run_FN_computation_torch_cluster(dir_pnet_result)
+pnet.run_FN_computation_torch_cluster(dir_pnet_result)
 
 # Quality Control
-pNet.run_quality_control_torch_cluster(dir_pnet_result)
+pnet.run_quality_control_torch_cluster(dir_pnet_result)
 
 # Visualization
-pNet.run_Visualization_cluster(dir_pnet_result)
+pnet.run_Visualization_cluster(dir_pnet_result)
 
 # Web Report
-pNet.run_web_report(dir_pnet_result)
+pnet.run_web_report(dir_pnet_result)
 
 print('All runs are finished\n', flush=True)
