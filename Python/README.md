@@ -35,7 +35,9 @@ python -m pip install -U scikit-image
 
 **Docker image**
 
-Navigate to the Python version folder /pNet/Python, and run the following command to build a docker image
+pNet can be dockerized to be isolated from the operation system and hardware. 
+The Docker software can be downloaded from https://www.docker.com <br />
+In PyCharm, enable Docker for deployment (https://www.jetbrains.com/help/pycharm/docker.html), navigate to the Python version folder /pNet/Python, and run the following command to build a docker image. <br />
 ```
 docker build -t pnet .
 ```
@@ -81,7 +83,7 @@ This streamlines the setup and computation of pNet, including modules below
 
 ```
 # This is a comprehensive setting for pNet workflow 
-pNet.workflow(dir_pnet_result: str,
+pnet.workflow(dir_pnet_result: str,
              file_scan: str,
              dataType='Surface', dataFormat='HCP Surface (*.cifti, *.mat)',
              file_subject_ID=None, file_subject_folder=None, file_group_ID=None,
@@ -104,7 +106,7 @@ pNet.workflow(dir_pnet_result: str,
 
 ```
 # This is a minimal version of pNet workflow for fast deployment
-pNet.workflow_simple(dir_pnet_result: str,
+pnet.workflow_simple(dir_pnet_result: str,
                     dataType: str, dataFormat: str,
                     file_scan: str,
                     file_Brain_Template: str,
@@ -190,7 +192,7 @@ file_Brain_Template = pNet.Brain_Template.file_HCP_surf
 K = 17
 
 # Run pNet workflow
-pNet.workflow_simple(
+pnet.workflow_simple(
         dir_pnet_result=dir_pnet_result,
         dataType=dataType,
         dataFormat=dataFormat,
@@ -222,7 +224,7 @@ file_Brain_Template = pNet.Brain_Template.file_MNI_vol
 K = 17
 
 # Run pNet workflow
-pNet.workflow_simple(
+pnet.workflow_simple(
         dir_pnet_result=dir_pnet_result,
         dataType=dataType,
         dataFormat=dataFormat,
