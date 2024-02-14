@@ -33,13 +33,13 @@ pip install matplotlib surfplot ggplot
 python -m pip install -U scikit-image
 ```
 
-**Docker image**
+**Docker container**
 
 pNet can be dockerized to be isolated from the operation system and hardware. 
 The Docker software can be downloaded from https://www.docker.com .
 1. Enable Docker for deployment in PyCharm (https://www.jetbrains.com/help/pycharm/docker.html).
 2. Navigate to the Python version folder /pNet/Python.
-3. Run the following terminal command to build a docker image, which will generate a large image file ~6.7GB.
+3. Run the following terminal command to build a docker container, which will be a large image file ~6.7GB.
 
 ```
 docker build -t pnet .
