@@ -17,7 +17,7 @@
 
 
 # Installation
-1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall into MATLAB APPS. Compiled pNet is located in folder Compiled_Runtime. It requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
+1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall as a MATLAB APP. It can also be compiled into a software, which requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
 2. The Python version can run in Conda environment or with Docker (https://www.docker.com). The Python version is available at https://github.com/YuncongMa/pNet/tree/main/Python. Installation details can be found in the README located in the Python folder (https://github.com/YuncongMa/pNet/tree/main/Python#readme). 
 4. Additional installation information can be found in the help document (/MATLAB/Manual_MATLAB.pdf and /Python/Manual_Python.pdf).
 
