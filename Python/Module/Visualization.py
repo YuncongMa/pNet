@@ -1,4 +1,4 @@
-# Yuncong Ma, 2/8/2024
+# Yuncong Ma, 2/14/2024
 # Visualization module of pNet
 
 #########################################
@@ -1446,7 +1446,7 @@ def run_Visualization_cluster(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pnet result folder
     :return:
 
-    Yuncong Ma, 2/12/2024
+    Yuncong Ma, 2/14/2024
     """
 
     print('\nStart Visualization at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + '\n', flush=True)
@@ -1470,6 +1470,20 @@ def run_Visualization_cluster(dir_pnet_result: str):
                     pythonFile=os.path.join(dir_pnet_gFN, 'cluster_job_visualization.py'),
                     logFile=os.path.join(dir_pnet_gFN, 'cluster_job_visualization.log')
                     )
+    
+    # check gFN completion
+    wait_time = 30
+    flag_complete = 0
+    report_interval = 20
+    Count = 0
+    while flag_complete == 0:
+        time.sleep(wait_time)
+        Count += 1
+        if Count % report_interval == 0:
+            print(f'--> Found {np.sum(flag_complete)} finished jobs out of 1 at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
+        if os.path.isfile(os.path.join(dir_pnet_gFN, 'All.jpg')):
+            flag_complete = 1
+            break
 
     # Information about scan list
     file_subject_folder = os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt')
@@ -1495,18 +1509,6 @@ def run_Visualization_cluster(dir_pnet_result: str):
 
     # check completion
     wait_time = 30
-    # check gFN
-    flag_complete = 0
-    report_interval = 20
-    Count = 0
-    while flag_complete == 0:
-        time.sleep(wait_time)
-        Count += 1
-        if Count % report_interval == 0:
-            print(f'--> Found {np.sum(flag_complete)} finished jobs out of 1 at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
-        if os.path.isfile(os.path.join(dir_pnet_gFN, 'All.jpg')):
-            flag_complete = 1
-            break
     # check pFN
     flag_complete = np.zeros(nFolder)
     report_interval = 20
