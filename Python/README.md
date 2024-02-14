@@ -36,8 +36,11 @@ python -m pip install -U scikit-image
 **Docker image**
 
 pNet can be dockerized to be isolated from the operation system and hardware. 
-The Docker software can be downloaded from https://www.docker.com <br />
-In PyCharm, enable Docker for deployment (https://www.jetbrains.com/help/pycharm/docker.html), navigate to the Python version folder /pNet/Python, and run the following command to build a docker image. <br />
+The Docker software can be downloaded from https://www.docker.com .
+1. Enable Docker for deployment in PyCharm (https://www.jetbrains.com/help/pycharm/docker.html).
+2. Navigate to the Python version folder /pNet/Python.
+3. Run the following command to build a docker image.
+
 ```
 docker build -t pnet .
 ```
