@@ -1,4 +1,4 @@
-# Yuncong Ma, 1/25/2024
+# Yuncong Ma, 2/14/2024
 # Quality control module of pNet
 
 #########################################
@@ -232,15 +232,17 @@ def visualize_quality_control(dir_pnet_result: str):
     :param dir_pnet_result: directory of the pNet result folder
     :return: None
 
-    Yuncong Ma, 1/25/2024
+    Yuncong Ma, 2/14/2024
     """
 
     # Setup sub-folders in pNet result
     dir_pnet_dataInput, dir_pnet_FNC, dir_pnet_gFN, dir_pnet_pFN, dir_pnet_QC, _ = setup_result_folder(dir_pnet_result)
 
     # get settings
+    settingDataInput = load_json_setting(os.path.join(dir_pnet_dataInput, 'Setting.json'))
     settingFNC = load_json_setting(os.path.join(dir_pnet_FNC, 'Setting.json'))
     K = settingFNC['K']
+    Combine_Scan = settingDataInput['Combine_Scan']
 
     # folder info
     list_subject_folder = load_txt_list(os.path.join(dir_pnet_dataInput, 'Subject_Folder.txt'))
@@ -278,68 +280,35 @@ def visualize_quality_control(dir_pnet_result: str):
 
     sio.savemat(os.path.join(dir_pnet_QC, 'Result.mat'), {'Result': Result}, do_compression=True)
 
-    # # visualization for spatial correspondence
-    # before = np.nanmean(Spatial_Correspondence, axis=1)
-    #
-    # Axes_Name = ['Personalized Functional Networks', 'Spatial Correspondence']
-    # Group_Name = ['']
-    # Group_Color = ['dodgerblue']
-    #
-    # n = before.shape[0]
-    #
-    # df = pd.DataFrame({
-    #     Axes_Name[1]: np.hstack([before]),
-    #     Axes_Name[0]: np.repeat(Group_Name, n),
-    #     'id': np.hstack([range(n)])
-    # })
-    #
-    # df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
-    # df.head()
-    #
-    # line_size = 0.6
-    # # set the transparency for filling area
-    # fill_alpha = 0.8
-    # point_alpha = 0.5
-    #
-    # df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
-    # df.head()
-    #
-    # shift = 0.1
-    #
-    # def alt_sign(x):
-    #     return (-1) ** x
-    #
-    # m1 = aes(x=stage(Axes_Name[0], after_scale='x+shift*alt_sign(x)'))              # shift outward
-    #
-    # Figure = (ggplot(df, aes(Axes_Name[0], Axes_Name[1], fill=Axes_Name[0]))
-    #  + geom_violin(m1, style='left-right', alpha=fill_alpha, size=line_size, show_legend=False)
-    #  + geom_boxplot(width=shift, alpha=fill_alpha, size=line_size, outlier_alpha=point_alpha, show_legend=False)
-    #  + scale_fill_manual(values=Group_Color)
-    #  + theme_classic()
-    #  + theme(figure_size=(5, 4),
-    #          axis_title=element_text(family='Arial', size=16, weight='bold', color='black'),
-    #          axis_text=element_text(family='Arial', size=14, weight='bold', color='black'),
-    #          axis_line=element_line(size=2, color='black'),)
-    # )
-    #
-    # Figure.save(os.path.join(dir_pnet_QC, 'Spatial_Correspondence.jpg'), verbose=False, dpi=500)
-
     # visualization for spatial correspondence
-    before = np.nanmean(Spatial_Correspondence-Delta_Spatial_Correspondence, axis=1)
-    after = np.nanmean(Spatial_Correspondence, axis=1)
+    # minimum of delta spatial correspondence
+    min_delta_SC = np.min(Delta_Spatial_Correspondence, axis=1)
+    min_delta_SC[np.isnan(min_delta_SC)] = 0
+    passed = min_delta_SC[min_delta_SC >= 0]
+    ps_passed = np.where(min_delta_SC >= 0)[0]
 
-    Axes_Name = ['Network Correspondence', 'Spatial Correspondence']
-    Group_Name = ['Unmatched', 'Matched']
-    Group_Color = ['tomato', 'dodgerblue']
-    Line_Color = 'gray'
+    if Combine_Scan:
+        Axes_Name = ['Subjects Passed QC', 'Delta Spatial Correspondence']
+    else:
+        Axes_Name = ['Scans Passed QC', 'Delta Spatial Correspondence']
+    Group_Name = ['']
+    Group_Color = ['dodgerblue']
 
-    n = before.shape[0]
+    n = passed.shape[0]
 
     df = pd.DataFrame({
-        Axes_Name[1]: np.hstack([before, after]),
+        Axes_Name[1]: np.hstack([passed]),
         Axes_Name[0]: np.repeat(Group_Name, n),
-        'id': np.hstack([range(n), range(n)])
+        'id': np.hstack([range(n)])
     })
+
+    df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
+    df.head()
+
+    line_size = 0.6
+    # set the transparency for filling area
+    fill_alpha = 0.8
+    point_alpha = 0.5
 
     df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
     df.head()
@@ -349,46 +318,156 @@ def visualize_quality_control(dir_pnet_result: str):
     def alt_sign(x):
         return (-1) ** x
 
-    m1 = aes(x=stage(Axes_Name[0], after_scale='x+shift*alt_sign(x)'))  # shift outward
-    m2 = aes(x=stage(Axes_Name[0], after_scale='x-shift*alt_sign(x)'), group='id')  # shift inward
+    m1 = aes(x=stage(Axes_Name[0], after_scale='x+shift*alt_sign(x)'))              # shift outward
+    m2 = aes(x=stage(Axes_Name[0], after_scale='x-shift*alt_sign(x)'))              # shift inward
 
-    line_size = 0.6
-    # set the transparency for filling area
-    fill_alpha = 0.8
-    point_alpha = 0.5
-    # set the transparency for lines
-    if n < 10:
-        line_alpha = 1
-    elif n < 50:
-        line_alpha = 0.5
-    elif n < 100:
-        line_alpha = 0.3
-    elif n < 500:
-        line_alpha = 0.2
-    elif n < 1000:
-        line_alpha = 0.1
-    else:
-        line_alpha = 0.05
+    df_additional = pd.DataFrame({Axes_Name[0]: [0, 1], Axes_Name[1]: [0, 0]})
 
     Figure = (ggplot(df, aes(Axes_Name[0], Axes_Name[1], fill=Axes_Name[0]))
-              + geom_violin(m1, style='left-right', alpha=fill_alpha, size=line_size, show_legend=False)
-              + geom_line(m2, color=Line_Color, size=line_size, alpha=line_alpha)
-              + geom_point(m2, color='none', alpha=point_alpha, size=2, show_legend=False)
-              + geom_boxplot(width=shift, alpha=fill_alpha, size=line_size, outlier_alpha=point_alpha,
-                             show_legend=False)
-              + scale_fill_manual(values=Group_Color)
-              + theme_classic()
-              + theme(figure_size=(4, 4),
-                      axis_title=element_text(family='Arial', size=16, weight='bold', color='black'),
-                      axis_text=element_text(family='Arial', size=14, weight='bold', color='black'),
-                      axis_line=element_line(size=2, color='black'), )
-              )
+     + geom_violin(m1, style='left-right', alpha=fill_alpha, size=line_size, show_legend=False)
+     + geom_boxplot(width=shift, alpha=fill_alpha, size=line_size, outlier_alpha=point_alpha, show_legend=False)
+     + geom_point(m2, color='none', alpha=point_alpha, size=2, show_legend=False)
+     + scale_fill_manual(values=Group_Color)
+     + theme_classic()
+     + theme(figure_size=(4, 4),
+             axis_title=element_text(family='Arial', size=16, weight='bold', color='black'),
+             axis_text=element_text(family='Arial', size=14, weight='bold', color='black'),
+             axis_line=element_line(size=2, color='black'),)
+    )
+    # Figure += geom_line(df_additional, aes(x=Axes_Name[0], y=Axes_Name[1]), color='tomato', size=line_size, alpha=1)
 
-    Figure.save(os.path.join(dir_pnet_QC, 'Spatial_Correspondence.jpg'), verbose=False, dpi=500)
+    Figure.save(os.path.join(dir_pnet_QC, 'Delta_Spatial_Correspondence.jpg'), verbose=False, dpi=500)
+
+    # # visualization for spatial correspondence
+    # before = np.nanmean(Delta_Spatial_Correspondence)
+    # after = np.nanmean(Spatial_Correspondence, axis=1)
+    #
+    # Axes_Name = ['Network Correspondence', 'Spatial Correspondence']
+    # Group_Name = ['Unmatched', 'Matched']
+    # Group_Color = ['tomato', 'dodgerblue']
+    # Line_Color = 'gray'
+    #
+    # n = before.shape[0]
+    #
+    # df = pd.DataFrame({
+    #     Axes_Name[1]: np.hstack([before, after]),
+    #     Axes_Name[0]: np.repeat(Group_Name, n),
+    #     'id': np.hstack([range(n), range(n)])
+    # })
+    #
+    # df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
+    # df.head()
+    #
+    # shift = 0.1
+    #
+    # def alt_sign(x):
+    #     return (-1) ** x
+    #
+    # m1 = aes(x=stage(Axes_Name[0], after_scale='x+shift*alt_sign(x)'))  # shift outward
+    # m2 = aes(x=stage(Axes_Name[0], after_scale='x-shift*alt_sign(x)'), group='id')  # shift inward
+    #
+    # line_size = 0.6
+    # # set the transparency for filling area
+    # fill_alpha = 0.8
+    # point_alpha = 0.5
+    # # set the transparency for lines
+    # if n < 10:
+    #     line_alpha = 1
+    # elif n < 50:
+    #     line_alpha = 0.5
+    # elif n < 100:
+    #     line_alpha = 0.3
+    # elif n < 500:
+    #     line_alpha = 0.2
+    # elif n < 1000:
+    #     line_alpha = 0.1
+    # else:
+    #     line_alpha = 0.05
+    #
+    # Figure = (ggplot(df, aes(Axes_Name[0], Axes_Name[1], fill=Axes_Name[0]))
+    #           + geom_violin(m1, style='left-right', alpha=fill_alpha, size=line_size, show_legend=False)
+    #           + geom_line(m2, color=Line_Color, size=line_size, alpha=line_alpha)
+    #           + geom_point(m2, color='none', alpha=point_alpha, size=2, show_legend=False)
+    #           + geom_boxplot(width=shift, alpha=fill_alpha, size=line_size, outlier_alpha=point_alpha,
+    #                          show_legend=False)
+    #           + scale_fill_manual(values=Group_Color)
+    #           + theme_classic()
+    #           + theme(figure_size=(4, 4),
+    #                   axis_title=element_text(family='Arial', size=16, weight='bold', color='black'),
+    #                   axis_text=element_text(family='Arial', size=14, weight='bold', color='black'),
+    #                   axis_line=element_line(size=2, color='black'), )
+    #           )
+    #
+    # Figure.save(os.path.join(dir_pnet_QC, 'Spatial_Correspondence.jpg'), verbose=False, dpi=500)
+
+    # # visualization for spatial correspondence
+    # # minimum of delta spatial correspondence
+    # min_delta_SC = np.min(Delta_Spatial_Correspondence, axis=1)
+    # min_delta_SC[np.isnan(min_delta_SC)] = 0
+    # failed = pd.Series(min_delta_SC[min_delta_SC < 0], index=np.where(min_delta_SC < 0)[0])
+    # passed = pd.Series(min_delta_SC[min_delta_SC >= 0], index=np.where(min_delta_SC >= 0)[0])
+    #
+    # Axes_Name = ['Quality Control', 'Delta Spatial Correspondence']
+    # Group_Name = ['Failed', 'Passed']
+    # Group_Color = ['tomato', 'dodgerblue']
+    #
+    # # Align the lengths of the two columns
+    # max_len = max(len(failed), len(passed))
+    # if len(failed) > 0:
+    #     failed = failed.reindex(range(max_len)).fillna(0)
+    #     all_pass = False
+    # else:
+    #     failed = pd.Series(np.full(max_len, np.NAN), index=range(max_len))
+    #     all_pass = True
+    # passed = passed.reindex(range(max_len)).fillna(0)
+    #
+    # # Create DataFrame
+    # df = pd.DataFrame({
+    #     Axes_Name[1]: np.hstack([failed.values, passed.values]),
+    #     Axes_Name[0]: np.repeat(Group_Name, max_len),
+    #     'id': np.hstack([range(max_len), range(max_len)])
+    # })
+    #
+    # df[Axes_Name[0]] = df[Axes_Name[0]].astype(pdtypes.CategoricalDtype(categories=Group_Name))
+    # df.head()
+    #
+    # shift = 0.1
+    #
+    # def alt_sign(x):
+    #     return (-1) ** x
+    #
+    # if all_pass:
+    #     m1 = aes(x=stage(Axes_Name[0], after_scale='x+shift*alt_sign(x)'))  # shift outward
+    #     m2 = aes(x=stage(Axes_Name[0], after_scale='x-shift*alt_sign(x)'))  # shift inward
+    #     violin_style = 'right'
+    # else:
+    #     m1 = aes(x=stage(Axes_Name[0], after_scale='x+shift*alt_sign(x)'))  # shift outward
+    #     m2 = aes(x=stage(Axes_Name[0], after_scale='x-shift*alt_sign(x)'))  # shift inward
+    #     violin_style = 'left-right'
+    #
+    # line_size = 0.6
+    # # set the transparency for filling area
+    # fill_alpha = 0.8
+    # point_alpha = 0.5
+    #
+    # Figure = (ggplot(df, aes(Axes_Name[0], Axes_Name[1], fill=Axes_Name[0]))
+    #           + geom_violin(m1, style=violin_style, alpha=fill_alpha, size=line_size, show_legend=False)
+    #           + geom_point(m2, color='none', alpha=point_alpha, size=2, show_legend=False)
+    #           + geom_boxplot(width=shift, alpha=fill_alpha, size=line_size, outlier_alpha=point_alpha,
+    #                          show_legend=False)
+    #           + scale_fill_manual(values=Group_Color)
+    #           + theme_classic()
+    #           + theme(figure_size=(4, 4),
+    #                   axis_title=element_text(family='Arial', size=16, weight='bold', color='black'),
+    #                   axis_text=element_text(family='Arial', size=14, weight='bold', color='black'),
+    #                   axis_line=element_line(size=2, color='black'), )
+    #           )
+    #
+    # Figure.save(os.path.join(dir_pnet_QC, 'Delta_Spatial_Correspondence.jpg'), verbose=False, dpi=500)
 
     # visualization for functional coherence
-    before = np.nanmean(Functional_Coherence_Control, axis=1)
-    after = np.nanmean(Functional_Coherence, axis=1)
+    before = np.nanmean(Functional_Coherence_Control[ps_passed, :], axis=1)
+    after = np.nanmean(Functional_Coherence[ps_passed, :], axis=1)
 
     Axes_Name = ['Functional Network Definition', 'Functional Coherence']
     Group_Name = ['Group', 'Personalized']

@@ -1,7 +1,8 @@
-# Yuncong Ma, 2/9/2024
+# Yuncong Ma, 2/14/2024
 # Make a web page based report for fast visual examination
 
 from Module.Visualization import *
+import shutil
 
 
 dir_python = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +15,7 @@ def run_web_report(dir_pnet_result: str):
     :param dir_pnet_result:
     :return:
 
-    Yuncong Ma, 2/9/2024
+    Yuncong Ma, 2/14/2024
     """
 
     # get directories of sub-folders
@@ -39,6 +40,7 @@ def run_web_report(dir_pnet_result: str):
     # load basic settings
     dataType = setting['Data_Input']['Data_Type']
     dataFormat = setting['Data_Input']['Data_Format']
+    Combine_Scan = setting['Data_Input']['Combine_Scan']
 
     # info about the fMRI dataset
     file_scan = os.path.join(dir_pnet_dataInput, 'Scan_List.txt')
@@ -55,11 +57,12 @@ def run_web_report(dir_pnet_result: str):
     list_subject_folder_unique, folder_index = np.unique(list_subject_folder, return_index=True)
     nFolder = len(list_subject_folder_unique)
 
+    # =========== Summary =========== #
     # template for web page
     template_summary = os.path.join(dir_python, 'Web_Template_Summary.html')
 
     # Generate the summary web page
-    file_summary = os.path.join(dir_pnet_result, 'Summary.html')
+    file_summary = os.path.join(dir_pnet_result, 'Report.html')
     pnet_FN_method = setting['FN_Computation']['Method']
     K = setting['FN_Computation']['K']
 
@@ -109,19 +112,27 @@ def run_web_report(dir_pnet_result: str):
         if list_subject_ID[folder_index[i]] != pre_sub:
             link_pFN = link_pFN + "<br />"
             pre_sub = list_subject_ID[folder_index[i]]
-        file_pFN_indv = './' + os.path.join('Personalized_FN', list_subject_folder_unique[i], 'All(Compressed).jpg')
+        file_pFN_indv = './' + os.path.join('Personalized_FN', list_subject_folder_unique[i], 'Report.html')
         link_pFN = link_pFN + f" <a href='{file_pFN_indv}' target='_blank' title='{list_subject_folder_unique[i]}'>({list_subject_folder_unique[i]})</a>\n"
     html_as_string = html_as_string.replace('{$link_pFN$}', str(link_pFN))
     # QC
     Result = load_matlab_single_variable(os.path.join(dir_pnet_QC, 'Result.mat'))
+    n_pass = np.sum(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) >= 0)
     n_missmatch = np.sum(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)
     ps_missmatch = np.where(np.min(Result['Delta_Spatial_Correspondence'][0, 0], axis=1) < 0)[0]
-    if n_missmatch == 0:
-        text_qc = 'pFNs of all scans passed QC. <br />'
+    scan_subject = ''
+    if Combine_Scan:
+        scan_subject = 'subjects'
     else:
-        text_qc = 'There are ' + str(n_missmatch) + ' scans failed the QC, meaning that they have at least one pFN miss matched. <br />'
+        scan_subject = 'scans'
+    if n_missmatch == 0:
+        text_qc = 'pFNs of all '+str(n_pass+n_missmatch)+' '+scan_subject+' passed QC. <br />'
+    else:
+        text_qc = 'There are ' + str(n_pass) + ' out of ' + str(n_pass+n_missmatch) + ' '+scan_subject+' passed QC. <br />\n' +\
+                  'There are ' + str(n_missmatch) +' scans do not pass QC, meaning that they have at least one pFN showing smaller similarity to their group-level counterpart. <br />\n'
+        text_qc += 'Below are the individual reports of '+scan_subject+' that do not pass QC. <br />\n'
         for i, ps in enumerate(ps_missmatch):
-            file_pFN_indv = './' + os.path.join('Personalized_FN', list_subject_folder_unique[ps], 'All(Compressed).jpg')
+            file_pFN_indv = './' + os.path.join('Personalized_FN', list_subject_folder_unique[ps], 'Report.html')
             text_qc = text_qc + f" <a href='{file_pFN_indv}' target='_blank' title='{list_subject_folder_unique[ps]}'>({list_subject_folder_unique[ps]})</a>\n"
             if (i+1) % 10 == 0:
                 text_qc = text_qc + " <br />"
@@ -129,6 +140,51 @@ def run_web_report(dir_pnet_result: str):
 
     file_summary = open(file_summary, 'w')
     print(html_as_string, file=file_summary)
+    file_summary.close()
+
+    # =========== Individual =========== #
+    # template for web page
+    template_individual = os.path.join(dir_python, 'Web_Template_Individual.html')
+    pre_sub = ''
+    delta_SC = Result['Delta_Spatial_Correspondence'][0, 0]
+    for i in range(nFolder):
+        if list_subject_ID[folder_index[i]] != pre_sub:
+            link_pFN = link_pFN + "<br />"
+            pre_sub = list_subject_ID[folder_index[i]]
+            with open(template_individual, 'r') as file:
+                html_as_string = file.read()
+            # copy gFN figure
+            shutil.copyfile(os.path.join(dir_pnet_gFN, 'All(Compressed).jpg'), os.path.join(dir_pnet_pFN, list_subject_folder_unique[i], 'gFN_All(Compressed).jpg'))
+            # report title
+            html_as_string = html_as_string.replace('{$subject_info$}', str(pre_sub))
+            report_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+            html_as_string = html_as_string.replace('{$report_time$}', str(report_time))
+            # setting
+            html_as_string = html_as_string.replace('{$pnet_FN_method$}', str(pnet_FN_method))
+            html_as_string = html_as_string.replace('{$K$}', str(K))
+            html_as_string = html_as_string.replace('{$dataType$}', str(dataType))
+            html_as_string = html_as_string.replace('{$dataFormat$}', str(dataFormat))
+            html_as_string = html_as_string.replace('{$nScan$}', str(nScan))
+            html_as_string = html_as_string.replace('{$nSubject$}', str(nSubject))
+            html_as_string = html_as_string.replace('{$text_gFN$}', str(text_gFN))
+
+            if np.sum(delta_SC[i, :] < 0) == 0:
+                text_qc = 'All pFNs passed QC. All of them show higher spatial similarity to their group-level counterparts that others.'
+            else:
+                text_qc = f'This pFN result violates QC, meaning that some pFNs show lower spatial similarity to their group-level counterparts that others. <br /> \n' \
+                          f'<br />\nDetails are below. <br />\n'
+                Result = load_matlab_single_variable(os.path.join(dir_pnet_QC, list_subject_folder_unique[i], 'Result.mat'))
+                Miss_Match = Result['Miss_Match'][0, 0]
+                for j in range(Miss_Match.shape[0]):
+                    text_qc += f'pFN {Miss_Match[j, 0]} is more similar to gFN {Miss_Match[j, 1]} <br />\n'
+
+            html_as_string = html_as_string.replace('{$text_qc$}', str(text_qc))
+
+            file_individual = os.path.join(dir_pnet_pFN, list_subject_folder_unique[i], 'Report.html')
+            file_individual = open(file_individual, 'w')
+            print(html_as_string, file=file_individual)
+            file_individual.close()
+
 
 
 

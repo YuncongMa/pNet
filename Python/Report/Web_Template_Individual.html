@@ -8,7 +8,7 @@
 
 <h1>pNet Report</h1>
 <text style="font-size:24px;">
-    This is a brief report summarizing the results obtained using pNet. <br />
+    This is a brief report summarizing individual results in '{$subject_info$}' obtained using pNet. <br />
     pNet is an open-source toolbox <a href="https://github.com/YuncongMa/pNet" target="_blank">(GitHub link)</a> to obtain personalized functional networks from fMRI data. <br />
     pNet is developed by Yong's lab <a href="https://www.med.upenn.edu/machine-learning-biomed-data/" target="_blank">(lab link)</a>. <br />
     Report is generated at {$report_time$}
@@ -29,32 +29,21 @@
     {$text_gFN$}
 </text>
 <p align="center">
-    <img src='{$figure_gFN$}', width="1000px">
+    <img src='./gFN_All(Compressed).jpg', width="1000px">
 </p>
 
 <h2>Personalized Functional Networks (pFNs)</h2>
-<text style="font-size:20px;">
-    A few examples of personalized FNs derived from several subjects are shown as below. <br />
-    <a href="#all_pFNs">Links to all pFNs are at the end of this web report.</a>
-</text>
 <p align="center">
-<img src='{$pFN_example$}', width="1000px">
+<img src='./All(Compressed).jpg', width="1000px">
 </p>
 
 <h2>Quality Control (QC)</h2>
 <text style="font-size:20px;">
     The QC examines spatial correspondence and functional coherence of personalized FNs to ensure that the personalized FNs have higher functional homogeneity than their group-level counterparts and maintain good spatial correspondence with their group-level counterparts.  <br />
 </text>
-<p align="center">
-    <img src='./Quality_Control/Delta_Spatial_Correspondence.jpg' width="500" hspace="50">
-    <img src='./Quality_Control/Functional_Coherence.jpg' width="500" hspace="50">
-</p>
 <text style="font-size:20px;">
     The delta spatial correspondence measures the minimum difference of spatial similarity between pFNs and their group counterparts. <br />
-    The functional coherence measures the average of weighted mean of the correlation coefficients between the time courses of each FN and vertex/voxel. <br />
-    <br />
-    Failed scans will show negative delta spatial correspondence, indicating that there is at least one pFN has higher spatial similarity to a different gFN. <br />
-    The personalized FNs show enhanced functional coherence while maintaining spatial correspondence to their group counterparts. <br />
+    The functional coherence of each FN is measured by a weighted mean of the correlation coefficients between the time courses of all the voxels within the FN and its centroid time course that was calculated as a weighted mean time course over the FN with its voxel-wise loadings as weights. <br />
     {$text_qc$}
 </text>
 
@@ -76,16 +65,6 @@
     <br />
     [8] Zhou, Z. (2023). Multiscale functional connectivity patterns of the aging brain learned from harmonized rsfMRI data of the multi-cohort iSTAGING study. NeuroImage, 269, 119911.
 </text>
-
-<a name="Reports of Individual Results">
-    <h2>Click links below to check individual results</h2>
-    <text style="font-size:20px;">
-        Scans are grouped by subject ID <br /><br />
-    </text>
-    <text style="font-size:18px;">
-        {$link_pFN$}
-    </text>
-</a>
 
 </body>
 </html>
