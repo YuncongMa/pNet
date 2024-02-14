@@ -41,8 +41,8 @@ This will generate a Python script to run a workflow
 </p>
 
 # Cluster Computation
-pNet provides bash scripts to interact with cluster environment for both MATLAN and Python versions. <br />
-The MATLAB version uses bash scripts (/MATLAN/Bash_Script) to perform customized pNet workflows. Users need to submit those bash jobs using terminal commands. <br />
+pNet provides bash scripts to interact with cluster environment for both MATLAB and Python versions. <br />
+The MATLAB version uses bash scripts (/MATLAB/Bash_Script) to perform customized pNet workflows. Users need to submit those bash jobs using terminal commands. <br />
 The Python version uses a Python script to generate bash scripts and submit bash jobs to the cluster.
 
 # Manual
