@@ -9,8 +9,8 @@
 </p>
 
 * This toolbox is designed to extract personalized functional networks from fMRI data.  <br />
-* It is implemented with our spatial-regularized non-negative matrix factorization (**SR-NMF**) (https://doi.org/10.1016/j.neuroimage.2017.05.004) and Group-Information-Guided Independent Component Analysis (**GIG-ICA**) (https://dx.doi.org/10.1016/j.neuroimage.2012.11.008) to compute personalized FNs. <br />
-* It works with both MATLAB (https://github.com/YuncongMa/pNet/tree/main/MATLAB) and Python (https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow script in Python.<br />
+* It is implemented with our spatial-regularized non-negative matrix factorization [**SR-NMF**](https://doi.org/10.1016/j.neuroimage.2017.05.004) and Group-Information-Guided Independent Component Analysis [**GIG-ICA**](https://dx.doi.org/10.1016/j.neuroimage.2012.11.008) to compute personalized FNs. <br />
+* It works with both [MATLAB](https://github.com/YuncongMa/pNet/tree/main/MATLAB) and [Python](https://github.com/YuncongMa/pNet/tree/main/Python), and comes with a user-friendly GUI interface in MATLAB, as well as a step-by-step guide to setup a customized workflow script in Python.<br />
 * It supports both surface and volume based fMRI data, and multiple fMRI formats, including CIFTI, MGH, MGZ, NIFTI, and MAT.<br />
 * It allows input of precomputed group-level FN definition. <br />
 * It outputs results of both group-level and personalized FNs, and their visualization graphs, as well as quality control and web-based report.
@@ -18,7 +18,7 @@
 
 # Installation
 1. The MATLAB version requires MATLAB no older than 2021A. Its GUI version can be accessed by openning pNet.mlapp, or install the pNet.mlappinstall as a MATLAB APP. It can also be compiled into a software, which requires the free MATLAB runtime software at https://www.mathworks.com/products/compiler/matlab-runtime.html. Details can be found in the README.txt in each subfolder containing the compiled pNet.
-2. The Python version can run in Conda environment or with Docker (https://www.docker.com). The Python version is available at https://github.com/YuncongMa/pNet/tree/main/Python. Installation details can be found in the README located in the Python folder (https://github.com/YuncongMa/pNet/tree/main/Python#readme). 
+2. The Python version can run in Conda environment or with Docker (https://www.docker.com). The Python version is available at https://github.com/YuncongMa/pNet/tree/main/Python. Installation details can be found in the README located in the Python folder (https://github.com/YuncongMa/pNet/tree/main/Python#readme). The docker file can be downloaded from [Google Drive](https://drive.google.com/drive/folders/15xBnVnyV79fzmjXG-VrCvtRs_nJa2vEA?usp=share_link).
 4. Additional installation information can be found in the help document (/MATLAB/Manual_MATLAB.pdf and /Python/Manual_Python.pdf).
 
 
