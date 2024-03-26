@@ -252,13 +252,14 @@ The Python version also offers preconfigured visualizations consistent to the MA
 The Python version also generate figure for QC report to investigate the benefit of using personalized FN modeling.
 
 <p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/22f08f1f-a085-4df8-907b-1f7ae0e23c13"  width="600">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/f12b60b5-124c-4383-87bb-85eebad694a8"  width="600">
 </p>
+
 
 ### Report
 pNet generates a HTML-based report to check gFNs, all pFNs with hyperlinks, and quality control.
 <p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/9ee50680-15c9-4106-a2ff-1814904219ce"  width="600">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/f2c8a723-dc6d-4df0-a508-a1280e68482e"  width="600">
 </p>
 
 
