@@ -108,14 +108,14 @@ Personalized FN modeling methods will enhance the functional homogeneity (ex. av
 pNet generates a file report for the examination about the one-to-one match between gFNs and pFNs, with another figure about the spatial correspondence.
 
 <p align="center">
-  <img src= "https://github.com/YuncongMa/pNet/assets/20191790/22f08f1f-a085-4df8-907b-1f7ae0e23c13"  width="600">
+  <img src= "https://github.com/YuncongMa/pNet/assets/20191790/a70cf37f-0dfd-4816-ad64-8901fdcbcbd1"  width="600">
 </p>
 
 
 # Report
 pNet generates a HTML-based report to check gFNs, all pFNs with hyperlinks, and quality control.
 <p align="center">
-<img src= "https://github.com/YuncongMa/pNet/assets/20191790/a70cf37f-0dfd-4816-ad64-8901fdcbcbd1"  width="600">
+<img src= "https://github.com/YuncongMa/pNet/assets/20191790/f2c8a723-dc6d-4df0-a508-a1280e68482e"  width="600">
 </p>
 
 
