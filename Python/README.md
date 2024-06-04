@@ -31,6 +31,7 @@ conda install pytorch
 conda install mesalib vtk
 pip install matplotlib surfplot ggplot
 python -m pip install -U scikit-image
+pip install plotnine
 ```
 
 **Docker container**
