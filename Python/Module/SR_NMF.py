@@ -113,7 +113,7 @@ def update_model_parameter(dir_pnet_result: str or None, FN_model_parameter, set
     :param FN_model_parameter: None or a dict containing model parameters listed in setup_SR_NMF
     :return:
 
-    Yuncong Ma, 2/12/2024
+    Yuncong Ma, 6/5/2024
     """
 
     if setting is None and dir_pnet_result is None:
@@ -130,6 +130,7 @@ def update_model_parameter(dir_pnet_result: str or None, FN_model_parameter, set
 
     # default model parameters
     FN_Model = dict(
+        file_gFN=None,
         samplingMethod='Subject',
         sampleSize='Automatic',
         nBS=50,
@@ -153,6 +154,7 @@ def update_model_parameter(dir_pnet_result: str or None, FN_model_parameter, set
         FN_Model[i] = FN_model_parameter[i]
 
     BootStrap = {'samplingMethod': FN_Model['samplingMethod'], 'sampleSize': FN_Model['sampleSize'], 'nBS': FN_Model['nBS']}
+    FN_Model['BootStrap'] = BootStrap
     maxIter = FN_Model['maxIter']
     if isinstance(maxIter, tuple):
         gFN_maxIter = maxIter[0]

@@ -1,4 +1,4 @@
-# Yuncong Ma, 2/12/2024
+# Yuncong Ma, 6/5/2024
 # FN Computation module of pNet
 # Pytorch version
 
@@ -321,7 +321,7 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
 
     :param dir_pnet_result: directory of pNet result folder
 
-    Yuncong Ma, 2/12/2024
+    Yuncong Ma, 6/5/2024
     """
 
     # get directories of sub-folders
@@ -406,7 +406,7 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
                 if os.path.isfile(os.path.join(dir_pnet_BS, str(i), 'FN.mat')):
                     continue
                 submit_bash_job(dir_pnet_result,
-                                python_command=f'pNet.SR_NMF.gFN_SR_NMF_boostrapping_cluster(dir_pnet_result,{rep})',
+                                python_command=f'pnet.SR_NMF.gFN_SR_NMF_boostrapping_cluster(dir_pnet_result,{rep})',
                                 memory=memory,
                                 n_thread=n_thread,
                                 bashFile=os.path.join(dir_pnet_BS, str(rep), 'cluster_job_bootstrap.sh'),
@@ -437,7 +437,7 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
 
             if not os.path.isfile(os.path.join(dir_pnet_gFN, 'FN.mat')):
                 submit_bash_job(dir_pnet_result,
-                                python_command='pNet.SR_NMF.fuse_FN_cluster(dir_pnet_result)',
+                                python_command='pnet.SR_NMF.fuse_FN_cluster(dir_pnet_result)',
                                 memory=memory,
                                 n_thread=n_thread,
                                 bashFile=os.path.join(dir_pnet_BS, 'cluster_job_fusion.sh'),
@@ -486,7 +486,7 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
             if os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'FN.mat')):
                 continue
             submit_bash_job(dir_pnet_result,
-                            python_command=f'pNet.SR_NMF.pFN_SR_NMF_cluster(dir_pnet_result,{scan})',
+                            python_command=f'pnet.SR_NMF.pFN_SR_NMF_cluster(dir_pnet_result,{scan})',
                             memory=memory,
                             n_thread=n_thread,
                             bashFile=os.path.join(dir_pnet_pFN, list_subject_folder[scan-1], 'cluster_job_pFN.sh'),
@@ -541,7 +541,7 @@ def run_FN_computation_torch_cluster(dir_pnet_result: str):
             if os.path.isfile(os.path.join(dir_pnet_pFN, list_subject_folder[scan - 1], 'FN.mat')):
                 continue
             submit_bash_job(dir_pnet_result,
-                            python_command=f'pNet.GIG_ICA.pFN_GIG_ICA_cluster(dir_pnet_result,{scan})',
+                            python_command=f'pnet.GIG_ICA.pFN_GIG_ICA_cluster(dir_pnet_result,{scan})',
                             memory=memory,
                             n_thread=n_thread,
                             bashFile=os.path.join(dir_pnet_pFN, list_subject_folder[scan - 1], 'cluster_job_pFN.sh'),

@@ -1,4 +1,4 @@
-# Yuncong Ma, 2/12/2024
+# Yuncong Ma, 6/5/2024
 # Quality control module of pNet using PyTorch
 
 #########################################
@@ -233,7 +233,7 @@ def run_quality_control_torch_cluster(dir_pnet_result: str):
     :param dir_pnet_result: the directory of pNet result folder
     :return: None
 
-    Yuncong Ma, 2/12/2024
+    Yuncong Ma, 6/5/2024
     """
 
     # Setup sub-folders in pNet result
@@ -266,7 +266,7 @@ def run_quality_control_torch_cluster(dir_pnet_result: str):
         if os.path.isfile(os.path.join(dir_indv, 'Result.mat')):
             continue
         submit_bash_job(dir_pnet_result,
-                        python_command=f'pNet.compute_quality_control_torch_cluster(dir_pnet_result,{rep})',
+                        python_command=f'pnet.compute_quality_control_torch_cluster(dir_pnet_result,{rep})',
                         memory=memory,
                         n_thread=n_thread,
                         bashFile=os.path.join(dir_indv, 'Cluster_job_bootstrap.sh'),

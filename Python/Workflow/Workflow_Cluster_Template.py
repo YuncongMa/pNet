@@ -59,6 +59,8 @@ if method == 'SR-NMF':
         dataPrecision=dataPrecision,
         outputFormat=outputFormat
     )
+    if FN_model_parameter not in locals():
+        FN_model_parameter = None
     if FN_model_parameter is not None:
         pnet.SR_NMF.update_model_parameter(dir_pnet_result, FN_model_parameter=FN_model_parameter)
 
